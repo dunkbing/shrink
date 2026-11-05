@@ -114,6 +114,7 @@ export class Engine {
       try {
         prepared = await format.oracle.prepare?.(work, ctx);
       } catch (e: any) {
+        if (abort.signal.aborted) return (report.status = "failed", report.reason = "cancelled", report);
         return skip(e instanceof SkipFile ? e.message : `damaged: ${e?.message ?? e}`);
       }
 
