@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     # Windows is new: tests that need POSIX shell fake tools are still being ported.
     continue-on-error: ${{ matrix.os == 'windows-latest' }}
     steps:
