@@ -24,8 +24,13 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends oxipng jpegoptim libjpeg-turbo-progs webp gifsicle imagemagick libtiff-tools \
-            ffmpeg flac sqlite3 qpdf mupdf-tools advancecomp zopfli p7zip-full binutils upx-ucl gpac mkclean libdeflate-tools
+          # one by one: a package missing from this Ubuntu only skips that format's tests
+          for p in jpegoptim libjpeg-turbo-progs webp gifsicle imagemagick libtiff-tools ffmpeg flac sqlite3 qpdf mupdf-tools \
+                   advancecomp zopfli p7zip-full binutils upx-ucl gpac libdeflate-tools cabextract xz-utils mkclean mp4v2-utils; do
+            sudo apt-get install -y --no-install-recommends "$p" || echo "::warning::$p not available"
+          done
+          # oxipng: static release binary
+          curl -fsSL https://github.com/shssoichiro/oxipng/releases/latest/download/oxipng-10.2.1-x86_64-unknown-linux-musl.tar.gz | tar xz --strip-components=1 -C /tmp && sudo mv /tmp/oxipng /usr/local/bin/ || echo "::warning::oxipng not installed"
       - name: Tools (macOS)
         if: runner.os == 'macOS'
         run: |
