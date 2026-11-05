@@ -137,7 +137,7 @@ export function parseEbml(head: Uint8Array): EbmlInfo | null {
 export const detectMatroska = (head: Uint8Array, name: string) => {
   const info = parseEbml(head);
   if (!info || (info.docType !== "matroska" && info.docType !== "webm")) return false;
-  return !/\.mka$/i.test(name);
+  return !/\.(mka|weba)$/i.test(name);
 };
 
 /** Throws if the Segment claims more bytes than the file holds. */
