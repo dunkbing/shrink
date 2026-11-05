@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { Engine } from "../src";
 import { pbm, pcx, pgm, ppm, sgi, sun, tga, xbm, xpm, hdr } from "../src/formats/raster-misc.format";
 import { env, type Env } from "./fake";
+import { scriptTool } from "./lib/platform";
 
 const have = Bun.which("magick") !== null;
 const t = have ? test : test.skip;
@@ -90,10 +91,16 @@ t("LONG-04: a tool that changes a pixel is rejected and the file is untouched", 
   const e = make();
   const tp = await e.file("t.ppm", other);
   // identify runs the real ImageMagick; anything else (the rewrite) just copies the tampered picture over the output
-  const script = `if [ "$0" = identify ]; then exec "${Bun.which("magick")}" identify "$@"; fi; for last; do :; done; cp "${tp}" "\${last#ppm:}"`;
-  const liar = new Engine({ formats, cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { magick: ["sh", "-c", script] } } });
+  const liar = scriptTool(`if (args[0] === "identify") {
+  const r = Bun.spawnSync([${JSON.stringify(Bun.which("magick"))}, ...args]);
+  process.stdout.write(r.stdout);
+  process.stderr.write(r.stderr);
+  process.exit(r.exitCode);
+}
+fs.copyFileSync(${JSON.stringify(tp)}, args[args.length - 1].replace(/^ppm:/, ""));`);
+  const liarEngine = new Engine({ formats, cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { magick: liar } } });
   const p = await e.file("a.ppm", bytes);
-  const r = await liar.optimizeFile(p);
+  const r = await liarEngine.optimizeFile(p);
   expect(r.steps[0]).toMatchObject({ outcome: "rejected" });
   expect(r.steps[0].detail).toContain("differs");
   expect(readFileSync(p)).toEqual(Buffer.from(bytes));

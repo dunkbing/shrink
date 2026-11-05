@@ -9,6 +9,7 @@ import { build, decodeBase64, encodeBase64Like, flatten, parseEntity } from "../
 import { env, type Env } from "./fake";
 import { makeJpeg } from "./lib/jpeg";
 import { makePng } from "./lib/png";
+import { scriptTool } from "./lib/platform";
 
 const have = Bun.which("oxipng") !== null && Bun.which("jpegtran") !== null;
 const t = have ? test : test.skip;
@@ -116,10 +117,8 @@ t("MIME-07 / COMMON-08: a tool that changes the image is rejected and the messag
   const other = makePng({ width: 64, height: 64, colorType: 6, bitDepth: 8, compression: 9, data: Uint8Array.from({ length: 64 * 64 * 4 }, (_, i) => i & 255) });
   const bad = join(e.dir, "other.png");
   writeFileSync(bad, other);
-  const liar = join(e.dir, "oxipng.sh");
-  writeFileSync(liar, `#!/bin/sh\nfor last; do :; done\nfor a; do if [ "$prev" = "--out" ]; then out="$a"; fi; prev="$a"; done\ncp "${bad}" "$out"\n`);
-  chmodSync(liar, 0o755);
-  const engine = new Engine({ formats: [mime], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { oxipng: [liar] } } });
+  const liar = scriptTool(`fs.copyFileSync(${JSON.stringify(bad)}, args[args.indexOf("--out") + 1]);`);
+  const engine = new Engine({ formats: [mime], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { oxipng: liar } } });
   const p = await e.file("a.eml", m);
   const r = await engine.optimizeFile(p);
   expect(r.steps[0].outcome).toBe("rejected");

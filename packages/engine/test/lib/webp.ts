@@ -1,5 +1,5 @@
 // WebP fixtures made with libwebp's own tools.
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { makePng } from "./png";
@@ -17,7 +17,7 @@ export function makeWebp(o: { lossy?: boolean; alpha?: boolean; width?: number; 
   const dir = mkdtempSync(join(tmpdir(), "shrink-webp-"));
   try {
     const png = join(dir, "in.png"), out = join(dir, "out.webp");
-    Bun.write(png, makePng({ width: w, height: h, colorType: o.alpha ? 6 : 2, bitDepth: 8, data }));
+    writeFileSync(png, makePng({ width: w, height: h, colorType: o.alpha ? 6 : 2, bitDepth: 8, data }));
     run(["cwebp", "-quiet", ...(o.lossy ? ["-q", "90"] : ["-lossless", "-z", "0"]), "-metadata", "none", png, "-o", out]);
     return new Uint8Array(require("node:fs").readFileSync(out));
   } finally {

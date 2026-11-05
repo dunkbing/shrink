@@ -8,6 +8,7 @@ import { parseTiff } from "../src/formats/tiff-parse";
 import { tiff } from "../src/formats/tiff.format";
 import { env, type Env } from "./fake";
 import { makeTiff } from "./lib/raster";
+import { copyTool } from "./lib/platform";
 
 const have = Bun.which("magick") !== null && Bun.which("tiffcp") !== null;
 const t = have ? test : test.skip;
@@ -146,7 +147,7 @@ t("TIFF-10: a result with a changed pixel is rejected by the check and the file 
   const e = make();
   const tp = await e.file("t.tif", tampered);
   // tiffcp is called as: tiffcp -c <spec> <in> <out>
-  const liar = new Engine({ formats: [tiff], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { tiffcp: ["sh", "-c", `cp "${tp}" "$3"`] } } });
+  const liar = new Engine({ formats: [tiff], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { tiffcp: copyTool(tp, 3) } } });
   const p = await e.file("a.tif", bytes);
   const r = await liar.optimizeFile(p);
   expect(r.steps[0]).toMatchObject({ outcome: "rejected" });

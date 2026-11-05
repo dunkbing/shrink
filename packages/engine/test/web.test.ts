@@ -6,7 +6,7 @@ import { formats as webFormats } from "../src/formats/web.format";
 import { compactCss, sameCss } from "../src/formats/web-css";
 import { compactJs, sameJs } from "../src/formats/web-js";
 import { env, type Env } from "./fake";
-import { fakeTool } from "./lib/web";
+import { tamperedMinify } from "./lib/web";
 
 const have = Bun.which("minify") !== null;
 const t = have ? test : test.skip;
@@ -65,8 +65,8 @@ t("COMMON-08 (HTML): a tool that changes a word or an attribute is rejected", as
   const e = make();
   const src = page(`<!-- c -->\n<p class="a">Hello world</p>\n<a href="/x">link</a>`);
   const p = await e.file("a.html", src);
-  for (const [label, edit] of [["text", "s/Hello world/Hello there/"], ["attribute", "s#/x#/y#"]]) {
-    const bad = await fakeTool(e.dir, `bad-${label}`, `minify --type html -o "$OUT" "$IN" && sed '${edit}' "$OUT" > "$OUT.x" && mv "$OUT.x" "$OUT"`);
+  for (const [label, edit] of [["text", 't => t.replace("Hello world", "Hello there")'], ["attribute", 't => t.replace("/x", "/y")']]) {
+    const bad = await tamperedMinify(e.dir, `bad-${label}`, "html", edit);
     const liar = new Engine({ formats: webFormats, cacheDir: e.dir + "/c-" + label, tempDir: e.dir + "/tmp", settings: { ...on, toolPaths: { minify: bad } } });
     const r = await liar.optimizeFile(p);
     expect(r.steps[0].outcome, label).toBe("rejected");
@@ -198,7 +198,7 @@ t("WEB-07 (tampered): a tool that rewrites a number is rejected", async () => {
   const e = make();
   const src = `{\n  "a": 1.50,\n  "b": [1, 2, 3]\n}\n`;
   const p = await e.file("a.json", src);
-  const bad = await fakeTool(e.dir, "bad-json", `minify --type json --json-keep-numbers -o "$OUT" "$IN" && sed 's/1.50/1.5/' "$OUT" > "$OUT.x" && mv "$OUT.x" "$OUT"`);
+  const bad = await tamperedMinify(e.dir, "bad-json", "json", 't => t.replace("1.50", "1.5")', "--json-keep-numbers");
   const liar = new Engine({ formats: webFormats, cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { ...on, toolPaths: { minify: bad } } });
   const r = await liar.optimizeFile(p);
   expect(r.steps[0].outcome).toBe("rejected");

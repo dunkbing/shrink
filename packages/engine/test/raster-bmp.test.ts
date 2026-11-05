@@ -9,6 +9,7 @@ import { png } from "../src/formats/png.format";
 import { env, type Env } from "./fake";
 import { bands, makeBmp, makeIco, makeIconDib } from "./lib/raster";
 import { makePng } from "./lib/png";
+import { copyTool } from "./lib/platform";
 
 const envs: Env[] = [];
 const make = (formats = [bmp, ico, png], settings = {}) => (envs.push(env({ formats, settings })), envs[envs.length - 1]);
@@ -221,7 +222,7 @@ t("ICO-08: a result with a changed pixel inside an entry is rejected", async () 
   const tampered = makePng({ width: 32, height: 32, colorType: 6, bitDepth: 8, compression: 9, data: Uint8Array.from({ length: 32 * 32 * 4 }, (_, i) => (i * 3) & 255) });
   const e = make([ico]);
   const tp = await e.file("t.png", tampered);
-  const liar = new Engine({ formats: [ico], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { oxipng: ["sh", "-c", `cp "${tp}" "$7"`] } } });
+  const liar = new Engine({ formats: [ico], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { oxipng: copyTool(tp, 7) } } });
   const p = await e.file("a.ico", bytes);
   const r = await liar.optimizeFile(p);
   expect(r.steps[0]).toMatchObject({ outcome: "rejected" });

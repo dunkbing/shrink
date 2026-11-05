@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { decodePng, png, samePixels } from "../src";
 import { env, type Env } from "./fake";
 import { makePng, rowBytes } from "./lib/png";
+import { copyTool } from "./lib/platform";
 
 const have = Bun.which("oxipng") !== null;
 const envs: Env[] = [];
@@ -141,7 +142,7 @@ test("PNG-15: a tool that changes a pixel is rejected and the file is untouched"
     formats: [png],
     cacheDir: e.dir + "/cache2",
     tempDir: e.dir + "/tmp",
-    settings: { toolPaths: { oxipng: ["sh", "-c", `cp "${tampered}" "$7"`] } },
+    settings: { toolPaths: { oxipng: copyTool(tampered, 7) } },
   });
   const r = await liar.optimizeFile(p);
   expect(r.steps[0]).toMatchObject({ outcome: "rejected" });

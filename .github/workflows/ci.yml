@@ -44,21 +44,24 @@ jobs:
         shell: pwsh
         run: |
           # best effort: a package or download that is missing only skips that format's tests
-          foreach ($p in 'ffmpeg','imagemagick','7zip','qpdf','gifsicle','libjpeg-turbo','webp','flac','mupdf','sqlite','xz','upx','mingw','advancecomp','minify','resvg','jpegoptim','zopfli','cabextract') {
+          foreach ($p in 'ffmpeg','imagemagick','7zip','qpdf','gifsicle','libjpeg-turbo','webp','flac','mupdf','sqlite','upx','mingw','minify') {
             choco install -y --no-progress $p
             if ($LASTEXITCODE -ne 0) { Write-Warning "$p not installed" }
           }
           # release binaries, into a folder that is already on PATH
           $bin = 'C:\ProgramData\chocolatey\bin'
-          function Get-Zip($url, $name) {
+          function Get-Zip($url, $name, $match = '.') {
             curl.exe -fsSL --retry 4 --retry-all-errors -o "$name.zip" $url
             if ($LASTEXITCODE -ne 0) { Write-Warning "$name not downloaded"; return }
             Expand-Archive "$name.zip" -DestinationPath "$name-x" -Force
-            Get-ChildItem "$name-x" -Recurse -Filter '*.exe' | ForEach-Object { Copy-Item $_.FullName $bin -Force }
+            Get-ChildItem "$name-x" -Recurse -Include '*.exe','*.dll' | Where-Object { $_.FullName -match $match } | ForEach-Object { Copy-Item $_.FullName $bin -Force }
           }
           Get-Zip 'https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-pc-windows-msvc.zip' oxipng
           Get-Zip 'https://github.com/tdewolff/minify/releases/latest/download/minify_windows_amd64.zip' minify
-          Get-Zip 'https://github.com/linebender/resvg/releases/latest/download/resvg-win64.zip' resvg
+          Get-Zip 'https://github.com/linebender/resvg/releases/latest/download/resvg-win-x86_64.zip' resvg
+          Get-Zip 'https://github.com/amadvance/advancecomp/releases/latest/download/advancecomp-2.6-windows-x64.zip' advancecomp
+          Get-Zip 'https://github.com/tukaani-project/xz/releases/latest/download/xz-5.8.4-windows.zip' xz 'x86-64'
+          Get-Zip 'https://github.com/tjko/jpegoptim/releases/latest/download/jpegoptim-1.5.6-x64-windows.zip' jpegoptim
           $global:LASTEXITCODE = 0
 
       - name: debug strip

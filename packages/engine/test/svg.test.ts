@@ -6,7 +6,7 @@ import { Engine } from "../src/optimize";
 import { formats as svgFormats } from "../src/formats/svg.format";
 import { sameEvents, xmlEvents } from "../src/formats/web-markup";
 import { env, type Env } from "./fake";
-import { fakeTool, inkscapeSvg } from "./lib/web";
+import { inkscapeSvg, tamperedMinify } from "./lib/web";
 
 const have = Bun.which("minify") !== null && Bun.which("resvg") !== null;
 const t = have ? test : test.skip;
@@ -132,11 +132,11 @@ t("COMMON-08 (SVG): a tool that changes a colour or a path is rejected, the file
   const src = inkscapeSvg(20);
   const p = await e.file("a.svg", src);
   for (const [label, edit, expectDetail] of [
-    ["colour", "s/fill:red/fill:lime/g", "rendered"],
-    ["path", "s/M10 10/M12 10/", "rendered"],
-    ["attribute", "s/<rect/<rect data-x=\"1\"/", "differ"],
+    ["colour", "t => t.replaceAll('fill:red', 'fill:lime')", "rendered"],
+    ["path", "t => t.replace('M10 10', 'M12 10')", "rendered"],
+    ["attribute", 't => t.replace("<rect", \'<rect data-x="1"\')', "differ"],
   ] as const) {
-    const bad = await fakeTool(e.dir, `bad-${label}`, `minify --type svg -o "$OUT" "$IN" && sed '${edit}' "$OUT" > "$OUT.x" && mv "$OUT.x" "$OUT"`);
+    const bad = await tamperedMinify(e.dir, `bad-${label}`, "svg", edit);
     const liar = new Engine({ formats: svgFormats, cacheDir: e.dir + "/cache-" + label, tempDir: e.dir + "/tmp", settings: { toolPaths: { minify: bad } } });
     const r = await liar.optimizeFile(p);
     expect(r.steps[0].outcome, label).toBe("rejected");

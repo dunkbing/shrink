@@ -102,7 +102,10 @@ t("COMMON-08 (SQLite): a tool that drops a row or changes user_version is reject
     const liar = await fakeTool(
       e.dir,
       `liar-${label}`,
-      `case "$3" in *"VACUUM INTO"*) OUTP=$(printf '%s' "$3" | sed "s/VACUUM INTO '\\(.*\\)'/\\1/"); /usr/bin/sqlite3 "$@" && /usr/bin/sqlite3 "$OUTP" "${sql}";; *) exec /usr/bin/sqlite3 "$@";; esac`,
+      `const real = Bun.which("sqlite3");
+if (!String(args[2]).includes("VACUUM INTO")) pass(real, args);
+if (run(real, args).status !== 0) process.exit(1);
+run(real, [/VACUUM INTO '(.*)'/.exec(args[2])[1], ${JSON.stringify(sql)}]);`,
     );
     const engine = new Engine({ formats: sqliteFormats, cacheDir: e.dir + "/c-" + label, tempDir: e.dir + "/tmp", settings: { toolPaths: { sqlite3: liar } } });
     const r = await engine.optimizeFile(p);

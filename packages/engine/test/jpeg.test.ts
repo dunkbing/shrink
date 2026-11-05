@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { Engine, jpeg, parseJpeg } from "../src";
 import { env, type Env } from "./fake";
 import { addSegment, cjpeg, comment, exif, icc, makeJpeg, mpf } from "./lib/jpeg";
+import { copyTool } from "./lib/platform";
 
 const have = Bun.which("jpegtran") !== null;
 const envs: Env[] = [];
@@ -147,7 +148,7 @@ t("JPEG-16: a result with different pixels is rejected", async () => {
   const worse = await makeJpeg({ width: 128, height: 96, quality: 30 });
   const e = make({ disabledTools: ["jpegoptim", "mozjpegtran"] });
   const p = await e.file("a.jpg", bytes);
-  const liar = new Engine({ formats: [jpeg], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { disabledTools: ["jpegoptim", "mozjpegtran"], toolPaths: { jpegtran: ["sh", "-c", `cat > "$5" < "${e.dir}/worse.jpg"`] } } });
+  const liar = new Engine({ formats: [jpeg], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { disabledTools: ["jpegoptim", "mozjpegtran"], toolPaths: { jpegtran: copyTool(`${e.dir}/worse.jpg`, 5) } } });
   await Bun.write(`${e.dir}/worse.jpg`, worse);
   const r = await liar.optimizeFile(p);
   expect(r.steps.find((s) => s.id === "jpeg.jpegtran")).toMatchObject({ outcome: "rejected", detail: "pixels differ" });

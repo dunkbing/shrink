@@ -6,6 +6,7 @@ import { decodeApng, sameApng } from "../src/formats/apng-decode";
 import { png } from "../src/formats/png.format";
 import { env, type Env } from "./fake";
 import { makeApng, type ApngFrame } from "./lib/raster";
+import { copyTool } from "./lib/platform";
 
 const have = Bun.which("oxipng") !== null;
 const t = have ? test : test.skip;
@@ -112,7 +113,7 @@ t("PNG-08f: a tool that changes the picture of a frame is rejected, the file is 
   // a different but smaller single PNG instead of the recompressed frame
   const other = makeApng({ w, h, frames: [{ w, h, rgba: scene(w, h, 3) }], level: 9 });
   const tp = await e.file("t.png", other);
-  const liar = new Engine({ formats: [png], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { oxipng: ["sh", "-c", `cp "${tp}" "$6"`] } } });
+  const liar = new Engine({ formats: [png], cacheDir: e.dir + "/c2", tempDir: e.dir + "/tmp", settings: { toolPaths: { oxipng: copyTool(tp, 6) } } });
   const p = await e.file("a.png", bytes);
   const r = await liar.optimizeFile(p);
   const step = r.steps.find((s) => s.id === "png.apng-frames")!;

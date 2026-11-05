@@ -1,5 +1,4 @@
 // Writers for the text-format tests: SVG, SQLite, and a script that stands in for a minifier.
-import { chmodSync } from "node:fs";
 import { join } from "node:path";
 
 /** An SVG as Inkscape writes it: editor namespaces, metadata, a gradient, layers and `n` shapes. */
@@ -63,10 +62,23 @@ INSERT INTO loose VALUES (1,2),(3,'four');`,
   );
 }
 
-/** An executable script that stands in for a tool: `body` is shell; `$IN` and `$OUT` are the last two arguments (minify's input and `-o` target). */
+/**
+ * A fake tool written as a bun script, so it runs the same on every OS. `body` is JavaScript with `args`, `IN` and `OUT`
+ * (the last two arguments: minify's input and `-o` target), `run(cmd, args)` and `pass(cmd, args)` (run and relay output and exit code).
+ */
 export async function fakeTool(dir: string, name: string, body: string): Promise<string[]> {
-  const p = join(dir, name);
-  await Bun.write(p, `#!/bin/sh\nIN=; OUT=; for a in "$@"; do OUT=$IN; IN=$a; done\n${body}\n`);
-  chmodSync(p, 0o755);
-  return [p];
+  const p = join(dir, name + ".js");
+  await Bun.write(
+    p,
+    `const { spawnSync } = require("node:child_process"), fs = require("node:fs");
+const args = process.argv.slice(2), IN = args[args.length - 1], OUT = args[args.length - 2];
+const run = (cmd, a) => spawnSync(cmd, a, { encoding: "utf8" });
+const pass = (cmd, a) => { const r = run(cmd, a); process.stdout.write(r.stdout); process.stderr.write(r.stderr); process.exit(r.status ?? 1); };
+${body}\n`,
+  );
+  return [process.execPath, p];
 }
+
+/** A minify that runs the real one for `type` and then rewrites its output with `edit` (JavaScript: a function of the text). */
+export const tamperedMinify = (dir: string, name: string, type: string, edit: string, extra = "") =>
+  fakeTool(dir, name, `if (run(Bun.which("minify"), ["--type", "${type}", ${extra ? `"${extra}", ` : ""}"-o", OUT, IN]).status !== 0) process.exit(1);\nfs.writeFileSync(OUT, (${edit})(fs.readFileSync(OUT, "utf8")));`);
