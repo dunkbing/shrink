@@ -1,0 +1,20 @@
+[
+  {
+    "file": "sample.flac",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Rm-sursilv-cuvierer.flac",
+    "format": "flac",
+    "licence": "Wikimedia Commons (CC BY-SA)"
+  },
+  {
+    "file": "sample.wav",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/4/48/Aejova.wav",
+    "format": "wav",
+    "licence": "Wikimedia Commons (CC)"
+  },
+  {
+    "file": "sample.mp3",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Fr-Pollein.mp3",
+    "format": "mp3",
+    "licence": "Wikimedia Commons (CC)"
+  }
+]
