@@ -61,6 +61,12 @@ jobs:
           Get-Zip 'https://github.com/linebender/resvg/releases/latest/download/resvg-win64.zip' resvg
           $global:LASTEXITCODE = 0
 
+      - name: debug strip
+        if: runner.os == 'Linux'
+        continue-on-error: true
+        run: |
+          which -a strip llvm-strip nice; strip --version | head -1
+          timeout 60 bun scripts/dbg.ts 2>&1 | head -60
       - run: bun run fixtures:fetch
         continue-on-error: true # a mirror can be down; the corpus test skips what is missing
       - run: bun run typecheck

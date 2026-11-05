@@ -1,6 +1,6 @@
 // PDF cases (docs/FORMATS.md, section 9) against the real qpdf, mutool and (when installed) cpdf.
 import { afterEach, expect, test } from "bun:test";
-import { readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, readFileSync, writeFileSync } from "node:fs";
 import type { Format, Step } from "../src";
 import { pdf } from "../src/formats/pdf.format";
 import { summarize } from "../src/formats/pdf-summary";
@@ -160,7 +160,8 @@ t("PDF-12: an .ai file is optimised with the lossless steps only", async () => {
   const r = await e.engine.optimizeFile(p);
   expect(r.status).toBe("optimized");
   expect(r.steps.map((s) => s.id).join()).not.toMatch(/gs|ghostscript/);
-  expect(sh(["qpdf", "--check", p]).exitCode).toBe(0);
+  copyFileSync(p, p + ".pdf"); // qpdf's AppArmor profile on Ubuntu only opens .pdf, .json and .qdf
+  expect(sh(["qpdf", "--check", p + ".pdf"]).exitCode).toBe(0);
 });
 
 t("PDF-13: a 1200-page PDF finishes, and cancelling stops it without leftovers", async () => {
