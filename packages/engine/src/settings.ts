@@ -11,6 +11,7 @@ export const defaults: Settings = {
   disabledTools: null,
   toolPaths: null,
   stepTimeout: 300,
+  lossy: { ssim: 0.98, pdfSsim: 0.9, minSaving: 0.05 },
   jpeg: { lossy: false, keepMetadata: false, arithmetic: false },
   png: { lossy: false, keepMetadata: false },
   gif: { lossy: false, keepMetadata: false },

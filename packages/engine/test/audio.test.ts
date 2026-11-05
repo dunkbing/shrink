@@ -564,3 +564,122 @@ for (const [name, format] of [["example.ogg", ogg], ["sample.flac", flac], ["sam
     if (r.status === "optimized") expect(decodeMd5(p)).toBe(decodeMd5(await e.file("ref-" + name, bytes)));
   });
 }
+
+// ---------- FLAC-03: audio.trimSilence ----------
+
+/** A WAV of `lead` silent frames, `body` frames of tone and `trail` silent frames (16 or 24 bit, any channel count). */
+function silentEnds(o: { lead: number; body: number; trail: number; bits?: 16 | 24; channels?: number; noise?: number }): Uint8Array {
+  const bits = o.bits ?? 16, channels = o.channels ?? 2, width = bits / 8;
+  const frames = o.lead + o.body + o.trail;
+  const data = new Uint8Array(frames * channels * width);
+  const dv = new DataView(data.buffer);
+  for (let i = 0; i < o.body; i++)
+    for (let c = 0; c < channels; c++) {
+      const v = Math.round((0.4 * Math.sin((i * (440 + c * 110) * 2 * Math.PI) / 44100) + ((i * 7 + c) % 5) / 40) * (bits === 16 ? 30000 : 7e6)) || 3000;
+      const at = ((o.lead + i) * channels + c) * width;
+      if (bits === 16) dv.setInt16(at, v, true);
+      else (data[at] = v & 255), (data[at + 1] = (v >> 8) & 255), (data[at + 2] = (v >> 16) & 255);
+    }
+  // dither-like noise of one step in the "silence" is still silence
+  if (o.noise) for (let i = 0; i < o.lead * channels; i++) bits === 16 ? dv.setInt16(i * 2, i % 3 === 0 ? o.noise : 0, true) : (data[i * 3] = i % 3 === 0 ? o.noise : 0);
+  const fmt = new Uint8Array(16);
+  const f = new DataView(fmt.buffer);
+  f.setUint16(0, 1, true); f.setUint16(2, channels, true); f.setUint32(4, 44100, true); f.setUint32(8, 44100 * channels * width, true); f.setUint16(12, channels * width, true); f.setUint16(14, bits, true);
+  const body = concat([text("WAVE"), chunkOf("fmt ", fmt), chunkOf("data", data)]);
+  const size = new Uint8Array(4);
+  new DataView(size.buffer).setUint32(0, body.length, true);
+  return concat([text("RIFF"), size, body]);
+}
+const chunkOf = (id: string, d: Uint8Array) => {
+  const n = new Uint8Array(4);
+  new DataView(n.buffer).setUint32(0, d.length, true);
+  return concat([text(id), n, d, d.length & 1 ? new Uint8Array(1) : new Uint8Array(0)]);
+};
+const encodeFlac = (name: string, wavBytes: Uint8Array, tags: string[] = []) => {
+  const w = f(name + ".wav"), out = f(name);
+  writeFileSync(w, wavBytes);
+  run(["flac", "-s", "-f", "-0", "--channel-map=none", ...tags.flatMap((t) => ["-T", t]), "-o", out, w]);
+  return out;
+};
+/** Raw PCM of a FLAC, decoded by flac itself. */
+const rawOf = (p: string) => {
+  const out = p + ".raw";
+  run(["flac", "-d", "-s", "-f", "--force-raw-format", "--endian=little", "--sign=signed", "-o", out, p]);
+  return new Uint8Array(readFileSync(out));
+};
+
+tflac("FLAC-03: trimSilence off never runs the step; the samples are untouched", async () => {
+  const src = encodeFlac("t-off.flac", silentEnds({ lead: 20000, body: 30000, trail: 15000 }));
+  const e = make([flac]);
+  const p = await e.file("a.flac", readFileSync(src));
+  const r = await e.engine.optimizeFile(p);
+  expect(step(r, "flac.trim")).toMatchObject({ outcome: "skipped", detail: "lossy steps are off" });
+  expect(r.lossy).toBeUndefined();
+  expect(Buffer.compare(rawOf(p), rawOf(src))).toBe(0);
+});
+
+for (const [bits, channels] of [[16, 2], [24, 3]] as const) {
+  tflac(`FLAC-03: trimSilence on cuts the silent ends (${bits}-bit, ${channels} channels), keeps the samples between and the tags, and says so`, async () => {
+    const lead = 20480, body = 30000, trail = 15000; // the start is a multiple of the block size, so the music is cut into the same blocks
+    const src = encodeFlac(`t-on-${bits}.flac`, silentEnds({ lead, body, trail, bits, channels }), ["TITLE=Keep me"]);
+    const e = make([flac], { audio: { trimSilence: true, keepMetadata: true } });
+    const p = await e.file("a.flac", readFileSync(src));
+    const r = await e.engine.optimizeFile(p);
+    expect(r.status).toBe("optimized");
+    expect(r.lossy).toBe(true);
+    expect(step(r, "flac.trim")).toMatchObject({ outcome: "kept", lossy: true });
+    expect(r.after).toBeLessThan(r.before);
+    const frame = (bits / 8) * channels;
+    const before = rawOf(src), after = rawOf(p);
+    expect(after.length).toBe(body * frame);
+    expect(Buffer.compare(after, before.subarray(lead * frame, (lead + body) * frame))).toBe(0);
+    expect(parseFlac(read(p)).totalSamples).toBe(BigInt(body));
+    expect(title(p)).toBe("Keep me");
+  });
+}
+
+tflac("FLAC-03: near-silent noise of one step at the ends counts as silence", async () => {
+  const src = encodeFlac("t-noise.flac", silentEnds({ lead: 20000, body: 30000, trail: 10000, noise: 1 }));
+  const e = make([flac], { audio: { trimSilence: true } });
+  const p = await e.file("a.flac", readFileSync(src));
+  expect((await e.engine.optimizeFile(p)).lossy).toBe(true);
+  expect(rawOf(p).length).toBe(30000 * 4);
+});
+
+tflac("FLAC-03: a file without silent ends, or silent all through, is not cut", async () => {
+  for (const [name, spec] of [["t-none.flac", { lead: 0, body: 30000, trail: 0 }], ["t-all.flac", { lead: 40000, body: 0, trail: 0 }]] as const) {
+    const src = encodeFlac(name, silentEnds(spec));
+    const e = make([flac], { audio: { trimSilence: true } });
+    const p = await e.file("a.flac", readFileSync(src));
+    const r = await e.engine.optimizeFile(p);
+    expect(r.lossy).toBeUndefined();
+    expect(Buffer.compare(rawOf(p), rawOf(src))).toBe(0);
+  }
+});
+
+tflac("FLAC-03: a result with a changed sample or a cut into the music is rejected and the file untouched", async () => {
+  const src = encodeFlac("t-tamper.flac", silentEnds({ lead: 20000, body: 30000, trail: 15000 }));
+  const good = rawOf(src);
+  const cases: [string, Uint8Array][] = [];
+  const changed = good.slice(20000 * 4, 50000 * 4);
+  changed[400] ^= 0x10;
+  cases.push(["changed", changed]);
+  cases.push(["cut into the music", good.slice(25000 * 4, 50000 * 4)]);
+  for (const [name, pcmBytes] of cases) {
+    const wavPath = f(`liar-${name}.wav`);
+    const hdr = silentEnds({ lead: 0, body: 1, trail: 0 }).subarray(0, 44);
+    const w = concat([hdr, pcmBytes]);
+    new DataView(w.buffer, w.byteOffset).setUint32(4, w.length - 8, true);
+    new DataView(w.buffer, w.byteOffset).setUint32(40, pcmBytes.length, true);
+    writeFileSync(wavPath, w);
+    const bad = f(`liar-${name}.flac`);
+    run(["flac", "-s", "-f", "-8", "-o", bad, wavPath]);
+    const liar: Step = { id: "flac.liar", lossy: true, run: async (_i, o) => void (await Bun.write(o, readFileSync(bad))) };
+    const e = make([{ ...flac, steps: [liar] }], { audio: { trimSilence: true } });
+    const p = await e.file("a.flac", readFileSync(src));
+    const r = await e.engine.optimizeFile(p);
+    expect(step(r, "flac.liar")?.outcome).toBe("rejected");
+    expect(step(r, "flac.liar")?.detail).toContain("between the silent ends");
+    expect(Buffer.compare(read(p), read(src))).toBe(0);
+  }
+});

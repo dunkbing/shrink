@@ -3,10 +3,13 @@ import type { Format, Settings } from "../types";
 import { pixels, samePicture, type Pixels } from "./bun-pixels";
 import { parseJpeg, type JpegInfo } from "./jpeg-parse";
 import { errorMessage } from "../errors";
+import { jpegRecompress, storedRaster } from "./jpeg-recode";
+import { judge } from "./lossy";
 
 interface Prepared {
   info: JpegInfo;
   pix: Pixels;
+  path: string;
 }
 
 const keeps = (ctx: { settings: Settings }) => ctx.settings.jpeg.keepMetadata;
@@ -28,6 +31,8 @@ export const jpeg: Format = {
     }),
     toolStep({ id: "jpeg.jpegtran", tool: "jpegtran", args: (i, o, ctx) => ["-optimize", "-progressive", "-copy", "all", ...arith(ctx), "-outfile", o, i] }),
     toolStep({ id: "jpeg.mozjpegtran", tool: "mozjpegtran", args: (i, o, ctx) => ["-optimize", "-progressive", "-copy", "all", ...arith(ctx), "-outfile", o, i] }),
+    // Last: it changes the pixels (within the similarity floor), so only with jpeg.lossy.
+    jpegRecompress,
   ],
   async skip(path, head, ctx) {
     const bytes = new Uint8Array(await Bun.file(path).arrayBuffer());
@@ -56,7 +61,8 @@ export const jpeg: Format = {
       }
       // The ICC profile is never touched by the tools used here; a rotation lives in EXIF, which then stays.
       if (info.orientation !== 1) ctx.facts.keepExif = true;
-      return { info, pix } satisfies Prepared;
+      ctx.facts.pixels = info.width * info.height;
+      return { info, pix, path } satisfies Prepared;
     },
     async same(original, candidatePath, ctx) {
       const a = original as Prepared;
@@ -75,6 +81,23 @@ export const jpeg: Format = {
       if (info.orientation !== a.info.orientation) return "orientation changed";
       if (keepsExif(ctx) && a.info.exif && !info.exif) return "EXIF was removed";
       return true;
+    },
+    async similar(original, candidatePath, ctx) {
+      const a = original as Prepared;
+      const bytes = new Uint8Array(await Bun.file(candidatePath).arrayBuffer());
+      let info: JpegInfo, pic;
+      try {
+        info = parseJpeg(bytes);
+        pic = await storedRaster(bytes);
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
+      }
+      if (info.width !== a.info.width || info.height !== a.info.height) return `size ${a.info.width}x${a.info.height} became ${info.width}x${info.height}`;
+      if (info.components !== a.info.components) return "colour components changed";
+      if (a.info.icc && (!info.icc || Buffer.compare(a.info.icc, info.icc) !== 0)) return "ICC profile changed";
+      if (info.orientation !== a.info.orientation) return "orientation changed";
+      if (keepsExif(ctx) && a.info.exif && !info.exif) return "EXIF was removed";
+      return judge(await storedRaster(new Uint8Array(await Bun.file(a.path).arrayBuffer())), pic, ctx.settings);
     },
   },
 };

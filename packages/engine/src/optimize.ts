@@ -38,7 +38,7 @@ export class Engine {
   constructor(opts: Options = {}) {
     this.opts = opts;
     this.settings = resolve(opts.settings);
-    this.formats = opts.formats ?? [];
+    this.formats = (opts.formats ?? []).map((f) => f.configure?.(this.settings) ?? f);
     this.cache = new Cache(opts.cacheDir);
   }
 
@@ -124,6 +124,7 @@ export class Engine {
       let best = work;
       let bestSize = report.before;
       let n = 0;
+      let lossyKept = false;
       for (const step of format.steps) {
         if (abort.signal.aborted) {
           report.status = "failed";
@@ -157,11 +158,18 @@ export class Engine {
           const file = Bun.file(out);
           if (!(await file.exists())) throw new Error("wrote no output");
           sr.size = file.size;
+          if (step.lossy) sr.lossy = true;
           if (file.size >= bestSize) sr.outcome = "not smaller";
-          else {
-            const verdict = await format.oracle.same(prepared, out, ctx);
+          else if (step.lossy && file.size > bestSize * (1 - (step.minSaving ?? settings.lossy.minSaving))) {
+            sr.outcome = "not smaller";
+            sr.detail = `saves under ${Math.round((step.minSaving ?? settings.lossy.minSaving) * 100)}%, not worth the loss`;
+          } else {
+            // once a lossy result is kept, what follows is judged by similarity to the original too
+            const judge = step.lossy || lossyKept ? format.oracle.similar : format.oracle.same;
+            const verdict = judge ? await judge.call(format.oracle, prepared, out, ctx) : "no similarity check for this format";
             if (verdict === true) {
               sr.outcome = "kept";
+              if (step.lossy) lossyKept = true;
               best = out;
               bestSize = file.size;
             } else {
@@ -192,6 +200,7 @@ export class Engine {
       }
       report.after = bestSize;
       report.status = "optimized";
+      if (lossyKept) report.lossy = true;
       if (o.dryRun) return report;
 
       // The original is replaced only if it is still what we read.

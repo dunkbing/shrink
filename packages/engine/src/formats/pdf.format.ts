@@ -1,9 +1,12 @@
-import { renameSync } from "node:fs";
+import { mkdirSync, renameSync } from "node:fs";
+import { extname, join } from "node:path";
 import { devNull } from "node:os";
 import { toolStep } from "../step";
 import { MissingTool } from "../tools";
-import { SkipFile, type Context, type Format } from "../types";
+import { SkipFile, type Context, type Format, type Step } from "../types";
 import { summarize, type PdfSummary } from "./pdf-summary";
+import { decodePng } from "./png-decode";
+import { compare, rasterOfPng } from "./lossy";
 import { errorMessage } from "../errors";
 
 interface Doc {
@@ -11,7 +14,12 @@ interface Doc {
   pages: number;
   renders: string[];
   text: string;
+  /** Hash of the text with white space collapsed (a lossy re-write may space it differently). */
+  textNorm: string;
   summary: PdfSummary;
+  path: string;
+  layered: boolean;
+  form: boolean;
 }
 
 const MAX_SIZE = 4 * 2 ** 30;
@@ -68,14 +76,57 @@ async function read(path: string, ctx: Context, ref?: Doc): Promise<Doc> {
   const js = await tool(ctx, "qpdf", ["--json=2", "--json-key=qpdf", path]);
   if (js.code !== 0 && js.code !== 3) throw new Error("qpdf cannot describe it");
   if (original && /"\/(ByteRange|DocMDP)"/.test(js.stdout)) throw new SkipFile("signed");
-  return { warned: check.code === 3, pages, renders, text: sha(txt.stdout), summary: summarize(JSON.parse(js.stdout)) };
+  return {
+    warned: check.code === 3,
+    pages,
+    renders,
+    text: sha(txt.stdout),
+    textNorm: sha(txt.stdout.replace(/\s+/g, " ").trim()),
+    summary: summarize(JSON.parse(js.stdout)),
+    path,
+    layered: /"\/OCProperties"/.test(js.stdout),
+    form: /"\/AcroForm"/.test(js.stdout),
+  };
 }
+
+const PROFILES: Record<string, string> = { screen: "/screen", ebook: "/ebook", printer: "/printer", prepress: "/prepress" };
+
+/** At most `k` page numbers (1-based) spread over the document, first and last included. */
+const samplePages = (pages: number, k: number) => [...new Set(Array.from({ length: Math.min(pages, k) }, (_, i) => 1 + Math.round((i * (pages - 1)) / Math.max(1, Math.min(pages, k) - 1))))];
+
+/** Renders the pages at low resolution into `dir`; returns the PNG paths by page number. */
+async function render(path: string, pages: number[], dir: string, ctx: Context): Promise<string[]> {
+  mkdirSync(dir, { recursive: true });
+  const r = await tool(ctx, "mutool", ["draw", "-r", "50", "-o", join(dir, "p%d.png"), path, pages.join(",")]);
+  if (r.code !== 0) throw new Error(`mutool cannot render it: ${r.stderr.trim().split("\n").pop()}`);
+  return pages.map((p) => join(dir, `p${p}.png`));
+}
+
+/** Ghostscript's pdfwrite at the chosen profile (screen, ebook, printer, prepress, or custom: images downsampled to `pdf.dpi`). */
+const ghostscript: Step = {
+  id: "pdf.ghostscript",
+  tool: "ghostscript",
+  lossy: true,
+  when(ctx) {
+    if (extname(ctx.original).toLowerCase() === ".ai") return "never for .ai files";
+    if (ctx.settings.pdf.skipLayered && ctx.facts.layered) return "layered PDF (pdf.skipLayered)";
+    if (ctx.facts.form) return "has form fields";
+    return true;
+  },
+  async run(input, output, ctx) {
+    const p = ctx.settings.pdf;
+    const dpi = String(Math.max(30, Math.round(p.dpi)));
+    const custom = ["-dDownsampleColorImages=true", "-dDownsampleGrayImages=true", "-dDownsampleMonoImages=true", `-dColorImageResolution=${dpi}`, `-dGrayImageResolution=${dpi}`, `-dMonoImageResolution=${dpi}`, "-dColorImageDownsampleThreshold=1.0", "-dGrayImageDownsampleThreshold=1.0", "-dMonoImageDownsampleThreshold=1.0"];
+    const r = await ctx.run("ghostscript", ["-q", "-dNOPAUSE", "-dBATCH", "-dSAFER", "-sDEVICE=pdfwrite", `-dPDFSETTINGS=${PROFILES[p.profile] ?? "/default"}`, ...(p.profile === "custom" ? custom : []), `-sOutputFile=${output}`, input]);
+    if (r.code !== 0) throw new Error(`ghostscript exited with ${r.code}: ${(r.stderr || r.stdout).trim().split("\n")[0] ?? ""}`);
+  },
+};
 
 export const pdf: Format = {
   id: "pdf",
   extensions: ["pdf", "ai", "epdf", "fdf"],
   detect: (h) => Buffer.from(h.subarray(0, 1024)).includes("%PDF-"),
-  flags: () => ({}),
+  flags: (s) => ({ lossy: s.pdf.profile !== "none" }),
   async skip(path, _head, ctx) {
     if (Bun.file(path).size > MAX_SIZE) return "too large to verify";
     const hit = await contains(path, ["/ByteRange", "/DocMDP", "pdfaid:part", "/GTS_PDFA1"]);
@@ -110,10 +161,43 @@ export const pdf: Format = {
       ok: [0, 3],
       args: (input, output) => ["--object-streams=generate", "--recompress-flate", "--compression-level=9", "--stream-data=compress", input, output],
     }),
+    // Last: it changes the images (within the render similarity floor), so only with a pdf.profile.
+    ghostscript,
   ],
   oracle: {
     async prepare(path, ctx) {
-      return read(path, ctx);
+      const doc = await read(path, ctx);
+      ctx.facts.layered = doc.layered;
+      ctx.facts.form = doc.form;
+      return doc;
+    },
+    async similar(original, candidate, ctx) {
+      const a = original as Doc;
+      let b: Doc;
+      try {
+        b = await read(candidate, ctx, a);
+      } catch (e) {
+        if (e instanceof SkipFile) return String(e.message);
+        return `the result is not a sound PDF: ${errorMessage(e)}`;
+      }
+      if (a.pages !== b.pages) return `page count ${a.pages} became ${b.pages}`;
+      if (a.textNorm !== b.textNorm) return "extracted text differs";
+      const pages = samplePages(a.pages, 12);
+      if (!pages.length) return true;
+      let x: string[], y: string[];
+      try {
+        x = await render(a.path, pages, join(ctx.dir, "render-a"), ctx);
+        y = await render(candidate, pages, join(ctx.dir, "render-b"), ctx);
+      } catch (e) {
+        return errorMessage(e);
+      }
+      const floor = ctx.settings.lossy.pdfSsim;
+      for (let i = 0; i < pages.length; i++) {
+        const s = compare(rasterOfPng(decodePng(new Uint8Array(await Bun.file(x[i]).arrayBuffer()))), rasterOfPng(decodePng(new Uint8Array(await Bun.file(y[i]).arrayBuffer()))), floor);
+        if (s.problem) return `page ${pages[i]}: ${s.problem}`;
+        if (s.ssim < floor) return `page ${pages[i]} similarity ${s.ssim.toFixed(4)} is below the floor ${floor}`;
+      }
+      return true;
     },
     async same(original, candidate, ctx) {
       const a = original as Doc;

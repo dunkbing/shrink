@@ -72,6 +72,7 @@ Order: configured path (`toolPaths`), the app's tool folder (`~/.shrink/tools/<p
 {
   "level": 5, "workers": 0, "preserveTimestamps": true, "lowPriority": true, "skipOptimized": true,
   "include": null, "exclude": null, "disabledTools": null, "toolPaths": null,
+  "lossy": { "ssim": 0.98, "pdfSsim": 0.9, "minSaving": 0.05 },
   "jpeg": { "lossy": false, "keepMetadata": false, "arithmetic": false },
   "png":  { "lossy": false, "keepMetadata": false },
   "gif":  { "lossy": false, "keepMetadata": false },
@@ -86,7 +87,7 @@ Order: configured path (`toolPaths`), the app's tool folder (`~/.shrink/tools/<p
 }
 ```
 
-`level` 1 (fast) to 9 (extreme) scales iteration counts and which slow steps run. `skipOptimized` keeps a cache of (content hash, settings hash) of files already processed.
+`lossy` is what a lossy step has to prove: SSIM of pictures (`ssim`) and of rendered PDF pages (`pdfSsim`) against the original, and the least share of the size it must save (`minSaving`). `level` 1 (fast) to 9 (extreme) scales iteration counts and which slow steps run. `skipOptimized` keeps a cache of (content hash, settings hash) of files already processed.
 
 ## Invariants every format must satisfy (COMMON cases)
 

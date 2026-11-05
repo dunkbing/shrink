@@ -29,7 +29,8 @@ jobs:
           sudo apt-get update
           # one by one: a package missing from this Ubuntu only skips that format's tests
           for p in jpegoptim libjpeg-turbo-progs webp gifsicle imagemagick libtiff-tools flac sqlite3 qpdf mupdf-tools \
-                   advancecomp zopfli p7zip-full binutils upx-ucl gpac libdeflate-tools cabextract xz-utils mkclean mp4v2-utils; do
+                   advancecomp zopfli p7zip-full binutils upx-ucl gpac libdeflate-tools cabextract xz-utils mkclean mp4v2-utils \
+                   pngquant ghostscript; do
             sudo apt-get install -y --no-install-recommends "$p" || echo "::warning::$p not available"
           done
           # ffmpeg: Ubuntu's 6.1 remuxes Matroska with shifted start times, so use a current static build
@@ -40,14 +41,14 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install oxipng jpegoptim mozjpeg webp gifsicle imagemagick libtiff ffmpeg flac qpdf mupdf-tools \
-            advancecomp zopfli sevenzip binutils upx gpac mkclean mp4v2 libdeflate cabextract
+            advancecomp zopfli sevenzip binutils upx gpac mkclean mp4v2 libdeflate cabextract pngquant ghostscript
           brew install tdewolff/tap/minify resvg || true
       - name: Tools (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           # best effort: a package or download that is missing only skips that format's tests
-          foreach ($p in 'ffmpeg','imagemagick','7zip','qpdf','gifsicle','libjpeg-turbo','webp','flac','mupdf','sqlite','upx','mingw','minify','gpac') {
+          foreach ($p in 'ffmpeg','imagemagick','7zip','qpdf','gifsicle','libjpeg-turbo','webp','flac','mupdf','sqlite','upx','mingw','minify','gpac','pngquant','ghostscript') {
             choco install -y --no-progress $p
             if ($LASTEXITCODE -ne 0) { Write-Warning "$p not installed" }
           }
@@ -65,6 +66,9 @@ jobs:
           Get-Zip 'https://github.com/amadvance/advancecomp/releases/latest/download/advancecomp-2.6-windows-x64.zip' advancecomp
           Get-Zip 'https://github.com/tukaani-project/xz/releases/latest/download/xz-5.8.4-windows.zip' xz 'x86-64'
           Get-Zip 'https://github.com/tjko/jpegoptim/releases/latest/download/jpegoptim-1.5.6-x64-windows.zip' jpegoptim
+          # Ghostscript: gswin64c.exe, with its DLL and resources next to it, onto PATH
+          $gsc = Get-ChildItem 'C:\Program Files\gs' -Recurse -Filter gswin64c.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($gsc) { Add-Content $env:GITHUB_PATH $gsc.DirectoryName } else { Write-Warning 'ghostscript not found' }
           # libjpeg-turbo (jpegtran, cjpeg) installs outside PATH
           Add-Content $env:GITHUB_PATH 'C:\libjpeg-turbo64\bin'
           $global:LASTEXITCODE = 0

@@ -128,3 +128,32 @@ export function makePdf(spec: PdfSpec = {}): Uint8Array {
   parts.push(enc.encode(xref));
   return Buffer.concat(parts);
 }
+
+/** A scanned-looking PDF: every page is one full-page JPEG (DCTDecode) of `w` x `h` pixels on a half-letter page, no text. */
+export function makeScanPdf(jpeg: Uint8Array, w: number, h: number, pages = 2): Uint8Array {
+  const objs: Uint8Array[] = [];
+  const add = (b: string | Uint8Array) => (objs.push(typeof b === "string" ? enc.encode(b) : b), objs.length);
+  const stream = (dict: string, data: Uint8Array) => Buffer.concat([enc.encode(`<< ${dict} /Length ${data.length} >>\nstream\n`), data, enc.encode("\nendstream")]);
+  const cat = add(""), tree = add("");
+  const img = add(stream(`/Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode`, jpeg));
+  const kids: number[] = [];
+  for (let i = 0; i < pages; i++) {
+    const c = add(stream("", enc.encode("q 306 0 0 396 0 0 cm /Im1 Do Q")));
+    kids.push(add(`<< /Type /Page /Parent ${tree} 0 R /MediaBox [0 0 306 396] /Contents ${c} 0 R /Resources << /XObject << /Im1 ${img} 0 R >> >> >>`));
+  }
+  objs[cat - 1] = enc.encode(`<< /Type /Catalog /Pages ${tree} 0 R >>`);
+  objs[tree - 1] = enc.encode(`<< /Type /Pages /Count ${pages} /Kids [${kids.map((k) => k + " 0 R").join(" ")}] >>`);
+  const parts: Uint8Array[] = [enc.encode("%PDF-1.4\n")];
+  let off = parts[0].length;
+  const offsets: number[] = [];
+  objs.forEach((o, i) => {
+    offsets.push(off);
+    const a = enc.encode(`${i + 1} 0 obj\n`), b = enc.encode("\nendobj\n");
+    parts.push(a, o, b);
+    off += a.length + o.length + b.length;
+  });
+  let xref = `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n`;
+  for (const o of offsets) xref += String(o).padStart(10, "0") + " 00000 n \n";
+  parts.push(enc.encode(`${xref}trailer\n<< /Size ${objs.length + 1} /Root ${cat} 0 R >>\nstartxref\n${off}\n%%EOF\n`));
+  return Buffer.concat(parts);
+}

@@ -259,6 +259,24 @@ t("WEB-09: invalid input is left untouched", async () => {
   }
 });
 
+t("web.jsExtensions: extra extensions are handled as JavaScript when listed, and only then; TypeScript never", async () => {
+  const src = "// a comment\nfunction add(a,   b) {\n    return a + b;\n}\n\n\n";
+  const plain = await run("lib.es6", src, on);
+  expect(plain.r.status).toBe("skipped");
+  expect(plain.out.toString()).toBe(src);
+  const listed = await run("lib.es6", src, { web: { ...on.web, jsExtensions: [".ES6", "wxs"] } });
+  expect(listed.r.format).toBe("js");
+  expect(listed.r.status).toBe("optimized");
+  expect(listed.out.length).toBeLessThan(src.length);
+  const wxs = await run("page.wxs", src, { web: { ...on.web, jsExtensions: [".ES6", "wxs"] } });
+  expect(wxs.r.status).toBe("optimized");
+  const ts = await run("lib.ts", src, { web: { ...on.web, jsExtensions: ["ts", "jsx"] } });
+  expect(ts.r.status).toBe("skipped");
+  expect(ts.out.toString()).toBe(src);
+  // the normal extensions still work, and the default list is unchanged
+  expect((await run("lib.js", src, { web: { ...on.web, jsExtensions: ["es6"] } })).r.status).toBe("optimized");
+});
+
 test("WEB-10: with the settings off nothing is touched", async () => {
   const files: [string, string][] = [["a.css", css], ["a.js", jsHazards], ["a.json", '{ "a" : 1,\n  "b" : [1, 2, 3] }\n'], ["a.html", page("<p>x</p>")], ["a.xml", "<a>\n  <b/>\n</a>\n"]];
   for (const [name, src] of files) {

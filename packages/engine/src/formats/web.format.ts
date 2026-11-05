@@ -99,6 +99,16 @@ export const js: Format = {
   ),
 };
 
+// web.jsExtensions: more names for JavaScript. The engine asks each format for its form under the settings (`configure`).
+// TypeScript and JSX are never handled, whatever the list says.
+const NOT_JS = new Set(["ts", "tsx", "jsx", "mts", "cts"]);
+js.configure = (settings) => {
+  const extra = (settings.web.jsExtensions ?? []).map((e) => e.trim().replace(/^\./, "").toLowerCase()).filter((e) => e && !NOT_JS.has(e) && !JS_EXT.includes(e));
+  if (!extra.length) return js;
+  const all = [...JS_EXT, ...extra];
+  return { ...js, extensions: all, detect: (h, n) => all.includes(ext(n)) && looksText(h) };
+};
+
 // ---------------------------------------------------------------- CSS
 
 export const css: Format = {

@@ -1,5 +1,6 @@
 // A strict PNG reader for verification: every pixel as 16-bit RGBA (so 16-bit images are compared in full), CRCs checked.
-import { inflateSync } from "node:zlib";
+import { createInflate, inflateSync } from "node:zlib";
+import { SkipFile } from "../types";
 import { readOrientation } from "./exif";
 
 export interface PngInfo {
@@ -16,6 +17,24 @@ export interface PngInfo {
   /** EXIF orientation (1 when none). */
   orientation: number;
   chunks: string[];
+  /** Set instead of `pixels` (empty) for pictures too large to hold: a hash of the canonical pixels, from a streaming read. */
+  hash?: string;
+}
+
+/** What the chunks say, before any image data is decoded. */
+export interface PngScan {
+  width: number;
+  height: number;
+  colorType: number;
+  bitDepth: number;
+  interlaced: boolean;
+  animated: boolean;
+  colour: Map<string, Uint8Array>;
+  orientation: number;
+  chunks: string[];
+  idat: Uint8Array[];
+  plte: Uint8Array | null;
+  trns: Uint8Array | null;
 }
 
 const SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -28,36 +47,40 @@ function fail(m: string): never {
   throw new Error(m);
 }
 
+/** Undoes the filter of one row: `src` holds the filter byte then the row at `at`; `prev` is the row above (or null). */
+export function unfilterRow(src: Uint8Array, at: number, prev: Uint8Array | null, out: Uint8Array, rowBytes: number, bpp: number): void {
+  const f = src[at];
+  for (let x = 0; x < rowBytes; x++) {
+    const a = x >= bpp ? out[x - bpp] : 0;
+    const b = prev ? prev[x] : 0;
+    const c = x >= bpp && prev ? prev[x - bpp] : 0;
+    let v = src[at + 1 + x];
+    switch (f) {
+      case 0: break;
+      case 1: v += a; break;
+      case 2: v += b; break;
+      case 3: v += (a + b) >> 1; break;
+      case 4: {
+        const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+        v += pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+        break;
+      }
+      default: fail(`bad filter type ${f}`);
+    }
+    out[x] = v & 255;
+  }
+}
+
 function unfilter(data: Uint8Array, at: number, rows: number, rowBytes: number, bpp: number): Uint8Array {
   const out = new Uint8Array(rows * rowBytes);
   for (let y = 0; y < rows; y++) {
-    const f = data[at + y * (rowBytes + 1)];
-    const src = at + y * (rowBytes + 1) + 1;
-    const dst = y * rowBytes;
-    for (let x = 0; x < rowBytes; x++) {
-      const a = x >= bpp ? out[dst + x - bpp] : 0;
-      const b = y > 0 ? out[dst - rowBytes + x] : 0;
-      const c = x >= bpp && y > 0 ? out[dst - rowBytes + x - bpp] : 0;
-      let v = data[src + x];
-      switch (f) {
-        case 0: break;
-        case 1: v += a; break;
-        case 2: v += b; break;
-        case 3: v += (a + b) >> 1; break;
-        case 4: {
-          const p = a + b - c, pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
-          v += pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
-          break;
-        }
-        default: fail(`bad filter type ${f}`);
-      }
-      out[dst + x] = v & 255;
-    }
+    const dst = out.subarray(y * rowBytes, (y + 1) * rowBytes);
+    unfilterRow(data, at + y * (rowBytes + 1), y > 0 ? out.subarray((y - 1) * rowBytes, y * rowBytes) : null, dst, rowBytes, bpp);
   }
   return out;
 }
 
-export function decodePng(bytes: Uint8Array): PngInfo {
+export function scanPng(bytes: Uint8Array): PngScan {
   if (bytes.length < 8 || SIGNATURE.some((b, i) => bytes[i] !== b)) fail("not a PNG");
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const idat: Uint8Array[] = [];
@@ -92,16 +115,14 @@ export function decodePng(bytes: Uint8Array): PngInfo {
   if (!width || !height || width > 1 << 16 || height > 1 << 16 || width * height > 1 << 28) fail("bad size");
   if (!DEPTHS[colorType]?.includes(bitDepth)) fail("bad colour type or depth");
   if (colorType === 3 && !plte) fail("missing palette");
-  const bits = CHANNELS[colorType] * bitDepth;
-  const bpp = Math.max(1, bits >> 3);
-  let raw: Uint8Array;
-  try {
-    raw = new Uint8Array(inflateSync(Buffer.concat(idat)));
-  } catch {
-    return fail("bad image data");
-  }
+  let orientation = 1;
+  if (exif && exif.length > 12) orientation = readOrientation(exif);
+  return { width, height, colorType, bitDepth, interlaced, animated, colour, orientation, chunks, idat, plte, trns };
+}
 
-  const pixels = new Uint16Array(width * height * 4);
+/** Turns one decoded row into canonical 16-bit RGBA (fully transparent pixels keep their colour here; the comparison ignores it). */
+export function pixelReader(sc: Pick<PngScan, "colorType" | "bitDepth" | "plte" | "trns">): (row: Uint8Array, px: number, out: Uint16Array, o: number) => void {
+  const { colorType, bitDepth, plte, trns } = sc;
   const maxv = (1 << bitDepth) - 1;
   const scale = bitDepth === 16 ? 1 : 65535 / maxv;
   const sample = (row: Uint8Array, base: number, i: number): number => {
@@ -112,9 +133,7 @@ export function decodePng(bytes: Uint8Array): PngInfo {
   };
   const trnsSample = (k: number) => (trns && trns.length >= (k + 1) * 2 ? (trns[k * 2] << 8) | trns[k * 2 + 1] : -1);
   const [tg, tr, tgn, tb] = [trnsSample(0), trnsSample(0), trnsSample(1), trnsSample(2)];
-
-  const put = (row: Uint8Array, px: number, x: number, y: number) => {
-    const o = (y * width + x) * 4;
+  return (row, px, out, o) => {
     let r = 0, g = 0, b = 0, a = 65535;
     const s = (k: number) => sample(row, 0, px * CHANNELS[colorType] + k);
     switch (colorType) {
@@ -124,8 +143,25 @@ export function decodePng(bytes: Uint8Array): PngInfo {
       case 4: { r = g = b = Math.round(s(0) * scale); a = Math.round(s(1) * scale); break; }
       case 6: { r = Math.round(s(0) * scale); g = Math.round(s(1) * scale); b = Math.round(s(2) * scale); a = Math.round(s(3) * scale); break; }
     }
-    pixels[o] = r; pixels[o + 1] = g; pixels[o + 2] = b; pixels[o + 3] = a;
+    out[o] = r; out[o + 1] = g; out[o + 2] = b; out[o + 3] = a;
   };
+}
+
+export function decodePng(bytes: Uint8Array): PngInfo {
+  const sc = scanPng(bytes);
+  const { width, height, colorType, bitDepth, interlaced, idat } = sc;
+  const bits = CHANNELS[colorType] * bitDepth;
+  const bpp = Math.max(1, bits >> 3);
+  let raw: Uint8Array;
+  try {
+    raw = new Uint8Array(inflateSync(Buffer.concat(idat)));
+  } catch {
+    return fail("bad image data");
+  }
+
+  const pixels = new Uint16Array(width * height * 4);
+  const read = pixelReader(sc);
+  const put = (row: Uint8Array, px: number, x: number, y: number) => read(row, px, pixels, (y * width + x) * 4);
 
   let used = 0;
   for (const [x0, y0, dx, dy] of interlaced ? PASSES : [[0, 0, 1, 1]]) {
@@ -140,15 +176,14 @@ export function decodePng(bytes: Uint8Array): PngInfo {
       for (let x = 0; x < pw; x++) put(row, x, x0 + x * dx, y0 + y * dy);
     }
   }
-  let orientation = 1;
-  if (exif && exif.length > 12) orientation = readOrientation(exif);
-  return { width, height, colorType, bitDepth, interlaced, animated, pixels, colour, orientation, chunks };
+  return { width, height, colorType, bitDepth, interlaced, animated: sc.animated, pixels, colour: sc.colour, orientation: sc.orientation, chunks: sc.chunks };
 }
 
 /** Do two decoded pictures hold the same pixels? Fully transparent pixels count as equal whatever their colour. */
 export function samePixels(a: PngInfo, b: PngInfo): true | string {
   if (a.width !== b.width || a.height !== b.height) return `size ${a.width}x${a.height} became ${b.width}x${b.height}`;
   if (a.animated !== b.animated) return "animation changed";
+  if (a.hash !== undefined || b.hash !== undefined) return a.hash === b.hash ? true : "pixels differ";
   const pa = a.pixels, pb = b.pixels;
   for (let i = 0; i < pa.length; i += 4) {
     if (pa[i + 3] === 0 && pb[i + 3] === 0) continue;
@@ -158,4 +193,83 @@ export function samePixels(a: PngInfo, b: PngInfo): true | string {
     }
   }
   return true;
+}
+
+/** Pictures with more pixels than this are read as a stream (a hash, never the whole picture in memory). */
+export const STREAM_PIXELS = 1 << 24;
+
+/**
+ * Like decodePng, but for a big picture: inflates and unfilters row by row and keeps only a hash of the canonical pixels
+ * (fully transparent pixels hash as zeros), so memory stays near the compressed size. Interlaced pictures are refused.
+ */
+export async function decodePngStream(bytes: Uint8Array, signal?: AbortSignal): Promise<PngInfo> {
+  const sc = scanPng(bytes);
+  if (sc.interlaced) throw new SkipFile(`interlaced PNG of ${Math.round((sc.width * sc.height) / 1e6)} megapixels is too large to verify`);
+  if (sc.animated) throw new SkipFile("animated PNG of this size is too large to verify");
+  const { width, height, colorType, bitDepth } = sc;
+  const bits = CHANNELS[colorType] * bitDepth;
+  const bpp = Math.max(1, bits >> 3);
+  const rowBytes = Math.ceil((width * bits) / 8);
+  const read = pixelReader(sc);
+  const hasher = new Bun.CryptoHasher("sha256");
+  const cur = new Uint8Array(rowBytes), prev = new Uint8Array(rowBytes);
+  const line = new Uint8Array(rowBytes + 1);
+  const rgba = new Uint16Array(width * 4);
+  let have = 0, y = 0;
+  const row = () => {
+    unfilterRow(line, 0, y > 0 ? prev : null, cur, rowBytes, bpp);
+    for (let x = 0; x < width; x++) {
+      read(cur, x, rgba, x * 4);
+      if (rgba[x * 4 + 3] === 0) rgba[x * 4] = rgba[x * 4 + 1] = rgba[x * 4 + 2] = 0;
+    }
+    hasher.update(new Uint8Array(rgba.buffer, rgba.byteOffset, rgba.byteLength));
+    prev.set(cur);
+    y++;
+  };
+  const feed = (chunk: Uint8Array) => {
+    if (signal?.aborted) throw new Error("cancelled");
+    let at = 0;
+    while (at < chunk.length) {
+      if (y >= height) fail("image data too long");
+      const n = Math.min(chunk.length - at, rowBytes + 1 - have);
+      line.set(chunk.subarray(at, at + n), have);
+      have += n;
+      at += n;
+      if (have === rowBytes + 1) {
+        row();
+        have = 0;
+      }
+    }
+  };
+  const inf = createInflate();
+  let failed: Error | null = null;
+  inf.on("data", (c: Buffer) => {
+    try {
+      feed(c);
+    } catch (e) {
+      failed ??= e instanceof Error ? e : new Error(String(e));
+      inf.destroy();
+    }
+  });
+  const done = new Promise<void>((res, rej) => {
+    inf.on("end", res);
+    inf.on("error", (e) => rej(failed ?? new Error("bad image data")));
+    inf.on("close", () => (failed ? rej(failed) : res()));
+  });
+  done.catch(() => {}); // awaited below; a failure before that is not unhandled
+  for (const part of sc.idat) {
+    if (failed) break;
+    if (!inf.write(part)) await Promise.race([new Promise<void>((r) => inf.once("drain", () => r())), done]);
+  }
+  inf.end();
+  await done;
+  if (failed) throw failed;
+  if (y !== height || have !== 0) fail("image data too short");
+  return { width, height, colorType, bitDepth, interlaced: false, animated: false, pixels: new Uint16Array(0), colour: sc.colour, orientation: sc.orientation, chunks: sc.chunks, hash: hasher.digest("hex") };
+}
+
+/** decodePng for pictures that fit, decodePngStream for big ones. */
+export async function decodePngAuto(bytes: Uint8Array, signal?: AbortSignal): Promise<PngInfo> {
+  const sc = scanPng(bytes);
+  return sc.width * sc.height > STREAM_PIXELS ? decodePngStream(bytes, signal) : decodePng(bytes);
 }

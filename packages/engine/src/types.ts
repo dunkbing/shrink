@@ -13,6 +13,8 @@ export interface Settings {
   toolPaths: Record<string, string[]> | null;
   /** Seconds a single step may run. */
   stepTimeout: number;
+  /** What a `lossy` step has to prove: similarity (SSIM, 0 to 1) of pictures and of rendered PDF pages, and the least share it must save. */
+  lossy: { ssim: number; pdfSsim: number; minSaving: number };
   jpeg: { lossy: boolean; keepMetadata: boolean; arithmetic: boolean };
   png: { lossy: boolean; keepMetadata: boolean };
   gif: { lossy: boolean; keepMetadata: boolean };
@@ -67,6 +69,8 @@ export interface Step {
   tool?: string;
   /** Can change decoded content: runs only when the format's `lossy` setting is on. */
   lossy?: boolean;
+  /** For a lossy step: the least share it must save (default `settings.lossy.minSaving`); 0 when the point is the change itself, as with trimming silence. */
+  minSaving?: number;
   /** Drops metadata: runs only when metadata is not kept. */
   strip?: boolean;
   /** Runs only at this level or above. */
@@ -83,6 +87,8 @@ export interface Oracle {
   prepare?(path: string, ctx: Context): Promise<unknown>;
   /** true, or why the candidate differs. */
   same(original: unknown, candidate: string, ctx: Context): Promise<true | string>;
+  /** For results of `lossy` steps: true if the candidate is similar enough (SSIM floor from the settings; size, orientation, ICC, alpha kept), or why not. */
+  similar?(original: unknown, candidate: string, ctx: Context): Promise<true | string>;
 }
 
 export interface Format {
@@ -95,6 +101,8 @@ export interface Format {
   skip?(path: string, head: Uint8Array, ctx: Context): Promise<string | null>;
   steps: Step[];
   oracle: Oracle;
+  /** Returns the format as it is for these settings (e.g. with extra extensions); the engine calls it once. */
+  configure?(settings: Settings): Format;
   /** Extensions that normally hold this format (without the dot); a mismatch skips the file. */
   extensions?: string[];
 }
@@ -109,6 +117,8 @@ export interface StepReport {
   /** Size of the candidate, if it produced one. */
   size?: number;
   outcome: "kept" | "not smaller" | "rejected" | "skipped" | "failed";
+  /** The step is lossy: what it kept changes the content within the similarity floor. */
+  lossy?: boolean;
   detail?: string;
   ms: number;
 }
@@ -122,6 +132,8 @@ export interface Report {
   /** Why it was skipped or failed. */
   reason?: string;
   steps: StepReport[];
+  /** A lossy step was kept. */
+  lossy?: boolean;
   notes: string[];
   dryRun?: boolean;
 }

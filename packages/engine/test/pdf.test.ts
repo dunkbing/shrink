@@ -5,7 +5,7 @@ import type { Format, Step } from "../src";
 import { pdf } from "../src/formats/pdf.format";
 import { summarize } from "../src/formats/pdf-summary";
 import { env, type Env } from "./fake";
-import { makePdf, type PdfSpec } from "./lib/pdf";
+import { makePdf, makeScanPdf, type PdfSpec } from "./lib/pdf";
 
 const have = Bun.which("qpdf") !== null && Bun.which("mutool") !== null;
 const t = have ? test : test.skip;
@@ -146,11 +146,10 @@ t("PDF-10: a truncated PDF or a broken xref is left untouched", async () => {
   }
 });
 
-t("PDF-11: a lossy profile is not part of the lossless steps", async () => {
+t("PDF-11: with a lossy profile the text of a text PDF is still there (the Ghostscript tests are at the end)", async () => {
   const e = make({ pdf: { profile: "ebook" } });
   const p = await e.file("a.pdf", makePdf({ image: 30000 }));
-  const r = await e.engine.optimizeFile(p);
-  expect(r.steps.every((s) => !/ghostscript|gs/.test(s.id))).toBe(true);
+  await e.engine.optimizeFile(p);
   expect(text(p)).toContain("Page 1 line 0");
 });
 
@@ -159,7 +158,7 @@ t("PDF-12: an .ai file is optimised with the lossless steps only", async () => {
   const p = await e.file("art.ai", makePdf({ pages: 2, image: 20000 }));
   const r = await e.engine.optimizeFile(p);
   expect(r.status).toBe("optimized");
-  expect(r.steps.map((s) => s.id).join()).not.toMatch(/gs|ghostscript/);
+  expect(r.steps.find((s) => s.id === "pdf.ghostscript")?.outcome).toBe("skipped");
   copyFileSync(p, p + ".pdf"); // qpdf's AppArmor profile on Ubuntu only opens .pdf, .json and .qdf
   expect(sh(["qpdf", "--check", p + ".pdf"]).exitCode).toBe(0);
 });
@@ -231,3 +230,97 @@ for (const name of ["tracemonkey.pdf", "annotation-text-widget.pdf", "form_two_p
     else if (name === "signed_verified.pdf") expect(r.reason).toBe("signed");
   });
 }
+
+// ---------------------------------------------------------------- PDF-11 (Ghostscript profiles)
+
+const gs = Bun.which("gs") !== null || Bun.which("gswin64c") !== null;
+const tg = have && gs ? test : test.skip;
+
+/** A 400 dpi "scan" of a half-letter page: a textured picture as a JPEG inside a PDF. */
+async function scan(seed = 1, flat = false): Promise<Uint8Array> {
+  const { makePng } = await import("./lib/png");
+  const w = 1700, h = 2200; // on a 4.25 x 5.5 in page: 400 dpi, above what ebook keeps
+  const data = new Uint8Array(w * h * 3);
+  let r = seed;
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++) {
+      r = (r * 1103515245 + 12345) >>> 0;
+      const o = (y * w + x) * 3, n = (r >>> 16) & 15;
+      const ink = (y % 60 < 6 && x > 150 && x < w - 150) || Math.hypot(x - 850, y - 1100) < 300;
+      data.set(flat ? [240, 240, 240] : ink ? [30 + n, 30 + n, 40 + n] : [235 - n, 232 - n, 220 - n], o);
+    }
+  const jpeg = new Uint8Array(await new Bun.Image(makePng({ width: w, height: h, colorType: 2, bitDepth: 8, data, compression: 1 })).jpeg({ quality: 95 }).bytes());
+  return makeScanPdf(jpeg, w, h);
+}
+const sizeDown = 0.5;
+
+tg("PDF-11: profile none never runs Ghostscript", async () => {
+  const e = make();
+  const p = await e.file("a.pdf", await scan());
+  const r = await e.engine.optimizeFile(p);
+  expect(r.steps.find((s) => s.id === "pdf.ghostscript")).toMatchObject({ outcome: "skipped", detail: "lossy steps are off" });
+  expect(r.lossy).toBeUndefined();
+}, 60000);
+
+tg("PDF-11: ebook on a scanned PDF is much smaller, flagged lossy, same pages and a similar render", async () => {
+  const bytes = await scan();
+  const e = make({ pdf: { profile: "ebook" } });
+  const p = await e.file("a.pdf", bytes);
+  await Bun.write(e.dir + "/orig.pdf", bytes);
+  const r = await e.engine.optimizeFile(p);
+  expect(r.status).toBe("optimized");
+  expect(r.lossy).toBe(true);
+  expect(r.steps.find((s) => s.id === "pdf.ghostscript")).toMatchObject({ outcome: "kept", lossy: true });
+  expect(r.after).toBeLessThan(r.before * sizeDown);
+  expect(summary(p).pages).toBe(2);
+  expect(sh(["qpdf", "--check", p]).exitCode).toBe(0);
+  // the pages render alike (the engine checked this; here with an own render at another resolution)
+  const { decodePng } = await import("../src");
+  const { compare, rasterOfPng } = await import("../src/formats/lossy");
+  for (const f of [e.dir + "/orig.pdf", p]) sh(["mutool", "draw", "-r", "40", "-o", f + ".p%d.png", f, "1"]);
+  const a = rasterOfPng(decodePng(new Uint8Array(readFileSync(e.dir + "/orig.pdf.p1.png"))));
+  const b = rasterOfPng(decodePng(new Uint8Array(readFileSync(p + ".p1.png"))));
+  expect(compare(a, b, 0.9).ssim).toBeGreaterThan(0.9);
+}, 120000);
+
+tg("PDF-11: the custom profile follows pdf.dpi; a lower dpi gives a smaller file", async () => {
+  const bytes = await scan();
+  const sizes: number[] = [];
+  for (const dpi of [150, 72]) {
+    const e = make({ pdf: { profile: "custom", dpi }, lossy: { pdfSsim: 0.5 } });
+    const p = await e.file("a.pdf", bytes);
+    await e.engine.optimizeFile(p);
+    sizes.push(readFileSync(p).length);
+  }
+  expect(sizes[1]).toBeLessThan(sizes[0]);
+  expect(sizes[0]).toBeLessThan(bytes.length);
+}, 120000);
+
+tg("PDF-11: never for .ai files, and skipLayered leaves layered PDFs alone", async () => {
+  const bytes = await scan();
+  const e = make({ pdf: { profile: "ebook" } });
+  const ai = await e.file("a.ai", bytes);
+  const r = await e.engine.optimizeFile(ai);
+  expect(r.steps.find((s) => s.id === "pdf.ghostscript")).toMatchObject({ outcome: "skipped", detail: "never for .ai files" });
+  const layered = makePdf({ pages: 1, layers: true, image: 30000 });
+  const on = make({ pdf: { profile: "ebook", skipLayered: true } });
+  const r1 = await on.engine.optimizeFile(await on.file("l.pdf", layered));
+  expect(r1.steps.find((s) => s.id === "pdf.ghostscript")?.detail).toContain("skipLayered");
+  const off = make({ pdf: { profile: "ebook", skipLayered: false } });
+  const r2 = await off.engine.optimizeFile(await off.file("l.pdf", layered));
+  expect(r2.steps.find((s) => s.id === "pdf.ghostscript")?.detail ?? "").not.toContain("skipLayered");
+}, 120000);
+
+tg("PDF-11: a result with other pages or a different picture is rejected and the file is untouched", async () => {
+  const bytes = await scan();
+  const other = await scan(5, true); // same page count, but a flat picture
+  const oneMore = makePdf({ pages: 3 });
+  for (const [bad, why] of [[other, "below the floor"], [oneMore, "page count"]] as const) {
+    const e = make({ pdf: { profile: "ebook" } }, { ...pdf, steps: [{ id: "pdf.liar", lossy: true, async run(_i, o) { await Bun.write(o, bad); } } as Step] });
+    const p = await e.file("a.pdf", bytes);
+    const r = await e.engine.optimizeFile(p);
+    expect(r.steps[0].outcome).toBe("rejected");
+    expect(r.steps[0].detail).toContain(why);
+    expect(readFileSync(p)).toEqual(Buffer.from(bytes));
+  }
+}, 120000);

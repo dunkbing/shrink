@@ -27,7 +27,18 @@ export async function recurseMembers(items: Member[], ctx: Context): Promise<Uin
   mkdirSync(dir, { recursive: true });
   const engine = new Engine({
     formats,
-    settings: { ...ctx.settings, skipOptimized: false, archive: { ...ctx.settings.archive, recurse: false }, jpeg: { ...ctx.settings.jpeg, keepMetadata: true } },
+    // an archive holds the same files before and after: lossy steps stay off inside it, whatever the settings say
+    settings: {
+      ...ctx.settings,
+      skipOptimized: false,
+      archive: { ...ctx.settings.archive, recurse: false },
+      jpeg: { ...ctx.settings.jpeg, keepMetadata: true, lossy: false },
+      png: { ...ctx.settings.png, lossy: false },
+      gif: { ...ctx.settings.gif, lossy: false },
+      webp: { ...ctx.settings.webp, lossy: false },
+      pdf: { ...ctx.settings.pdf, profile: "none" },
+      audio: { ...ctx.settings.audio, trimSilence: false },
+    },
     tempDir: dir,
     cacheDir: join(dir, "cache"),
     signal: ctx.signal,

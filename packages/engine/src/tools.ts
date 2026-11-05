@@ -10,7 +10,7 @@ export class MissingTool extends Error {
 /** Places a tool is commonly installed under another name (Homebrew keeps mozjpeg's jpegtran out of PATH). */
 const KNOWN: Record<string, string[]> = {
   mozjpegtran: ["/opt/homebrew/opt/mozjpeg/bin/jpegtran", "/usr/local/opt/mozjpeg/bin/jpegtran", "/usr/bin/mozjpegtran"],
-  ghostscript: ["gs"],
+  ghostscript: ["gs", "gswin64c", "gswin32c"],
   // GNU strip (ELF, PE, ar): Homebrew keeps binutils off PATH, and on macOS plain `strip` is the Mach-O one
   "gnu-strip": ["/opt/homebrew/opt/binutils/bin/strip", "/usr/local/opt/binutils/bin/strip", "llvm-strip", "/opt/homebrew/opt/llvm/bin/llvm-strip", ...(process.platform === "darwin" ? [] : ["strip"])],
   "7zz": ["7z", "7zip"],

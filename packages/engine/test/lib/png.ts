@@ -30,6 +30,8 @@ export interface PngSpec {
   /** Extra chunks placed before IDAT: [type, data]. */
   chunks?: [string, Uint8Array][];
   compression?: number;
+  /** Adam7 interlacing (8 bits or more per sample); `data` is still given as plain rows. */
+  interlace?: boolean;
   /** Split the image data into several IDAT chunks of this size. */
   idatSize?: number;
 }
@@ -40,13 +42,33 @@ export function rowBytes(s: Pick<PngSpec, "width" | "colorType" | "bitDepth">) {
   return Math.ceil((s.width * channels[s.colorType] * s.bitDepth) / 8);
 }
 
-export function makePng(s: PngSpec): Uint8Array {
+const PASSES = [[0, 0, 8, 8], [4, 0, 8, 8], [0, 4, 4, 8], [2, 0, 4, 4], [0, 2, 2, 4], [1, 0, 2, 2], [0, 1, 1, 2]];
+
+/** The image data as the PNG stores it: filter byte 0 and the row bytes, in plain or Adam7 order. */
+function scanlines(s: PngSpec): Uint8Array {
   const rb = rowBytes(s);
-  const raw = new Uint8Array(s.height * (rb + 1));
-  for (let y = 0; y < s.height; y++) {
-    for (let x = 0; x < rb; x++) raw[y * (rb + 1) + 1 + x] = s.data ? s.data[y * rb + x] : (x * 7 + y * 3) & 255;
+  const px = (y: number, x: number) => (s.data ? s.data[y * rb + x] : (x * 7 + y * 3) & 255);
+  if (!s.interlace) {
+    const raw = new Uint8Array(s.height * (rb + 1));
+    for (let y = 0; y < s.height; y++) for (let x = 0; x < rb; x++) raw[y * (rb + 1) + 1 + x] = px(y, x);
+    return raw;
   }
-  const ihdr = concat([u32(s.width), u32(s.height), new Uint8Array([s.bitDepth, s.colorType, 0, 0, 0])]);
+  if (s.bitDepth < 8) throw new Error("interlaced fixtures need 8 bits or more per sample");
+  const bpp = (channels[s.colorType] * s.bitDepth) / 8;
+  const out: number[] = [];
+  for (const [x0, y0, dx, dy] of PASSES) {
+    for (let y = y0; y < s.height; y += dy) {
+      if (x0 >= s.width) continue;
+      out.push(0);
+      for (let x = x0; x < s.width; x += dx) for (let k = 0; k < bpp; k++) out.push(px(y, x * bpp + k));
+    }
+  }
+  return Uint8Array.from(out);
+}
+
+export function makePng(s: PngSpec): Uint8Array {
+  const raw = scanlines(s);
+  const ihdr = concat([u32(s.width), u32(s.height), new Uint8Array([s.bitDepth, s.colorType, 0, 0, s.interlace ? 1 : 0])]);
   const z = new Uint8Array(deflateSync(raw, { level: s.compression ?? 1 }));
   const idats: Uint8Array[] = [];
   const size = s.idatSize ?? z.length;

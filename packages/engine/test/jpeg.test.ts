@@ -111,10 +111,72 @@ t("JPEG-10: data after the end of the image means the file is skipped", async ()
   expect((await e.engine.optimizeFile(p)).reason).toBe("data after the end of the image");
 });
 
-t("JPEG-11/12: multi-picture (gain map, MPO) files are skipped", async () => {
+t("JPEG-11: a gain-map (multi-picture) file is skipped with a reason", async () => {
   const e = make();
   const p = await e.file("hdr.jpg", mpf(await makeJpeg({ width: 128, height: 96 })));
   expect((await e.engine.optimizeFile(p)).reason).toContain("multi-picture");
+});
+
+t("JPEG-12: an MPO (two JPEGs concatenated) is skipped and both frames stay byte for byte, also with lossy on", async () => {
+  const first = mpf(await makeJpeg({ width: 128, height: 96 }));
+  const second = await makeJpeg({ width: 128, height: 96, seed: 9 });
+  const mpo = Uint8Array.from([...first, ...second]);
+  // the same two frames without the MPF index are still not touched: data after the first image
+  const bare = Uint8Array.from([...(await makeJpeg({ width: 128, height: 96 })), ...second]);
+  for (const [name, bytes, why] of [["a.mpo", mpo, "multi-picture"], ["b.jpg", mpo, "multi-picture"], ["c.jpg", bare, "data after"]] as const) {
+    for (const lossy of [false, true]) {
+      const e = make({ jpeg: { lossy } });
+      const p = await e.file(name, bytes);
+      const r = await e.engine.optimizeFile(p);
+      expect(r.status).toBe("skipped");
+      expect(r.reason ?? "").toContain(why);
+      expect(readFileSync(p)).toEqual(Buffer.from(bytes));
+    }
+  }
+});
+
+/** Rewrites the frame header to say 4 components (what a CMYK JPEG has); the checks that skip it read headers only. */
+function asFourComponents(jpeg: Uint8Array, adobeTransform?: number): Uint8Array {
+  const at = jpeg.findIndex((v, i) => v === 0xff && jpeg[i + 1] === 0xc0);
+  const len = (jpeg[at + 2] << 8) | jpeg[at + 3];
+  // FF C0, length, precision, height, width, count (offset 9), then 3 bytes per component: add a fourth
+  const fixed = Uint8Array.from([...jpeg.subarray(at, at + 2 + len), 4, 0x11, 0]);
+  fixed[2] = (len + 3) >> 8;
+  fixed[3] = (len + 3) & 255;
+  fixed[9] = 4;
+  const adobe = adobeTransform === undefined ? [] : [0xff, 0xee, 0, 14, 0x41, 0x64, 0x6f, 0x62, 0x65, 0, 100, 0, 0, 0, 0, adobeTransform];
+  return Uint8Array.from([...jpeg.subarray(0, 2), ...adobe, ...jpeg.subarray(2, at), ...fixed, ...jpeg.subarray(at + 2 + len)]);
+}
+
+t("JPEG-06: CMYK and Adobe YCCK JPEGs are skipped (never through the tools), also with lossy on, and stay untouched", async () => {
+  const base = await makeJpeg({ width: 64, height: 48 });
+  const cases: [string, Uint8Array][] = [["cmyk.jpg", asFourComponents(base, 0)], ["ycck.jpg", asFourComponents(base, 2)]];
+  expect(parseJpeg(cases[0][1]).components).toBe(4);
+  expect(parseJpeg(cases[1][1]).adobe).toBe(2);
+  for (const lossy of [false, true]) {
+    for (const [name, bytes] of cases) {
+      const e = make({ jpeg: { lossy } });
+      const p = await e.file(name, bytes);
+      const r = await e.engine.optimizeFile(p);
+      expect(r.status).toBe("skipped");
+      expect(r.reason).toContain("CMYK");
+      expect(r.steps).toEqual([]);
+      expect(readFileSync(p)).toEqual(Buffer.from(bytes));
+    }
+  }
+});
+
+const magick = Bun.which("magick") ?? Bun.which("convert");
+(magick ? t : test.skip)("JPEG-06: a real CMYK JPEG made by ImageMagick is left alone", async () => {
+  const e = make({ jpeg: { lossy: true } });
+  const out = `${e.dir}/cmyk.jpg`;
+  const r0 = Bun.spawnSync([magick!, "-size", "64x48", "gradient:red-blue", "-colorspace", "CMYK", out]);
+  expect(r0.exitCode).toBe(0);
+  const bytes = readFileSync(out);
+  expect(parseJpeg(new Uint8Array(bytes)).components).toBe(4);
+  const r = await e.engine.optimizeFile(out);
+  expect(r.status).toBe("skipped");
+  expect(readFileSync(out)).toEqual(bytes);
 });
 
 t("JPEG-14: arithmetic coding only with the setting", async () => {

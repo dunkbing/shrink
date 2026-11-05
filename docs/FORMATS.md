@@ -14,8 +14,8 @@ Extensions: .jpg .jpeg .jpe .jfif .jfi .jif (also .jps, .mpo and .jpt, by header
 Detect: `FF D8 FF`.
 Oracle: `pixels`.
 
-Steps: jpegli *(lossy, strip)*, guetzli *(lossy, strip, level 9)*, jpeg-recompress *(lossy)*, Leanify, jpegoptim *(progressive, strip)*, jpegtran (optimize, progressive, `-copy none` when stripping), mozjpeg's jpegtran, ECT. Arithmetic coding only with `jpeg.arithmetic`.
-Skip/guards: CMYK/YCCK not through lossy tools; **EXIF Orientation != 1, non-sRGB ICC profile, or MPF/gain-map JPEGs (Ultra HDR, ISO 21496-1, Apple) are handled as keepMetadata** (gain maps: skipped, every tool drops them); damaged streams skipped.
+Steps: jpegoptim *(progressive, strip)*, jpegtran (optimize, progressive, `-copy all`), mozjpeg's jpegtran, then `cjpeg` re-encode *(lossy)*: decodes and re-encodes at the lowest quality (30 to 95) whose result keeps SSIM >= `lossy.ssim` (0.98) and is at least `lossy.minSaving` (5%) smaller, carrying ICC and (when needed) EXIF over; jpegli, guetzli, jpeg-recompress, Leanify and ECT are not implemented. Arithmetic coding only with `jpeg.arithmetic`.
+Skip/guards: CMYK/YCCK files are skipped (header check, no tool sees them); **EXIF Orientation != 1, non-sRGB ICC profile, or MPF/gain-map JPEGs (Ultra HDR, ISO 21496-1, Apple) are handled as keepMetadata** (gain maps: skipped, every tool drops them); damaged streams skipped.
 
 | ID | Case |
 |---|---|
@@ -41,8 +41,8 @@ Extensions: .png .apng (also .pns).
 Detect: 8-byte PNG signature; `acTL` chunk means APNG.
 Oracle: `pixels`; for APNG the composed picture after every frame (blend and dispose applied), delays as ratios, loop count, hidden/visible default image and its pixels.
 
-Steps: native APNG pass (each frame's data recompressed with oxipng, no colour changes; layout, delays, blend/dispose untouched), pngquant *(lossy, strip)*, native recompress (`Bun.Image` `png({compressionLevel: 9})` as a baseline only when it keeps pixels equal), PngOptimizer *(strip, Windows)*, TruePNG *(Windows)*, PNGOUT *(Windows)*, oxipng (levels by `level`, `--strip safe`), Leanify *(strip)*, zopflipng, pngwolf, pngrewrite *(strip)*, advpng *(strip)*, ECT, DeflOpt, defluff.
-Guards: Android 9-patch (`*.9.png`) skips tools that break the border; `cICP`, non-sRGB `cHRM`/`gAMA` without `sRGB`, ICC non-sRGB, `eXIf` orientation != 1 are kept (keepMetadata behaviour). Fully transparent pixels' RGB may change (invisible) and the oracle ignores them.
+Steps: native APNG pass (each frame's data recompressed with oxipng, no colour changes; layout, delays, blend/dispose untouched), pngquant *(lossy, strip; `--quality=0-q` with the lowest q (30 to 100) that keeps SSIM >= `lossy.ssim`, alpha classes kept; skipped for animated PNGs and files with a colour profile)*, native recompress (`Bun.Image` `png({compressionLevel: 9})` as a baseline only when it keeps pixels equal), PngOptimizer *(strip, Windows)*, TruePNG *(Windows)*, PNGOUT *(Windows)*, oxipng (levels by `level`, `--strip safe`), Leanify *(strip)*, zopflipng, pngwolf, pngrewrite *(strip)*, advpng *(strip)*, ECT, DeflOpt, defluff.
+Guards: a 9-patch (`*.9.png`) has no special case: its border markers are ordinary pixels, so any change is rejected by the oracle. `cICP`, non-sRGB `cHRM`/`gAMA` without `sRGB`, ICC non-sRGB, `eXIf` orientation != 1 are kept (keepMetadata behaviour). Fully transparent pixels' RGB may change (invisible) and the oracle ignores them.
 
 | ID | Case |
 |---|---|
@@ -57,7 +57,7 @@ Guards: Android 9-patch (`*.9.png`) skips tools that break the border; `cICP`, n
 | PNG-09 | 9-patch `.9.png`: border pixels intact. |
 | PNG-10 | `lossy` on: palette-quantised, much smaller, flagged lossy; off: never. |
 | PNG-11 | Truncated / CRC-broken PNG: untouched. |
-| PNG-12 | Large (8000x8000) PNG stays within the memory bound and honours cancel. |
+| PNG-12 | Large (8000x8000) PNG stays within the memory bound and honours cancel. Above 16 megapixels the oracle reads the picture as a stream (a hash of the canonical pixels, memory near the file size); interlaced or animated pictures that large are skipped. |
 | PNG-13 | PNG inside ICO/CUR/ZIP goes through the parent family's rules. |
 
 ## 3. GIF (tier 1)
@@ -79,7 +79,7 @@ Steps: ImageMagick *(lossy)*, gifsicle (`-O3`, `--no-comments --no-extensions` w
 ## 4. WebP (tier 1)
 
 Detect: `RIFF....WEBP`. Oracle: `pixels` (static); animated WebP is skipped (cwebp cannot read it).
-Steps: cwebp lossless re-encode (`-lossless -z 9 -metadata none|all`), pingo only if installed by the user *(not bundled)*. Lossy WebP is never recompressed without `webp.lossy`.
+Steps: cwebp lossless re-encode (`-lossless -z 9 -metadata none|all`), pingo only if installed by the user *(not bundled)*. Lossy WebP is never recompressed without `webp.lossy`; with it, `cwebp -q` runs at the lowest quality (20 to 95) that keeps SSIM >= `lossy.ssim` (alpha at full quality, ICC and needed EXIF kept).
 
 | ID | Case |
 |---|---|
@@ -116,8 +116,8 @@ Cases: SVG-01 Inkscape output with metadata shrinks a lot; SVG-02 `<style>`/CSS,
 ## 9. PDF (tier 1)
 
 Extensions: .pdf .ai .epdf .fdf. Detect: `%PDF-`. Oracle: `document`.
-Lossless steps: mutool clean (garbage collect, compress streams), cpdf (squeeze), qpdf (`--object-streams=generate --recompress-flate --compression-level=9`; `--stream-data=compress`). Lossy *(pdf.profile != none)*: Ghostscript (`screen` | `ebook` | `printer` | `prepress` | `custom` dpi), qpdf recompress images as JPEG.
-Skip: signed PDFs (`/ByteRange`, `/DocMDP`), PDF/A, encrypted without a password, layered PDFs when `skipLayered` and a profile is used; `.ai` never goes through Ghostscript.
+Lossless steps: mutool clean (garbage collect, compress streams), cpdf (squeeze), qpdf (`--object-streams=generate --recompress-flate --compression-level=9`; `--stream-data=compress`). Lossy *(pdf.profile != none)*: Ghostscript (`screen` | `ebook` | `printer` | `prepress` | `custom` dpi). A lossy result must keep the page count and the text (white space collapsed) and render alike: SSIM >= `lossy.pdfSsim` (0.9) on up to 12 pages sampled across the document (mutool, 50 dpi). qpdf image recompression is not implemented.
+Skip: signed PDFs (`/ByteRange`, `/DocMDP`), PDF/A, encrypted without a password, layered PDFs when `skipLayered` and a profile is used; `.ai` never goes through Ghostscript, nor do PDFs with form fields.
 
 | ID | Case |
 |---|---|
@@ -138,7 +138,7 @@ Skip: signed PDFs (`/ByteRange`, `/DocMDP`), PDF/A, encrypted without a password
 ## 10. HTML / CSS / JavaScript / JSON / XML (tier 2; off by default except SVG)
 
 Detect by extension plus content sniffing. Oracle: `text-structure`.
-HTML (`web.html`): minify (whitespace between tags, comments, optional attributes); skip documents with whitespace-sensitive content (`pre`, `textarea`, `white-space: pre*`, `xmp`, `listing`, `plaintext`, inline SVG `<text>`). CSS (`web.css`): minify. JS/JSON (`web.js`): JS uses a native whitespace/comment step (the minifier's rewrites cannot be proven equal by tokens); JSON keeps number spellings (`--json-keep-numbers`); `jsExtensions` for extra extensions; never JSX/TypeScript. XML-family (.xml .xhtml .xsl .xslt .kml .smil .fb2; `.sgml` is not XML and is not handled; setting `web.html`) : whitespace/comment removal only where the DOM compare proves equal.
+HTML (`web.html`): minify (whitespace between tags, comments, optional attributes); skip documents with whitespace-sensitive content (`pre`, `textarea`, `white-space: pre*`, `xmp`, `listing`, `plaintext`, inline SVG `<text>`). CSS (`web.css`): minify. JS/JSON (`web.js`): JS uses a native whitespace/comment step (the minifier's rewrites cannot be proven equal by tokens); JSON keeps number spellings (`--json-keep-numbers`); `jsExtensions` for extra extensions (the engine asks the format for its form under the settings; `ts`, `tsx`, `jsx`, `mts`, `cts` are ignored); never JSX/TypeScript. XML-family (.xml .xhtml .xsl .xslt .kml .smil .fb2; `.sgml` is not XML and is not handled; setting `web.html`) : whitespace/comment removal only where the DOM compare proves equal.
 Cases: WEB-01 HTML with comments; WEB-02 `<pre>` preserved byte-exact; WEB-03 inline `<script>`/`<style>` handled; WEB-04 conditional comments kept; WEB-05 CSS `calc()` spacing, `@media` queries, `!important`, custom properties; WEB-06 JS ASI hazards, regex literals vs division, template literals, strict-mode strings; WEB-07 JSON big numbers/`-0`/exponent spelling unchanged, duplicate keys left alone; WEB-08 BOM and CRLF handling; WEB-09 invalid input untouched; WEB-10 setting off: untouched (except SVG); WEB-11 XML entity expansion limits (billion-laughs file is rejected, never expanded).
 
 ## 11. ZIP-based containers (tier 1)
@@ -183,8 +183,8 @@ Cases: SQL-01 fragmented DB with free pages shrinks; SQL-02 schema, triggers, vi
 ## 14. Audio (tier 1-2)
 
 Oracle: `audio`.
-FLAC (.flac): shntool trim *(`audio.trimSilence`, lossy-ish: changes audio)*, `flac -8 -e -p` re-encode, flacout *(level 9, Windows)*; metadata stripped unless kept.
-WAV (.wav): strip non-audio chunks (native); trim silence only with `audio.trimSilence`.
+FLAC (.flac): trim *(`audio.trimSilence`, lossy: changes the samples at the ends; native: `flac -d` finds frames within one step of silence at both ends, `flac --skip --until` re-encodes, tags and pictures carried over; the oracle compares the samples between the silent ends)*, `flac -8 -e -p` re-encode, flacout *(level 9, Windows)*; metadata stripped unless kept.
+WAV (.wav): strip non-audio chunks (native); trimming silence from WAV is not implemented (only FLAC has `audio.trimSilence`).
 MP3 (.mp3): mp3packer (verified by ffmpeg decode equality; skipped if gapless info would be lost). Tags: ID3v1/v2/APE stripped unless kept.
 Ogg Vorbis (.ogg .oga .opus .spx): OptiVorbis (Vorbis only, verified by decode equality); Opus/Speex/FLAC-in-Ogg skipped.
 M4A/M4B/M4P/M4R (.m4a ...): ffmpeg remux + mp4 box cleanup; `audio.keepMetadata` applies.
