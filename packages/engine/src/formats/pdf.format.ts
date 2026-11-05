@@ -4,6 +4,7 @@ import { toolStep } from "../step";
 import { MissingTool } from "../tools";
 import { SkipFile, type Context, type Format } from "../types";
 import { summarize, type PdfSummary } from "./pdf-summary";
+import { errorMessage } from "../errors";
 
 interface Doc {
   warned: boolean;
@@ -119,9 +120,9 @@ export const pdf: Format = {
       let b: Doc;
       try {
         b = await read(candidate, ctx, a);
-      } catch (e: any) {
+      } catch (e) {
         if (e instanceof SkipFile) return String(e.message);
-        return `the result is not a sound PDF: ${e?.message ?? e}`;
+        return `the result is not a sound PDF: ${errorMessage(e)}`;
       }
       if (a.pages !== b.pages) return `page count ${a.pages} became ${b.pages}`;
       for (let i = 0; i < a.pages; i++) if (a.renders[i] !== b.renders[i]) return `page ${i + 1} renders differently`;

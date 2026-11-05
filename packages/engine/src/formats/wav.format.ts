@@ -1,6 +1,7 @@
 import { SkipFile, type Context, type Format, type Settings } from "../types";
 import { audioSigOrNull, sameAudio, type AudioSig } from "./audio-oracle";
 import { isWav, parseWav, rewriteWav, type Wav } from "./wav-parse";
+import { errorMessage } from "../errors";
 
 interface Prepared {
   wav: Wav;
@@ -42,8 +43,8 @@ export const wav: Format = {
       let w: Wav;
       try {
         w = parseWav(bytes);
-      } catch (e: any) {
-        return e instanceof SkipFile ? e.message : `the result is not a valid WAV: ${e?.message ?? e}`;
+      } catch (e) {
+        return e instanceof SkipFile ? e.message : `the result is not a valid WAV: ${errorMessage(e)}`;
       }
       if (!same(slice(a.bytes, a.wav.fmt), slice(bytes, w.fmt))) return "fmt chunk changed";
       if (!same(slice(a.bytes, a.wav.data), slice(bytes, w.data))) return "audio data changed";

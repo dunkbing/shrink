@@ -3,6 +3,7 @@ import { MissingTool } from "../tools";
 import type { Context, Format, Settings } from "../types";
 import { audioSig, sameAudio, type AudioSig } from "./audio-oracle";
 import { isFlac, parseFlac, type FlacInfo } from "./flac-parse";
+import { errorMessage } from "../errors";
 
 interface Prepared {
   info: FlacInfo;
@@ -55,8 +56,8 @@ export const flac: Format = {
         const bad = await flacTest(candidate, ctx);
         if (bad) return `the result does not verify: ${bad}`;
         b = { info, sig: await audioSig(candidate, ctx) };
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       const x = a.info, y = b.info;
       if (x.sampleRate !== y.sampleRate || x.channels !== y.channels || x.bitsPerSample !== y.bitsPerSample) return "stream format changed";

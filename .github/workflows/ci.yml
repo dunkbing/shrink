@@ -68,5 +68,11 @@ jobs:
 
       - run: bun run fixtures:fetch
         continue-on-error: true # a mirror can be down; the corpus test skips what is missing
+      - name: debug exe alone
+        if: runner.os == 'Linux'
+        continue-on-error: true
+        run: |
+          which -a strip
+          time timeout 120 bun test packages/engine/test/exe.test.ts 2>&1 | tail -40
       - run: bun run typecheck
       - run: bun test

@@ -2,6 +2,7 @@ import { inPlaceStep, toolStep } from "../step";
 import type { Format, Settings } from "../types";
 import { pixels, samePicture, type Pixels } from "./bun-pixels";
 import { parseJpeg, type JpegInfo } from "./jpeg-parse";
+import { errorMessage } from "../errors";
 
 interface Prepared {
   info: JpegInfo;
@@ -50,8 +51,8 @@ export const jpeg: Format = {
       let pix: Pixels;
       try {
         pix = await pixels(bytes);
-      } catch (e: any) {
-        throw new Error(`does not decode: ${e?.message ?? e}`);
+      } catch (e) {
+        throw new Error(`does not decode: ${errorMessage(e)}`);
       }
       // The ICC profile is never touched by the tools used here; a rotation lives in EXIF, which then stays.
       if (info.orientation !== 1) ctx.facts.keepExif = true;
@@ -64,8 +65,8 @@ export const jpeg: Format = {
       try {
         info = parseJpeg(bytes);
         pix = await pixels(bytes);
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       const same = samePicture(a.pix, pix);
       if (same !== true) return same;

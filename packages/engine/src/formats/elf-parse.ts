@@ -1,3 +1,4 @@
+import { errorMessage } from "../errors";
 // Strict ELF reader, `ar` reader and the "same loadable content" comparison used as the oracle for executables.
 export interface ElfSection {
   index: number;
@@ -311,8 +312,8 @@ export function sameAr(a: ArMember[], b: ArMember[]): true | string {
       try {
         x = parseElf(a[i].data);
         y = parseElf(b[i].data);
-      } catch (e: any) {
-        return `member ${a[i].name}: ${e?.message ?? e}`;
+      } catch (e) {
+        return `member ${a[i].name}: ${errorMessage(e)}`;
       }
       const r = sameElf(x, y);
       if (r !== true) return `member ${a[i].name}: ${r}`;

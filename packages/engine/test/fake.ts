@@ -21,7 +21,7 @@ export function fakeFormat(steps: Step[] = [trim], extra: Partial<Format> = {}):
     id: "fake",
     extensions: ["fake"],
     detect: (head) => new TextDecoder().decode(head.subarray(0, 5)) === "FAKE\n",
-    flags: (s) => ({ lossy: (s as any).fakeLossy === true, keepMetadata: s.png.keepMetadata }),
+    flags: (s) => ({ lossy: false, keepMetadata: s.png.keepMetadata }),
     steps,
     oracle: {
       async prepare(path) {

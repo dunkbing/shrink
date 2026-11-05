@@ -1,6 +1,7 @@
 import type { Format, Step } from "../types";
 import { SkipFile } from "../types";
 import { describe, looksLikeCfb, readCfb, signed, writeCfb, type Cfb } from "./cfb-parse";
+import { errorMessage } from "../errors";
 
 const MAX = 2 ** 30;
 
@@ -36,8 +37,8 @@ export const cfb: Format = {
       let c: Cfb;
       try {
         c = readCfb(new Uint8Array(await Bun.file(candidate).arrayBuffer()));
-      } catch (e: any) {
-        return `the result is not a valid compound file: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result is not a valid compound file: ${errorMessage(e)}`;
       }
       if (c.major !== a.major) return "version changed";
       const d = describe(c);

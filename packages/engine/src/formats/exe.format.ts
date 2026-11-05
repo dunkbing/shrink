@@ -5,6 +5,7 @@ import { SkipFile, type Context, type Format, type Settings, type Step } from ".
 import { ET_REL, elfOverlay, isAr, isElf, parseAr, parseElf, sameAr, sameElf, type ArMember, type Elf } from "./elf-parse";
 import { MH_OBJECT, isMacho, parseMacho, sameMacho, signatureKind } from "./macho-parse";
 import { DIR_CLR, DIR_SECURITY, isPe, parsePe, peOverlay, samePe, stripPeSymbols, type Pe } from "./pe-parse";
+import { errorMessage } from "../errors";
 
 type Kind = "pe" | "elf" | "macho" | "ar";
 type Parsed = { kind: "pe"; pe: Pe } | { kind: "elf"; elf: Elf } | { kind: "macho"; m: ReturnType<typeof parseMacho>; sig: string; signedOk?: boolean } | { kind: "ar"; members: ArMember[] };
@@ -142,8 +143,8 @@ export const exe: Format = {
           bytes = new Uint8Array(await Bun.file(t).arrayBuffer());
           b = parseAny(bytes);
         }
-      } catch (e: any) {
-        return `the result does not parse: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not parse: ${errorMessage(e)}`;
       }
       if (a.kind !== b.kind) return "file kind changed";
       switch (a.kind) {

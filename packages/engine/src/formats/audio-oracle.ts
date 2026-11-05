@@ -1,4 +1,5 @@
 // Shared audio oracle: both files decode (ffmpeg) to the same samples, and the same streams and tags where tags are kept.
+import { parseFfprobe } from "./ffprobe";
 import { MissingTool } from "../tools";
 import type { Context } from "../types";
 
@@ -24,12 +25,12 @@ export async function audioSig(path: string, ctx: Context): Promise<AudioSig> {
   if (!hash) throw new Error("has no audio stream");
   const pr = await ctx.run("ffprobe", ["-v", "error", "-show_streams", "-show_format", "-show_chapters", "-of", "json", path]);
   if (pr.code !== 0) throw new Error("cannot be read");
-  const j = JSON.parse(pr.stdout);
-  const streams: any[] = j.streams ?? [];
+  const j = parseFfprobe(pr.stdout);
+  const streams = j.streams ?? [];
   const audio = streams.filter((s) => s.codec_type === "audio");
   const tags = new Map<string, string>();
-  const addTags = (t: any, prefix: string) => {
-    for (const [k, v] of Object.entries<any>(t ?? {})) if (!IGNORED.has(k.toLowerCase())) tags.set(prefix + k.toLowerCase(), String(v));
+  const addTags = (t: Record<string, unknown> | undefined, prefix: string) => {
+    for (const [k, v] of Object.entries(t ?? {})) if (!IGNORED.has(k.toLowerCase())) tags.set(prefix + k.toLowerCase(), String(v));
   };
   addTags(j.format?.tags, "");
   audio.forEach((s, i) => addTags(s.tags, `a${i}:`));

@@ -10,6 +10,7 @@ import { iterations } from "./gzip.format";
 import { parseGzip, wrapGzip } from "./gzip-parse";
 import { sha } from "./zip-parse";
 import { needXz, xzCheck, xzDigest, xzRecompress } from "./xz-util";
+import { errorMessage } from "../errors";
 
 const MAX = 1 << 30;
 let seq = 0;
@@ -98,8 +99,8 @@ const oracle = {
     let b: ArMem[];
     try {
       b = parseArMembers(new Uint8Array(await Bun.file(candidate).arrayBuffer()));
-    } catch (e: any) {
-      return `the result is not a valid ar archive: ${e?.message ?? e}`;
+    } catch (e) {
+      return `the result is not a valid ar archive: ${errorMessage(e)}`;
     }
     if (a.length !== b.length) return "member count differs";
     for (let i = 0; i < a.length; i++) {
@@ -111,9 +112,9 @@ const oracle = {
       let got: string;
       try {
         got = await inner(y, ctx);
-      } catch (e: any) {
+      } catch (e) {
         if (e instanceof SkipFile) throw e;
-        return `${x.name}: the recompressed member does not decode: ${e?.message ?? e}`;
+        return `${x.name}: the recompressed member does not decode: ${errorMessage(e)}`;
       }
       if (got !== x.sha) return `${x.name}: decompressed bytes differ`;
     }

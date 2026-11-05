@@ -2,6 +2,7 @@
 // (and stored) folders are rewritten; every other byte is copied, with the offsets that moved patched.
 import { inflateRawSync } from "node:zlib";
 import { SkipFile } from "../types";
+import { errorMessage } from "../errors";
 
 export interface CabBlock {
   /** Offset of the CFDATA record. */
@@ -130,8 +131,8 @@ export function folderBlocks(c: Cab, f: CabFolder): Uint8Array[] {
       if (d[0] !== 0x43 || d[1] !== 0x4b) throw new Error("MSZIP block without its signature");
       try {
         raw = inflateRawSync(d.subarray(2), hist.length ? { dictionary: hist } : undefined);
-      } catch (e: any) {
-        throw new Error(`cannot inflate a block: ${e?.message ?? e}`);
+      } catch (e) {
+        throw new Error(`cannot inflate a block: ${errorMessage(e)}`);
       }
     }
     if (raw.length !== k.cbUncomp) throw new Error("block size does not match its header");

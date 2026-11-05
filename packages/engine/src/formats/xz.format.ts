@@ -3,6 +3,7 @@
 import { join } from "node:path";
 import { SkipFile, type Context, type Format, type Step } from "../types";
 import { needXz, xzCheck, xzDigest, xzRecompress } from "./xz-util";
+import { errorMessage } from "../errors";
 
 const XZ_MAGIC = [0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00];
 const isXz = (h: Uint8Array) => h.length >= 12 && XZ_MAGIC.every((b, i) => h[i] === b);
@@ -40,9 +41,9 @@ const oracle = {
     let b;
     try {
       b = await xzDigest(await needXz(ctx), Bun.file(candidate), ctx.signal);
-    } catch (e: any) {
+    } catch (e) {
       if (e instanceof SkipFile) throw e;
-      return `xz cannot decode the result: ${e?.message ?? e}`;
+      return `xz cannot decode the result: ${errorMessage(e)}`;
     }
     return a.size === b.size && a.sha === b.sha ? true : "decompressed bytes differ";
   },

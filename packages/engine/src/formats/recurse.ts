@@ -4,6 +4,7 @@ import { basename, join } from "node:path";
 import { detect, HEAD } from "../detect";
 import { Engine } from "../optimize";
 import type { Context, Format } from "../types";
+import { errorMessage } from "../errors";
 
 export interface Member {
   name: string;
@@ -63,7 +64,7 @@ export async function sameMember(name: string, a: Uint8Array, b: Uint8Array, ctx
     const prepared = await found.format.oracle.prepare?.(fa, ctx);
     const r = await found.format.oracle.same(prepared, fb, ctx);
     return r === true ? true : `${name}: ${r}`;
-  } catch (e: any) {
-    return `${name}: ${e?.message ?? e}`;
+  } catch (e) {
+    return `${name}: ${errorMessage(e)}`;
   }
 }

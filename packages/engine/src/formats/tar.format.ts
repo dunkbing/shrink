@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { SkipFile, type Format, type Settings, type Step } from "../types";
 import { recurseMembers, sameMember } from "./recurse";
 import { looksLikeTar, parseTar, type TarEntry } from "./tar-parse";
+import { errorMessage } from "../errors";
 
 const MAX = 2 ** 30;
 const REGULAR = (e: TarEntry) => (e.type === "0" || e.type === "7") && !e.sparse && e.pax.size === undefined;
@@ -72,8 +73,8 @@ export const tar: Format = {
       try {
         nb = new Uint8Array(await Bun.file(candidate).arrayBuffer());
         entries = parseTar(nb).entries;
-      } catch (e: any) {
-        return `the result is not a valid tar: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result is not a valid tar: ${errorMessage(e)}`;
       }
       if (entries.length !== a.entries.length) return `entry count ${a.entries.length} became ${entries.length}`;
       for (let i = 0; i < entries.length; i++) {

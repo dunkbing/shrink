@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { toolStep } from "../step";
 import { SkipFile, type Context, type Format, type Oracle, type Step } from "../types";
 import { checkXml, headText, MAX_TEXT, readText, rootIsSvg, SafetyError, sameEvents, xmlEvents, type Ev } from "./web-markup";
+import { errorMessage } from "../errors";
 
 const decoder = new TextDecoder("utf-8", { fatal: true });
 let counter = 0;
@@ -37,9 +38,9 @@ async function prepareText(text: string, ctx: Context): Promise<Prepared> {
   let png: Uint8Array;
   try {
     png = await render(file, ctx);
-  } catch (e: any) {
+  } catch (e) {
     if (e instanceof SkipFile) throw e;
-    throw new SkipFile(`cannot render to verify: ${String(e?.message ?? e).slice(0, 80)}`);
+    throw new SkipFile(`cannot render to verify: ${errorMessage(e).slice(0, 80)}`);
   }
   return { events, png };
 }
@@ -49,8 +50,8 @@ async function sameText(p: Prepared, text: string, ctx: Context): Promise<true |
   try {
     checkXml(text);
     events = xmlEvents(text, { svg: true });
-  } catch (e: any) {
-    return `not well-formed SVG: ${e?.message ?? e}`;
+  } catch (e) {
+    return `not well-formed SVG: ${errorMessage(e)}`;
   }
   const s = sameEvents(p.events, events, { svg: true });
   if (s !== true) return s;
@@ -59,8 +60,8 @@ async function sameText(p: Prepared, text: string, ctx: Context): Promise<true |
   let png: Uint8Array;
   try {
     png = await render(file, ctx);
-  } catch (e: any) {
-    return `the result does not render: ${String(e?.message ?? e).slice(0, 80)}`;
+  } catch (e) {
+    return `the result does not render: ${errorMessage(e).slice(0, 80)}`;
   }
   if (png.length !== p.png.length || Buffer.compare(png, p.png) !== 0) return "the rendered picture differs";
   return true;
@@ -136,7 +137,7 @@ export const svgz: Format = {
       let text: string;
       try {
         text = decoder.decode(gunzip(new Uint8Array(await Bun.file(path).arrayBuffer())));
-      } catch (e: any) {
+      } catch (e) {
         if (e instanceof TypeError) throw new SkipFile("not UTF-8 text");
         throw e;
       }

@@ -4,6 +4,7 @@ import { deflateRawSync } from "node:zlib";
 import type { Context, Format, Settings, Step } from "../types";
 import { parseGzip, wrapGzip, type Gzip } from "./gzip-parse";
 import { sha } from "./zip-parse";
+import { errorMessage } from "../errors";
 
 let seq = 0;
 
@@ -76,8 +77,8 @@ export const gzip: Format = {
       let b: Gzip;
       try {
         b = parseGzip(new Uint8Array(await Bun.file(candidate).arrayBuffer()));
-      } catch (e: any) {
-        return `the result is not a valid gzip member: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result is not a valid gzip member: ${errorMessage(e)}`;
       }
       if (b.data.length !== a.gz.data.length || sha(b.data) !== a.sha) return "decompressed bytes differ";
       if (ctx.settings.archive.keepMetadata && (a.gz.mtime !== b.mtime || !same(a.gz.name, b.name) || !same(a.gz.comment, b.comment) || !same(a.gz.extra, b.extra))) return "header fields were changed";

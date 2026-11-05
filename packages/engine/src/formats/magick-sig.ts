@@ -1,6 +1,7 @@
 // Pixel proof through ImageMagick: one line per frame with the geometry, colour model and a SHA-256 of the pixel data.
 import { MissingTool } from "../tools";
 import { SkipFile, type Context } from "../types";
+import { errorMessage } from "../errors";
 
 export async function frameSignatures(ctx: Context, prefix: string, path: string): Promise<string[]> {
   const r = await ctx.run("magick", ["identify", "-regard-warnings", "-format", "%w|%h|%[colorspace]|%[channels]|%[depth]|%[type]|%#\n", `${prefix}:${path}`]);
@@ -14,10 +15,10 @@ export async function frameSignatures(ctx: Context, prefix: string, path: string
 export async function originalSignatures(ctx: Context, prefix: string, path: string): Promise<string[]> {
   try {
     return await frameSignatures(ctx, prefix, path);
-  } catch (e: any) {
+  } catch (e) {
     if (e instanceof MissingTool) throw new SkipFile("cannot verify: ImageMagick (magick) not found");
-    if (String(e?.message).includes("cancelled") || String(e?.message).includes("timed out")) throw e;
-    throw new Error(`${e?.message ?? e}`);
+    if (errorMessage(e).includes("cancelled") || errorMessage(e).includes("timed out")) throw e;
+    throw new Error(`${errorMessage(e)}`);
   }
 }
 

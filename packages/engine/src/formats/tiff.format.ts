@@ -2,6 +2,7 @@ import { toolStep } from "../step";
 import { type Context, type Format, type Settings } from "../types";
 import { frameSignatures, originalSignatures, sameSignatures } from "./magick-sig";
 import { parseTiff, sameTags, tagNumber, type Tiff } from "./tiff-parse";
+import { errorMessage } from "../errors";
 
 interface Prepared {
   tiff: Tiff;
@@ -46,16 +47,16 @@ export const tiff: Format = {
       let b: Tiff;
       try {
         b = parseTiff(new Uint8Array(await Bun.file(candidatePath).arrayBuffer()));
-      } catch (e: any) {
-        return `the result does not parse: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not parse: ${errorMessage(e)}`;
       }
       const tags = sameTags(a.tiff, b, ctx.settings.tiff.keepMetadata);
       if (tags !== true) return tags;
       let sigs: string[];
       try {
         sigs = await frameSignatures(ctx, "tiff", candidatePath);
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       return sameSignatures(a.sigs, sigs);
     },

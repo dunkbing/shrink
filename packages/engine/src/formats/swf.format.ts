@@ -4,6 +4,7 @@ import { deflateSync, inflateSync } from "node:zlib";
 import type { Format, Step } from "../types";
 import { SkipFile } from "../types";
 import { sha } from "./zip-parse";
+import { errorMessage } from "../errors";
 
 interface Swf {
   sig: string;
@@ -23,8 +24,8 @@ export function parseSwf(b: Uint8Array): Swf {
   if (sig === "CWS") {
     try {
       body = inflateSync(body, { maxOutputLength: Math.min(Math.max(length - 8, 1), 2 ** 30) + 1 });
-    } catch (e: any) {
-      throw new Error(`cannot inflate: ${e?.message ?? e}`);
+    } catch (e) {
+      throw new Error(`cannot inflate: ${errorMessage(e)}`);
     }
   }
   if (body.length + 8 !== length) throw new Error("length field does not match the body");
@@ -76,8 +77,8 @@ export const swf: Format = {
       let b: Swf;
       try {
         b = parseSwf(new Uint8Array(await Bun.file(candidate).arrayBuffer()));
-      } catch (e: any) {
-        return `the result is not a valid SWF: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result is not a valid SWF: ${errorMessage(e)}`;
       }
       if (b.version !== a.version) return "version changed";
       if (b.length !== a.length || sha(b.body) !== a.sha) return "tag stream differs";

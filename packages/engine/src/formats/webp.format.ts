@@ -2,6 +2,7 @@ import { toolStep } from "../step";
 import { SkipFile, type Format, type Settings } from "../types";
 import { pixels, samePicture, type Pixels } from "./bun-pixels";
 import { parseWebp, type WebpInfo } from "./webp-parse";
+import { errorMessage } from "../errors";
 
 interface Prepared {
   info: WebpInfo;
@@ -30,8 +31,8 @@ export const webp: Format = {
       let pix: Pixels;
       try {
         pix = await pixels(bytes);
-      } catch (e: any) {
-        throw new Error(`does not decode: ${e?.message ?? e}`);
+      } catch (e) {
+        throw new Error(`does not decode: ${errorMessage(e)}`);
       }
       ctx.facts.lossless = info.lossless;
       if (info.orientation !== 1) ctx.facts.keepExif = true;
@@ -44,8 +45,8 @@ export const webp: Format = {
       try {
         info = parseWebp(bytes);
         pix = await pixels(bytes);
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       if (info.animated) return "result is animated";
       const same = samePicture(a.pix, pix);

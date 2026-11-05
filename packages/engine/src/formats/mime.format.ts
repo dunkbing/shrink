@@ -6,6 +6,7 @@ import { pixels, samePicture } from "./bun-pixels";
 import { decodeGif, sameGif } from "./gif-decode";
 import { build, contentType, decodeBase64, encodeBase64Like, flatten, parseEntity, transferEncoding, type Entity, type Leaf } from "./mime-parse";
 import { decodePng, samePixels } from "./png-decode";
+import { errorMessage } from "../errors";
 
 const EXT = ["eml", "emlx", "mht", "mhtml"];
 const MAX = 128 * 1024 * 1024;
@@ -50,8 +51,8 @@ async function same(a: Uint8Array, b: Uint8Array, type: string): Promise<true | 
     if (type === "image/png") return samePixels(decodePng(a), decodePng(b));
     if (type === "image/gif") return sameGif(decodeGif(a), decodeGif(b));
     return samePicture(await pixels(a), await pixels(b));
-  } catch (e: any) {
-    return `an image part does not decode: ${e?.message ?? e}`;
+  } catch (e) {
+    return `an image part does not decode: ${errorMessage(e)}`;
   }
 }
 
@@ -84,9 +85,9 @@ const parts: Step = {
       let smaller: Uint8Array | null = null;
       try {
         smaller = await recompress(data, type, ctx, n++);
-      } catch (err: any) {
-        if (!String(err?.message).startsWith("tool not found")) throw err;
-        ctx.note(`mime.parts: ${err.message}`);
+      } catch (err) {
+        if (!errorMessage(err).startsWith("tool not found")) throw err;
+        ctx.note(`mime.parts: ${errorMessage(err)}`);
       }
       if (smaller) e.body = encodeBase64Like(smaller, e.body ?? "");
     }
@@ -130,8 +131,8 @@ export const mime: Format = {
       let b: Msg;
       try {
         b = parseMessage(latin1(new Uint8Array(await Bun.file(candidatePath).arrayBuffer())), ctx.facts.emlx === true);
-      } catch (e: any) {
-        return `the result is not a valid message: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result is not a valid message: ${errorMessage(e)}`;
       }
       if (a.suffix !== b.suffix) return "the trailer changed";
       if (ctx.facts.emlx && Number(/^\d+/.exec(b.prefix)![0]) !== build(b.root).length) return "the length line is wrong";

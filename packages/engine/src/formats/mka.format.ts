@@ -1,5 +1,6 @@
 import type { Context, Format, Settings } from "../types";
 import { audioSig, sameAudio, type AudioSig } from "./audio-oracle";
+import { errorMessage } from "../errors";
 
 const EBML = [0x1a, 0x45, 0xdf, 0xa3];
 
@@ -40,8 +41,8 @@ export const mka: Format = {
       let b: AudioSig;
       try {
         b = await audioSig(candidate, ctx);
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       if (b.errors) return `the result decodes with errors: ${b.errors.split("\n")[0]}`;
       return sameAudio(original as AudioSig, b, ctx.settings.audio.keepMetadata);

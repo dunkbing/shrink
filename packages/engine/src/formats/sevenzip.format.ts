@@ -3,6 +3,7 @@ import { crc32 } from "node:zlib";
 import { basename, join } from "node:path";
 import type { Context, Format, Step } from "../types";
 import { SkipFile } from "../types";
+import { errorMessage } from "../errors";
 
 const NOPASS = "-pshrink-no-password";
 
@@ -149,8 +150,8 @@ export const sevenzip: Format = {
         await check7zHeader(candidate);
         await test7z(candidate, ctx);
         return compare(original as Item[], (await list(candidate, ctx)).items);
-      } catch (e: any) {
-        return `the result is not a valid 7z: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result is not a valid 7z: ${errorMessage(e)}`;
       }
     },
   },

@@ -7,6 +7,7 @@ import { SkipFile, type Format, type Settings, type Step } from "../types";
 import { bestDeflate, buildZip, type NewMember } from "./zip-build";
 import { parseZip, readMember, sha, zipHazards, type Zip } from "./zip-parse";
 import { recurseMembers, sameMember } from "./recurse";
+import { errorMessage } from "../errors";
 
 const EXTENSIONS = (
   "zip zipx jar war ear epub cbz kmz xps oxps ora vsdx 3mf " +
@@ -109,8 +110,8 @@ export const zip: Format = {
       let b: ZipFacts;
       try {
         b = load(new Uint8Array(await Bun.file(candidatePath).arrayBuffer()));
-      } catch (e: any) {
-        return `the result is not a valid ZIP: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result is not a valid ZIP: ${errorMessage(e)}`;
       }
       const recurse = ctx.settings.archive.recurse;
       if (a.zip.entries.length !== b.zip.entries.length) return `member count ${a.zip.entries.length} became ${b.zip.entries.length}`;

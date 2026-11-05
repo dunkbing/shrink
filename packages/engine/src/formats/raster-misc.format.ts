@@ -3,6 +3,7 @@
 import { toolStep } from "../step";
 import type { Context, Format, Step } from "../types";
 import { frameSignatures, originalSignatures, sameSignatures } from "./magick-sig";
+import { errorMessage } from "../errors";
 
 const text = (h: Uint8Array, n: number) => String.fromCharCode(...h.subarray(0, n));
 const ws = (c: number) => c === 10 || c === 13 || c === 32 || c === 9;
@@ -27,8 +28,8 @@ function misc(o: { id: string; prefix: string; extensions: string[]; detect(h: U
         let sigs: string[];
         try {
           sigs = await frameSignatures(ctx, o.prefix, candidate);
-        } catch (e: any) {
-          return `the result does not decode: ${e?.message ?? e}`;
+        } catch (e) {
+          return `the result does not decode: ${errorMessage(e)}`;
         }
         return sameSignatures(original as string[], sigs);
       },

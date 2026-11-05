@@ -1,6 +1,7 @@
 // Strict ZIP reader: central directory, zip64, member data. Throws on anything inconsistent.
 import { crc32, inflateRawSync } from "node:zlib";
 import { SkipFile } from "../types";
+import { errorMessage } from "../errors";
 
 export interface ZipEntry {
   name: string;
@@ -139,8 +140,8 @@ export function readMember(z: Zip, e: ZipEntry): Uint8Array {
   } else if (e.method === 8) {
     try {
       out = inflateRawSync(raw, { maxOutputLength: Math.max(e.size, 1) + 1 });
-    } catch (err: any) {
-      throw new Error(`cannot inflate ${e.name}: ${err?.message ?? err}`);
+    } catch (err) {
+      throw new Error(`cannot inflate ${e.name}: ${errorMessage(err)}`);
     }
   } else throw new SkipFile(`unsupported compression method ${e.method}`);
   if (out.length !== e.size) throw new Error(`size mismatch in ${e.name}`);

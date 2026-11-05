@@ -3,6 +3,7 @@ import { copyFileSync, existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { toolStep } from "../step";
 import { SkipFile, type Context, type Format } from "../types";
+import { errorMessage } from "../errors";
 
 const MAGIC = "SQLite format 3\0";
 const sql = (s: string) => `'${s.replace(/'/g, "''")}'`;
@@ -86,9 +87,9 @@ export const sqlite: Format = {
     async prepare(path, ctx) {
       try {
         return await fingerprint(path, ctx);
-      } catch (e: any) {
+      } catch (e) {
         if (e instanceof SkipFile) throw e;
-        throw new Error(`damaged: ${e?.message ?? e}`);
+        throw new Error(`damaged: ${errorMessage(e)}`);
       }
     },
     async same(original, candidate, ctx) {
@@ -97,8 +98,8 @@ export const sqlite: Format = {
         if (f === original) return true;
         const [a, b] = [String(original).split("|"), f.split("|")];
         return a[0] !== b[0] ? "pragmas (user_version, application_id, auto_vacuum...) differ" : a[1] !== b[1] ? "the dump differs" : "row ids differ";
-      } catch (e: any) {
-        return `the result fails verification: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result fails verification: ${errorMessage(e)}`;
       }
     },
   },

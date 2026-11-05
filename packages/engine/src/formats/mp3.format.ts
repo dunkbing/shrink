@@ -2,6 +2,7 @@ import { toolStep } from "../step";
 import type { Format, Settings } from "../types";
 import { audioSig, sameAudio, type AudioSig } from "./audio-oracle";
 import { audioRegion, frameChain, id3v2Size } from "./mp3-parse";
+import { errorMessage } from "../errors";
 
 const hasGapless = (tags: Uint8Array[]) => tags.some((t) => Buffer.from(t).includes("iTunSMPB"));
 
@@ -51,8 +52,8 @@ export const mp3: Format = {
       let b: AudioSig;
       try {
         b = await audioSig(candidate, ctx);
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       return sameAudio(original as AudioSig, b, ctx.settings.audio.keepMetadata);
     },

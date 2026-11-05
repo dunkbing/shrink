@@ -4,6 +4,7 @@ import { SkipFile, type Format, type Oracle, type Step } from "../types";
 import { compactCss, parseCss, sameCss } from "./web-css";
 import { compactJs, sameJs, tokenizeJs } from "./web-js";
 import { checkXml, headText, htmlEvents, HTML_SENSITIVE, jsonTokens, readText, rootIsSvg, sameEvents, sameHtml, SafetyError, xmlEvents } from "./web-markup";
+import { errorMessage } from "../errors";
 
 const looksText = (head: Uint8Array) => !head.includes(0);
 const startsWithTag = (head: Uint8Array) => headText(head).trimStart().startsWith("<");
@@ -47,7 +48,7 @@ function textOracle<T>(prepare: (text: string) => T | Promise<T>, same: (orig: T
       let text: string;
       try {
         text = await readText(candidate, SkipFile);
-      } catch (e: any) {
+      } catch (e) {
         return `the result is not valid UTF-8 text`;
       }
       return same(original as T, text);
@@ -70,8 +71,8 @@ export const json: Format = {
       let b: string[];
       try {
         b = jsonTokens(t);
-      } catch (e: any) {
-        return `not valid JSON: ${e?.message ?? e}`;
+      } catch (e) {
+        return `not valid JSON: ${errorMessage(e)}`;
       }
       return a.length === b.length && a.every((x, i) => x === b[i]) ? true : "JSON content differs";
     },
@@ -171,8 +172,8 @@ export const xml: Format = {
     try {
       checkXml(t);
       return sameEvents(a, xmlEvents(t, { svg: false }), { svg: false });
-    } catch (e: any) {
-      return `not well-formed XML: ${e?.message ?? e}`;
+    } catch (e) {
+      return `not well-formed XML: ${errorMessage(e)}`;
     }
   }),
 };

@@ -25,6 +25,7 @@ export interface Settings {
   archive: { keepMetadata: boolean; recurse: boolean };
   web: { html: boolean; css: boolean; js: boolean; svg: boolean; jsExtensions: string[] | null };
   exe: { enabled: boolean; upx: boolean };
+  lua: { minify: boolean };
 }
 
 export type DeepPartial<T> = { [K in keyof T]?: T[K] extends object ? (T[K] extends unknown[] ? T[K] : DeepPartial<T[K]>) : T[K] };

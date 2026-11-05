@@ -1,4 +1,5 @@
 export { Engine } from "./optimize";
+export { errorMessage } from "./errors";
 export { defaults, resolve } from "./settings";
 export { Cache, hashFile } from "./cache";
 export { createTools, runCommand, MissingTool } from "./tools";

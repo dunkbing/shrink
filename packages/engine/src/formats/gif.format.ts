@@ -1,6 +1,7 @@
 import { toolStep } from "../step";
 import { SkipFile, type Format, type Settings } from "../types";
 import { decodeGif, sameGif, type GifInfo } from "./gif-decode";
+import { errorMessage } from "../errors";
 
 export const gif: Format = {
   id: "gif",
@@ -27,8 +28,8 @@ export const gif: Format = {
       let b: GifInfo;
       try {
         b = decodeGif(new Uint8Array(await Bun.file(candidatePath).arrayBuffer()));
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       const a = original as GifInfo;
       const same = sameGif(a, b);

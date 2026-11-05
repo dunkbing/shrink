@@ -2,6 +2,7 @@
 // ignored), JSON token streams, and the guards the web formats share. Bun.XML validates XML; HTMLRewriter reads HTML.
 import { sameCss, parseCss, serializeCss, COLOR_PROPS } from "./web-css";
 import { sameJs } from "./web-js";
+import { errorMessage } from "../errors";
 
 export type Ev =
   | { t: "s"; name: string; attrs: [string, string][] }
@@ -233,7 +234,10 @@ function foldRaw(ev: Ev[]): Ev[] {
       const kind = e.name.endsWith("|style") ? "css" : "js";
       let text = "";
       let j = k + 1;
-      while (ev[j] && ev[j].t === "x") text += (ev[j++] as any).text;
+      for (let x = ev[j]; x && x.t === "x"; x = ev[j]) {
+        text += x.text;
+        j++;
+      }
       if (j > k + 1) {
         out.push({ t: "raw", kind, text });
         k = j - 1;
@@ -331,8 +335,8 @@ export function sameJson(a: JsonTok[], b: string): true | string {
   let t: JsonTok[];
   try {
     t = jsonTokens(b);
-  } catch (e: any) {
-    return `not valid JSON: ${e?.message ?? e}`;
+  } catch (e) {
+    return `not valid JSON: ${errorMessage(e)}`;
   }
   if (a.length !== t.length) return "JSON content differs";
   for (let k = 0; k < a.length; k++) if (a[k] !== t[k]) return `JSON differs near ${a[k].slice(0, 30)} / ${t[k].slice(0, 30)}`;
@@ -444,8 +448,8 @@ export async function sameHtml(a: HEv[], bSrc: string): Promise<true | string> {
   let b: HEv[];
   try {
     b = canonHtml(await htmlEvents(bSrc));
-  } catch (e: any) {
-    return `not readable HTML: ${e?.message ?? e}`;
+  } catch (e) {
+    return `not readable HTML: ${errorMessage(e)}`;
   }
   const x = canonHtml(a);
   const n = Math.max(x.length, b.length);
@@ -469,7 +473,7 @@ export async function sameHtml(a: HEv[], bSrc: string): Promise<true | string> {
         return `attribute ${nm} of <${p.v}> differs`;
       }
     } else if (p.t === "raw") {
-      const r = p.kind === "css" ? sameCss(p.v, q.v) : p.kind === "js" ? sameJs(p.v, q.v) : p.kind === "json" ? (() => { try { return sameJson(jsonTokens(p.v), q.v); } catch (e: any) { return String(e?.message ?? e); } })() : p.v.trim().replace(/\s+/g, " ") === q.v.trim().replace(/\s+/g, " ") ? true : "script content differs";
+      const r = p.kind === "css" ? sameCss(p.v, q.v) : p.kind === "js" ? sameJs(p.v, q.v) : p.kind === "json" ? (() => { try { return sameJson(jsonTokens(p.v), q.v); } catch (e) { return errorMessage(e); } })() : p.v.trim().replace(/\s+/g, " ") === q.v.trim().replace(/\s+/g, " ") ? true : "script content differs";
       if (r !== true) return `${p.kind}: ${r}`;
     } else if (p.v !== q.v) return `${p.t} differs: "${p.v.slice(0, 40)}" vs "${q.v.slice(0, 40)}"`;
   }

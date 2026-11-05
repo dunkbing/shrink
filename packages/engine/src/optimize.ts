@@ -6,6 +6,7 @@ import { detect, HEAD } from "./detect";
 import { MissingTool, createTools, runCommand } from "./tools";
 import { resolve } from "./settings";
 import { SkipFile, type Context, type Format, type Options, type Report, type Settings, type StepReport, type Step } from "./types";
+import { errorMessage } from "./errors";
 
 /** The part of a file that tells if it changed: size, mtime and a hash of its first and last blocks. */
 async function fingerprint(path: string): Promise<string> {
@@ -59,9 +60,9 @@ export class Engine {
         const st = statSync(path);
         if (!st.isFile()) return skip("not a file");
         report.before = report.after = st.size;
-      } catch (e: any) {
+      } catch (e) {
         report.status = "failed";
-        report.reason = e?.code === "ENOENT" ? "not found" : String(e?.message ?? e);
+        report.reason = e instanceof Error && "code" in e && e.code === "ENOENT" ? "not found" : errorMessage(e);
         return report;
       }
       if (report.before < 16) return skip(report.before === 0 ? "empty file" : "too small");
@@ -115,9 +116,9 @@ export class Engine {
       let prepared: unknown;
       try {
         prepared = await format.oracle.prepare?.(work, ctx);
-      } catch (e: any) {
+      } catch (e) {
         if (abort.signal.aborted) return (report.status = "failed", report.reason = "cancelled", report);
-        return skip(e instanceof SkipFile ? e.message : `damaged: ${e?.message ?? e}`);
+        return skip(e instanceof SkipFile ? e.message : `damaged: ${errorMessage(e)}`);
       }
 
       let best = work;
@@ -168,9 +169,9 @@ export class Engine {
               sr.detail = verdict;
             }
           }
-        } catch (e: any) {
+        } catch (e) {
           sr.outcome = "failed";
-          sr.detail = stepAbort.signal.aborted ? String((stepAbort.signal.reason as Error)?.message ?? "cancelled") : String(e?.message ?? e);
+          sr.detail = stepAbort.signal.aborted ? String((stepAbort.signal.reason as Error)?.message ?? "cancelled") : errorMessage(e);
           if (abort.signal.aborted) {
             report.status = "failed";
             report.reason = "cancelled";
@@ -203,21 +204,21 @@ export class Engine {
       const st = statSync(path);
       try {
         await Bun.write(path, Bun.file(best)); // in place: keeps permissions, hard links and the inode
-      } catch (e: any) {
+      } catch (e) {
         try {
           await Bun.write(path, Bun.file(work));
         } catch {} // best effort to put the original back
         report.status = "failed";
         report.after = report.before;
-        report.reason = `could not write the result: ${e?.message ?? e}`;
+        report.reason = `could not write the result: ${errorMessage(e)}`;
         return report;
       }
       if (settings.preserveTimestamps) utimesSync(path, st.atime, st.mtime);
       if (key) this.cache.add(Cache.key(await hashFile(path), settings));
       return report;
-    } catch (e: any) {
+    } catch (e) {
       report.status = "failed";
-      report.reason = String(e?.message ?? e);
+      report.reason = errorMessage(e);
       return report;
     } finally {
       if (dir) rmSync(dir, { recursive: true, force: true });

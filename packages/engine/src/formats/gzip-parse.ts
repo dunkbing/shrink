@@ -1,6 +1,13 @@
 // Strict single-member gzip reader and writer.
 import { crc32, inflateRawSync } from "node:zlib";
 import { SkipFile } from "../types";
+import { errorMessage } from "../errors";
+
+/** What `inflateRawSync` returns with `info: true` (@types/node declares only the plain Buffer). */
+interface InflateInfo {
+  buffer: Buffer;
+  engine: { bytesWritten: number };
+}
 
 export interface Gzip {
   flags: number;
@@ -55,12 +62,12 @@ export function parseGzip(b: Uint8Array): Gzip {
   let data: Buffer;
   let used = 0;
   try {
-    const r: any = inflateRawSync(b.subarray(p, trailer), { info: true, maxOutputLength: MAX_OUT });
+    const r = inflateRawSync(b.subarray(p, trailer), { info: true, maxOutputLength: MAX_OUT }) as unknown as InflateInfo;
     data = r.buffer;
     used = r.engine.bytesWritten;
-  } catch (e: any) {
-    if (e?.code === "ERR_BUFFER_TOO_LARGE" || /larger than|too large/i.test(String(e?.message))) throw new SkipFile("zip bomb (more than 512 MiB uncompressed)");
-    throw new Error(`cannot inflate: ${e?.message ?? e}`);
+  } catch (e) {
+    if ((e instanceof Error && "code" in e && e.code === "ERR_BUFFER_TOO_LARGE") || /larger than|too large/i.test(errorMessage(e))) throw new SkipFile("zip bomb (more than 512 MiB uncompressed)");
+    throw new Error(`cannot inflate: ${errorMessage(e)}`);
   }
   if (p + used !== trailer) {
     // the stream ended early: more data follows (another member, padding or junk)

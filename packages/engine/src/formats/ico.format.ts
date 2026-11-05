@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { SkipFile, type Context, type Format, type Settings, type Step } from "../types";
 import { decodeDib, sameBitmap, type Bitmap } from "./bmp-decode";
 import { decodePng, samePixels, type PngInfo } from "./png-decode";
+import { errorMessage } from "../errors";
 
 const PNG = [137, 80, 78, 71, 13, 10, 26, 10];
 
@@ -104,8 +105,8 @@ export const ico: Format = {
       let b: Ico;
       try {
         b = parse(new Uint8Array(await Bun.file(candidatePath).arrayBuffer()));
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       if (a.type !== b.type) return "type changed";
       if (a.entries.length !== b.entries.length) return "image count changed";

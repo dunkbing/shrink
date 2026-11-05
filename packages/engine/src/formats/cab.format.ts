@@ -9,6 +9,7 @@ import { deflateRawSync } from "node:zlib";
 import { SkipFile, type Context, type Format, type Step } from "../types";
 import { isCab, parseCab, repackCab, type Cab } from "./cab-parse";
 import { iterations } from "./gzip.format";
+import { errorMessage } from "../errors";
 
 const MAX = 1 << 30;
 let seq = 0;
@@ -83,9 +84,9 @@ export const cab: Format = {
       let c: Cab;
       try {
         c = await load(candidate);
-      } catch (e: any) {
+      } catch (e) {
         if (e instanceof SkipFile) return `the result is not a plain cabinet: ${e.message}`;
-        return `the result is not a valid cabinet: ${e?.message ?? e}`;
+        return `the result is not a valid cabinet: ${errorMessage(e)}`;
       }
       const l = JSON.parse(listing(c));
       const o = JSON.parse(a.list);
@@ -95,9 +96,9 @@ export const cab: Format = {
       let b: Map<string, string>;
       try {
         b = await extracted(candidate, ctx);
-      } catch (e: any) {
+      } catch (e) {
         if (e instanceof SkipFile) throw e;
-        return `cabextract cannot read the result: ${e?.message ?? e}`;
+        return `cabextract cannot read the result: ${errorMessage(e)}`;
       }
       if (b.size !== a.files.size) return "extracted file list differs";
       for (const [k, v] of a.files) if (b.get(k) !== v) return `${k}: extracted bytes differ`;

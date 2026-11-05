@@ -1,3 +1,4 @@
+import { errorMessage } from "../errors";
 // JavaScript tokenizer: the oracle for JS minification (token streams, comments and whitespace ignored,
 // line breaks kept where automatic semicolon insertion could depend on them) and a whitespace-only compactor.
 
@@ -180,8 +181,8 @@ export function sameJsTokens(a: Tok[], b: Tok[]): true | string {
 export function sameJs(a: string, b: string): true | string {
   try {
     return sameJsTokens(tokenizeJs(a), tokenizeJs(b));
-  } catch (e: any) {
-    return `not valid JavaScript: ${e?.message ?? e}`;
+  } catch (e) {
+    return `not valid JavaScript: ${errorMessage(e)}`;
   }
 }
 

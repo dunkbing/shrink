@@ -1,3 +1,4 @@
+import { errorMessage } from "../errors";
 // CSS rule-list parser: the oracle for CSS minification (selectors, declarations and nesting compared in a
 // normal form) and a whitespace/comment-only compactor built on the same parse.
 
@@ -232,8 +233,8 @@ export function sameCss(a: string, b: string, lenient = false): true | string {
     let i = 0;
     while (i < x.length && x[i] === y[i]) i++;
     return `rules differ near "${x.slice(Math.max(0, i - 20), i + 30)}" / "${y.slice(Math.max(0, i - 20), i + 30)}"`;
-  } catch (e: any) {
-    return `not valid CSS: ${e?.message ?? e}`;
+  } catch (e) {
+    return `not valid CSS: ${errorMessage(e)}`;
   }
 }
 

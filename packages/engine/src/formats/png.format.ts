@@ -1,3 +1,4 @@
+import { errorMessage } from "../errors";
 import { toolStep } from "../step";
 import { type Format, type Settings } from "../types";
 import { apngFrames } from "./apng-opt";
@@ -48,8 +49,8 @@ export const png: Format = {
       let b: PngInfo;
       try {
         b = decodePng(new Uint8Array(await Bun.file(candidatePath).arrayBuffer()));
-      } catch (e: any) {
-        return `the result does not decode: ${e.message}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       const same = apng ? samePixels({ ...a, animated: false }, { ...b, animated: false }) : samePixels(a, b);
       if (same !== true) return same;
@@ -58,8 +59,8 @@ export const png: Format = {
         let c: ApngInfo;
         try {
           c = decodeApng(new Uint8Array(await Bun.file(candidatePath).arrayBuffer()));
-        } catch (e: any) {
-          return `the animation does not decode: ${e.message}`;
+        } catch (e) {
+          return `the animation does not decode: ${errorMessage(e)}`;
         }
         const s = sameApng(apng, c);
         if (s !== true) return s;

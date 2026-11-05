@@ -1,8 +1,10 @@
 // Shared by the video container formats: the `packets` oracle (ffmpeg stream hashes of the copied packets plus
 // stream facts from ffprobe) and the ffmpeg remux step.
 import { statSync } from "node:fs";
+import { parseFfprobe } from "./ffprobe";
 import { MissingTool } from "../tools";
 import { SkipFile, type Context, type Oracle, type Step } from "../types";
+import { errorMessage } from "../errors";
 
 export interface VStream {
   index: number;
@@ -39,14 +41,14 @@ const PROP_KEYS = ["profile", "width", "height", "coded_width", "coded_height", 
 export async function probe(path: string, ctx: Context): Promise<{ streams: VStream[]; chapters: string[]; duration: number | null; format: string }> {
   const r = await ctx.run("ffprobe", ["-v", "error", "-show_streams", "-show_chapters", "-show_format", "-of", "json", path]);
   if (r.code !== 0 || r.stderr.trim()) throw new Error(`ffprobe: ${(r.stderr || "failed").trim().split("\n")[0]}`);
-  const j = JSON.parse(r.stdout);
-  const streams: VStream[] = (j.streams ?? []).map((s: any) => {
+  const j = parseFfprobe(r.stdout);
+  const streams: VStream[] = (j.streams ?? []).map((s) => {
     const tags = Object.fromEntries(Object.entries(s.tags ?? {}).map(([k, v]) => [k.toLowerCase(), String(v)]));
     const disp = Object.entries(s.disposition ?? {}).filter(([, v]) => v).map(([k]) => k).sort().join(",");
     const props = JSON.stringify([PROP_KEYS.map((k) => (k === "extradata_size" && (s.codec_type === "subtitle" || j.format?.format_name === "ogg") ? null : (s[k] ?? null))), disp, s.side_data_list ?? null]);
     return {
-      index: s.index,
-      type: s.codec_type,
+      index: s.index ?? -1,
+      type: s.codec_type ?? "",
       codec: s.codec_name ?? "?",
       attachedPic: s.disposition?.attached_pic === 1,
       skeleton: s.codec_type === "data" && (s.codec_name ?? "unknown") === "unknown",
@@ -59,7 +61,7 @@ export async function probe(path: string, ctx: Context): Promise<{ streams: VStr
       attachment: s.codec_type === "attachment" ? `${tags.filename ?? ""}:${s.extradata_size ?? 0}` : "",
     };
   });
-  const chapters = (j.chapters ?? []).map((c: any) => `${c.start_time}-${c.end_time}`);
+  const chapters = (j.chapters ?? []).map((c) => `${c.start_time}-${c.end_time}`);
   return { streams, chapters, duration: num(j.format?.duration), format: String(j.format?.format_name ?? "") };
 }
 
@@ -104,7 +106,7 @@ export function packetsOracle(opts: PacketsOptions = {}): Oracle {
         if (!info.streams.some((s) => s.type === "video" && !s.attachedPic)) throw new SkipFile("no video stream (audio-only files belong to the audio formats)");
         for (const s of info.streams) if (!s.chapterTrack && !s.skeleton && s.type !== "attachment" && s.type !== "data" && !info.hashes.has(s.index)) throw new Error(`stream ${s.index} could not be read`);
         return info;
-      } catch (e: any) {
+      } catch (e) {
         if (e instanceof SkipFile) throw e;
         if (e instanceof MissingTool) throw new SkipFile(`cannot verify: ${e.message}`);
         throw e;
@@ -116,8 +118,8 @@ export function packetsOracle(opts: PacketsOptions = {}): Oracle {
       try {
         await opts.whole?.(candidate, statSync(candidate).size, ctx, false);
         b = await analyze(candidate, ctx);
-      } catch (e: any) {
-        return `the result does not read cleanly: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not read cleanly: ${errorMessage(e)}`;
       }
       if (b.size * 2 < a.size) return "the result is less than half the original (suspicious)";
       const keep = ctx.settings.video.keepMetadata;

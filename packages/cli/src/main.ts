@@ -2,7 +2,7 @@
 import { readdirSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 import { parseArgs } from "node:util";
-import { Engine, allFormats, type Report } from "@shrink/engine";
+import { Engine, allFormats, errorMessage, type Report } from "@shrink/engine";
 
 const USAGE = `shrink [flags] files or folders...
 
@@ -46,8 +46,8 @@ async function main(): Promise<number> {
         verbose: { type: "boolean", short: "v" }, help: { type: "boolean", short: "h" },
       },
     });
-  } catch (e: any) {
-    console.error(`shrink: ${e.message}\n\n${USAGE}`);
+  } catch (e) {
+    console.error(`shrink: ${errorMessage(e)}\n\n${USAGE}`);
     return 2;
   }
   const { values, positionals } = parsed;

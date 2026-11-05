@@ -1,5 +1,6 @@
 import { type Format, type Settings, type Step } from "../types";
 import { decodeBmp, sameBitmap, writeBmp, type Bitmap } from "./bmp-decode";
+import { errorMessage } from "../errors";
 
 /** Repacks the picture the smallest way that keeps every pixel: palette of 2/16/256 colours (raw or RLE) or 24-bit. */
 export function repackBmp(bm: Bitmap): Uint8Array | null {
@@ -62,8 +63,8 @@ export const bmp: Format = {
       let b: Bitmap;
       try {
         b = decodeBmp(new Uint8Array(await Bun.file(candidatePath).arrayBuffer()));
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       const same = sameBitmap(a, b);
       if (same !== true) return same;

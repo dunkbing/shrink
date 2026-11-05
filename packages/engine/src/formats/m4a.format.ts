@@ -1,5 +1,6 @@
 import type { Context, Format, Settings, Step } from "../types";
 import { audioSig, sameAudio, type AudioSig } from "./audio-oracle";
+import { errorMessage } from "../errors";
 
 const BRANDS = ["M4A ", "M4B ", "M4P ", "M4R ", "F4A ", "F4B "];
 const ascii = (b: Uint8Array, o: number, n: number) => String.fromCharCode(...b.subarray(o, o + n));
@@ -78,8 +79,8 @@ export const m4a: Format = {
       let b: AudioSig;
       try {
         b = await audioSig(candidate, ctx);
-      } catch (e: any) {
-        return `the result does not decode: ${e?.message ?? e}`;
+      } catch (e) {
+        return `the result does not decode: ${errorMessage(e)}`;
       }
       if (b.errors) return `the result decodes with errors: ${b.errors.split("\n")[0]}`;
       return sameAudio(original as AudioSig, b, ctx.settings.audio.keepMetadata);
