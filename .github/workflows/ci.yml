@@ -17,8 +17,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    # Windows is new: tests that need POSIX shell fake tools are still being ported.
-    continue-on-error: ${{ matrix.os == 'windows-latest' }}
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
@@ -73,12 +71,6 @@ jobs:
 
       - run: bun run fixtures:fetch
         continue-on-error: true # a mirror can be down; the corpus test skips what is missing
-      - name: debug exe alone
-        if: runner.os == 'Linux'
-        continue-on-error: true
-        run: |
-          which -a strip
-          time timeout 120 bun test packages/engine/test/exe.test.ts 2>&1 | tail -40
       - run: bun run typecheck
       - run: bun scripts/no-any.ts
       - run: bun test
