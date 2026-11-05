@@ -3,11 +3,11 @@ import { Show, Text, View, type JSX, type WidgetState } from "mantou-ui";
 import { c } from "./theme";
 
 /** Dark look for a secondary Button (the library draws it light). */
-export const secondary = (s: WidgetState) => ({ backgroundColor: s.pressed ? "#3b3e46" : s.hovered ? c.controlHover : c.control, borderWidth: 0, borderRadius: 7, height: 30 });
-export const primary = { height: 30, borderRadius: 7 };
+export const secondary = (s: WidgetState) => ({ backgroundColor: s.pressed ? "#454a56" : s.hovered ? c.controlHover : c.control, borderWidth: 1, borderColor: c.line, borderRadius: 3, height: 26 });
+export const primary = { height: 26, borderRadius: 3, backgroundColor: c.accent };
 
 export const buttonText = (text: string, primaryButton = false) => (
-  <Text style={{ fontSize: 13, fontWeight: 600, color: primaryButton ? "#ffffff" : c.text }}>{text}</Text>
+  <Text style={{ fontSize: 13, fontWeight: 600, color: primaryButton ? "#1b1f27" : c.text }}>{text}</Text>
 );
 
 /** A switch's label with an optional caption under it. */

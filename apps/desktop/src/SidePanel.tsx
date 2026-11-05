@@ -53,7 +53,7 @@ function Tools() {
       <For each={tools() ?? []}>
         {(t) => (
           <View role="listItem" label={`${t.name}: ${t.found ? "found" : "missing"}`} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <View style={{ width: 8, height: 8, borderRadius: 4, flexShrink: 0, backgroundColor: t.found ? c.good : c.bad }} />
+            <View style={{ width: 6, height: 6, borderRadius: 3, flexShrink: 0, backgroundColor: t.found ? c.good : c.bad }} />
             <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
               <Text style={{ fontSize: 13, color: t.found ? c.text : c.dim }}>{t.name}</Text>
               <Text style={{ fontSize: 11, color: c.faint, maxLines: 1 }}>{t.formats.join(", ")}</Text>

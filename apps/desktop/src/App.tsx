@@ -45,7 +45,7 @@ export function App(props: { store: Store }) {
           <FileTable items={store.items()} />
         </Show>
         <View style={{ flexShrink: 0, gap: 8, padding: 12, paddingLeft: 16, paddingRight: 16, borderTopWidth: 1, borderColor: c.line }}>
-          <Progress value={fraction()} label={`${Math.round(fraction() * 100)}%`} style={{ height: 4, borderRadius: 2, backgroundColor: c.control, opacity: store.running() ? 1 : 0.5 }} />
+          <Progress value={fraction()} label={`${Math.round(fraction() * 100)}%`} style={{ height: 3, borderRadius: 1, backgroundColor: c.control, opacity: store.running() ? 1 : 0.5 }} />
           <View style={{ flexDirection: "row", justifyContent: "spaceBetween" }}>
             <Text style={{ fontSize: 12, color: c.dim }} role="status">
               {store.running() ? `${store.runDone()} of ${store.runTotal()} files` : `${store.items().length} ${store.items().length === 1 ? "file" : "files"}`}

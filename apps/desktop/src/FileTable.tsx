@@ -57,7 +57,7 @@ const head = { fontSize: 11, fontWeight: 600, color: c.faint, whiteSpace: "nowra
 export function EmptyState(props: { over: boolean }) {
   return (
     <View style={{ flexGrow: 1, alignItems: "center", justifyContent: "center", gap: 6 }}>
-      <View style={{ width: 360, height: 180, borderRadius: 16, borderWidth: 1.5, borderColor: props.over ? c.accent : c.line, backgroundColor: props.over ? "#4c8dff14" : "transparent", alignItems: "center", justifyContent: "center", gap: 6 }}>
+      <View style={{ width: 360, height: 180, borderRadius: 4, borderWidth: 1, borderColor: props.over ? c.accent : c.line, backgroundColor: props.over ? "#74ade81a" : "transparent", alignItems: "center", justifyContent: "center", gap: 6 }}>
         <Text style={{ fontSize: 17, fontWeight: 600, color: c.text }}>Drop files or folders here</Text>
         <Text style={{ fontSize: 13, color: c.dim }}>or use Add Files and Add Folder</Text>
       </View>
