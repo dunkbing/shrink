@@ -1,0 +1,8 @@
+{
+  "name": "@shrink/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": { "shrink": "src/main.ts" },
+  "dependencies": { "@shrink/engine": "workspace:*" }
+}

@@ -20,7 +20,7 @@ async function fingerprint(path: string): Promise<string> {
 function enabled(step: Step, format: Format, ctx: Context): string | null {
   const flags = format.flags?.(ctx.settings) ?? {};
   if (step.lossy && !flags.lossy) return "lossy steps are off";
-  if (step.strip && flags.keepMetadata) return "metadata is kept";
+  if (step.strip && (flags.keepMetadata || ctx.facts.protected)) return flags.keepMetadata ? "metadata is kept" : "the file's metadata affects how it looks";
   if (step.minLevel && ctx.level < step.minLevel) return `needs level ${step.minLevel}`;
   const w = step.when?.(ctx);
   if (w === false) return "does not apply";
@@ -95,6 +95,7 @@ export class Engine {
           return cur.signal;
         },
         tools,
+        facts: {},
         note: (m) => report.notes.push(m),
         async run(tool, args, ro) {
           const cmd = await tools.locate(tool);

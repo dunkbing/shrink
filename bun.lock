@@ -8,12 +8,24 @@
         "@types/bun": "1.4.4",
       },
     },
+    "packages/cli": {
+      "name": "@shrink/cli",
+      "version": "0.0.0",
+      "bin": {
+        "shrink": "src/main.ts",
+      },
+      "dependencies": {
+        "@shrink/engine": "workspace:*",
+      },
+    },
     "packages/engine": {
       "name": "@shrink/engine",
       "version": "0.0.0",
     },
   },
   "packages": {
+    "@shrink/cli": ["@shrink/cli@workspace:packages/cli"],
+
     "@shrink/engine": ["@shrink/engine@workspace:packages/engine"],
 
     "@types/bun": ["@types/bun@1.4.4", "", { "dependencies": { "bun-types": "1.4.4" } }, "sha512-9wkRDXUXK124pEnAutE6n/l18j+i9GC5IAHK8TmX/2nlySETmky0OU6yL5U8pW1AoKh++AN9auDCr647BfurjQ=="],

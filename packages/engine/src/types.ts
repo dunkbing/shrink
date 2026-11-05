@@ -44,6 +44,8 @@ export interface Context {
   /** Runs a tool by name (its configured command first); rejects if it is missing, fails, times out or is cancelled. */
   run(tool: string, args: string[], opts?: { cwd?: string }): Promise<RunResult>;
   note(message: string): void;
+  /** Things the format learned about this file (set while reading it, read by steps): `protected` means keep metadata. */
+  facts: Record<string, unknown>;
 }
 
 export interface RunResult {
