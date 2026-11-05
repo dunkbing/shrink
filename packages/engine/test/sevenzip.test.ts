@@ -33,7 +33,7 @@ function build(e: Env, name: string, switches: string[], extra: (dir: string) =>
   expect(r2.exitCode).toBe(0);
   return out;
 }
-const listing = (p: string) => sz("l", "-slt", p).stdout.toString().replace(/^.*?----------\n/s, "").replace(/Packed Size = .*\n|Method = .*\n|Block = .*\n/g, "");
+const listing = (p: string) => sz("l", "-slt", p).stdout.toString().replace(/\r\n/g, "\n").replace(/^.*?----------\n/s, "").replace(/Packed Size = .*\n|Method = .*\n|Block = .*\n/g, "");
 
 t("7Z-01: a weakly packed archive is repacked smaller; the listing is equal", async () => {
   const e = make({ level: 7 });

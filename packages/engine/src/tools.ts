@@ -62,7 +62,8 @@ export async function runCommand(cmd: string[], o: { signal: AbortSignal; timeou
   try {
     const [stdout, stderr, code] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited]);
     if (why) throw new Error(why);
-    return { code, stdout, stderr };
+    // Windows tools end lines with \r\n; the parsers split on \n
+    return process.platform === "win32" ? { code, stdout: stdout.replaceAll("\r\n", "\n"), stderr: stderr.replaceAll("\r\n", "\n") } : { code, stdout, stderr };
   } finally {
     clearTimeout(timer);
     o.signal.removeEventListener("abort", onAbort);
