@@ -101,12 +101,12 @@ test$("PNG-07: colour under fully transparent pixels may change", async () => {
   expect(same(bytes, new Uint8Array(readFileSync(p)))).toBe(true);
 });
 
-test("PNG-08: an animated PNG is skipped for now", async () => {
+test("PNG-08: an animation control chunk without frames is damaged (animations are in raster-apng.test.ts)", async () => {
   const e = make();
   const p = await e.file("a.png", makePng({ width: 8, height: 8, colorType: 6, bitDepth: 8, chunks: [["acTL", new Uint8Array(8)]] }));
   const r = await e.engine.optimizeFile(p);
   expect(r.status).toBe("skipped");
-  expect(r.reason).toContain("animated");
+  expect(r.reason).toContain("damaged");
 });
 
 test("PNG-11: truncated and corrupt files are left alone", async () => {

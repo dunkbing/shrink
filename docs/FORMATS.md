@@ -39,9 +39,9 @@ Skip/guards: CMYK/YCCK not through lossy tools; **EXIF Orientation != 1, non-sRG
 
 Extensions: .png .apng (also .pns).
 Detect: 8-byte PNG signature; `acTL` chunk means APNG.
-Oracle: `pixels` (frames and delays for APNG).
+Oracle: `pixels`; for APNG the composed picture after every frame (blend and dispose applied), delays as ratios, loop count, hidden/visible default image and its pixels.
 
-Steps: apngopt *(APNG)*, pngquant *(lossy, strip)*, native recompress (`Bun.Image` `png({compressionLevel: 9})` as a baseline only when it keeps pixels equal), PngOptimizer *(strip, Windows)*, TruePNG *(Windows)*, PNGOUT *(Windows)*, oxipng (levels by `level`, `--strip safe`), Leanify *(strip)*, zopflipng, pngwolf, pngrewrite *(strip)*, advpng *(strip)*, ECT, DeflOpt, defluff.
+Steps: native APNG pass (each frame's data recompressed with oxipng, no colour changes; layout, delays, blend/dispose untouched), pngquant *(lossy, strip)*, native recompress (`Bun.Image` `png({compressionLevel: 9})` as a baseline only when it keeps pixels equal), PngOptimizer *(strip, Windows)*, TruePNG *(Windows)*, PNGOUT *(Windows)*, oxipng (levels by `level`, `--strip safe`), Leanify *(strip)*, zopflipng, pngwolf, pngrewrite *(strip)*, advpng *(strip)*, ECT, DeflOpt, defluff.
 Guards: Android 9-patch (`*.9.png`) skips tools that break the border; `cICP`, non-sRGB `cHRM`/`gAMA` without `sRGB`, ICC non-sRGB, `eXIf` orientation != 1 are kept (keepMetadata behaviour). Fully transparent pixels' RGB may change (invisible) and the oracle ignores them.
 
 | ID | Case |
@@ -92,18 +92,18 @@ Steps: cwebp lossless re-encode (`-lossless -z 9 -metadata none|all`), pingo onl
 
 ## 5. BMP / DIB (tier 2)
 
-Oracle `pixels-tool`. Steps: ImageMagick (`-compress RLE` or palette reduction when lossless: only if the image has <= 256 colours), ImageWorsener (not colour-managed).
+Oracle: a strict TypeScript reader (all depths, RLE4/RLE8, bitfields, OS/2 headers, top-down), pixel for pixel. Steps: native repack (palette of 2/16/256 colours raw or RLE when the picture has that few colours; 32-bit with an unused alpha byte to 24-bit). Left alone: real alpha, 16-bit and other non-8-bit bitfields, colour space or profile headers, OS/2 2.x, JPEG/PNG-in-BMP.
 Cases: BMP-01 24-bit with few colours shrinks via palette; BMP-02 32-bit with alpha; BMP-03 RLE4/RLE8; BMP-04 top-down vs bottom-up; BMP-05 OS/2 headers; BMP-06 ICC/colour space headers kept; BMP-07 truncated untouched.
 
 ## 6. TIFF (tier 2)
 
-Detect: `II*\0` / `MM\0*`. Oracle `pixels-tool` per page. Steps: ImageMagick (Zip/LZW/PackBits; `-strip` when stripping).
+Detect: `II*\0` / `MM\0*`. Oracle `pixels-tool` per page (ImageMagick pixel signature per frame) plus a tag check (every tag that is not layout survives; descriptive tags may go when not keeping metadata). Steps: tiffcp (Zip with predictor, Zip, LZW, CCITT G4 for black and white): a lossless copy of the samples, so tiling, planar layout, ICC and all pages stay. Tags are not stripped.
 Skip: BigTIFF, GeoTIFF, TIFF with Photoshop layers/extra tags ImageMagick would drop ("unsupported TIFF").
 Cases: TIFF-01 uncompressed → deflate smaller; TIFF-02 multi-page keeps every page; TIFF-03 16-bit and float samples; TIFF-04 CMYK and Lab; TIFF-05 tiled vs striped; TIFF-06 GeoTIFF skipped; TIFF-07 BigTIFF skipped; TIFF-08 EXIF/ICC kept when keepMetadata or non-sRGB ICC; TIFF-09 truncated untouched. (.fax, .ptif and .dng via TidyDNG are tier 3.)
 
 ## 7. ICO / CUR (tier 2)
 
-Steps: Leanify *(strip, follows `png.keepMetadata`)*. Oracle: every contained image (BMP or PNG) decodes to the same pixels; directory entries unchanged.
+Steps: oxipng on every PNG entry (`--strip safe`, follows `png.keepMetadata`), directory rebuilt. Oracle: every contained image (BMP or PNG) decodes to the same pixels; directory entries unchanged.
 Cases: ICO-01 PNG-compressed icon sizes; ICO-02 BMP-based 32-bit; ICO-03 multi-resolution count preserved; ICO-04 cursor hotspot kept; ICO-05 colour-managed PNG inside: skipped; ICO-06 truncated untouched.
 
 ## 8. SVG / SVGZ (tier 1)

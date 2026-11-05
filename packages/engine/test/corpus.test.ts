@@ -30,7 +30,6 @@ for (const m of files) {
   test(`real file: ${m.file}`, async () => {
     const r = await run(join(real, m.file), m.file);
     summary.push(`${m.file}: ${r.status} ${r.before} -> ${r.after}${r.reason ? ` (${r.reason})` : ""}`);
-    if (m.file === "apng-beach-ball.png") expect(r.reason).toContain("animated");
   });
 }
 

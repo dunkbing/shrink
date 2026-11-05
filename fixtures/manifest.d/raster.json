@@ -1,0 +1,806 @@
+[
+  {
+    "file": "pillow-bmp-g-pal1.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/pal1.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/pal1)"
+  },
+  {
+    "file": "pillow-bmp-g-pal4.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/pal4.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/pal4)"
+  },
+  {
+    "file": "pillow-bmp-g-pal4rle.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/pal4rle.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/pal4rle)"
+  },
+  {
+    "file": "pillow-bmp-g-pal8.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/pal8.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/pal8)"
+  },
+  {
+    "file": "pillow-bmp-g-pal8rle.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/pal8rle.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/pal8rle)"
+  },
+  {
+    "file": "pillow-bmp-g-pal8topdown.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/pal8topdown.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/pal8topdown)"
+  },
+  {
+    "file": "pillow-bmp-g-pal8os2.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/pal8os2.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/pal8os2)"
+  },
+  {
+    "file": "pillow-bmp-g-pal8v5.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/pal8v5.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/pal8v5)"
+  },
+  {
+    "file": "pillow-bmp-g-rgb16.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/rgb16.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/rgb16)"
+  },
+  {
+    "file": "pillow-bmp-g-rgb16-565.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/rgb16-565.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/rgb16-565)"
+  },
+  {
+    "file": "pillow-bmp-g-rgb24.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/rgb24.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/rgb24)"
+  },
+  {
+    "file": "pillow-bmp-g-rgb24pal.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/rgb24pal.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/rgb24pal)"
+  },
+  {
+    "file": "pillow-bmp-g-rgb32.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/rgb32.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/rgb32)"
+  },
+  {
+    "file": "pillow-bmp-g-rgb32bf.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/g/rgb32bf.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (g/rgb32bf)"
+  },
+  {
+    "file": "pillow-bmp-q-rgba32.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/q/rgba32.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (q/rgba32)"
+  },
+  {
+    "file": "pillow-bmp-q-rgba16-4444.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/q/rgba16-4444.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (q/rgba16-4444)"
+  },
+  {
+    "file": "pillow-bmp-q-rgb24prof.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/q/rgb24prof.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (q/rgb24prof)"
+  },
+  {
+    "file": "pillow-bmp-q-pal8os2v2.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/q/pal8os2v2.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (q/pal8os2v2)"
+  },
+  {
+    "file": "pillow-bmp-q-pal4rletrns.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/q/pal4rletrns.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (q/pal4rletrns)"
+  },
+  {
+    "file": "pillow-bmp-b-badrle.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/b/badrle.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (b/badrle)"
+  },
+  {
+    "file": "pillow-bmp-b-shortfile.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/b/shortfile.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (b/shortfile)"
+  },
+  {
+    "file": "pillow-bmp-b-pal8badindex.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/b/pal8badindex.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (b/pal8badindex)"
+  },
+  {
+    "file": "pillow-bmp-q-rgb24png.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/bmp/q/rgb24png.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "BMP variant (q/rgb24png)"
+  },
+  {
+    "file": "pillow-hopper_rle8.bmp",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_rle8.bmp",
+    "format": "bmp",
+    "licence": "Pillow test image (HPND)",
+    "note": "RLE8"
+  },
+  {
+    "file": "pillow-python.ico",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/python.ico",
+    "format": "ico",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_draw.ico",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_draw.ico",
+    "format": "ico",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-deerstalker.cur",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/deerstalker.cur",
+    "format": "ico",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_256x256.ico",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_256x256.ico",
+    "format": "ico",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_mask.ico",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_mask.ico",
+    "format": "ico",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-black_and_white.ico",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/black_and_white.ico",
+    "format": "ico",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-16bit.deflate.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/16bit.deflate.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-16bit.MM.deflate.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/16bit.MM.deflate.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-16bit.cropped.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/16bit.cropped.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-8bit.s.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/8bit.s.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-child_ifd.tiff",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/child_ifd.tiff",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-copyleft.tiff",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/copyleft.tiff",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-g4-multi.tiff",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/g4-multi.tiff",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper.iccprofile.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper.iccprofile.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_g4.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_g4.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_gray_4bpp.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_gray_4bpp.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_jpg.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_jpg.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_lzw.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_lzw.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_lzma.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_lzma.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_bigtiff.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_bigtiff.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_float_dpi_2.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_float_dpi_2.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-lab.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/lab.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-multipage-lastframe.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/multipage-lastframe.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-12bit.cropped.tif",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/12bit.cropped.tif",
+    "format": "tiff",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-apng-blend_op_over.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/blend_op_over.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-blend_op_over_near_transparent.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/blend_op_over_near_transparent.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-blend_op_source_near_transparent.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/blend_op_source_near_transparent.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-blend_op_source_solid.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/blend_op_source_solid.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-blend_op_source_transparent.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/blend_op_source_transparent.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-chunk_actl_after_idat.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/chunk_actl_after_idat.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-chunk_multi_actl.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/chunk_multi_actl.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-chunk_no_actl.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/chunk_no_actl.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-chunk_no_fctl.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/chunk_no_fctl.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-chunk_no_fdat.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/chunk_no_fdat.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-chunk_repeat_fctl.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/chunk_repeat_fctl.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-delay.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/delay.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-delay_round.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/delay_round.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-delay_short_max.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/delay_short_max.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-delay_zero_denom.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/delay_zero_denom.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-delay_zero_numer.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/delay_zero_numer.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-different_durations.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/different_durations.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_background.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_background.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_background_before_region.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_background_before_region.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_background_final.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_background_final.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_background_p_mode.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_background_p_mode.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_background_region.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_background_region.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_none.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_none.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_none_region.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_none_region.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_previous.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_previous.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_previous_final.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_previous_final.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_previous_first.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_previous_first.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_previous_frame.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_previous_frame.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-dispose_op_previous_region.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/dispose_op_previous_region.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-fctl_actl.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/fctl_actl.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-mode_16bit.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/mode_16bit.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-mode_grayscale.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/mode_grayscale.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-mode_grayscale_alpha.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/mode_grayscale_alpha.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-mode_palette.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/mode_palette.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-mode_palette_1bit_alpha.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/mode_palette_1bit_alpha.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-mode_palette_alpha.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/mode_palette_alpha.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-num_plays.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/num_plays.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-num_plays_1.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/num_plays_1.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-sequence_fdat_fctl.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/sequence_fdat_fctl.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-sequence_gap.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/sequence_gap.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-sequence_reorder.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/sequence_reorder.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-sequence_reorder_chunk.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/sequence_reorder_chunk.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-sequence_repeat.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/sequence_repeat.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-sequence_repeat_chunk.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/sequence_repeat_chunk.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-sequence_start.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/sequence_start.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-single_frame.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/single_frame.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-single_frame_default.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/single_frame_default.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-split_fdat.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/split_fdat.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-split_fdat_zero_chunk.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/split_fdat_zero_chunk.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-syntax_num_frames_high.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/syntax_num_frames_high.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-syntax_num_frames_invalid.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/syntax_num_frames_invalid.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-syntax_num_frames_low.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/syntax_num_frames_low.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-syntax_num_frames_zero.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/syntax_num_frames_zero.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-apng-syntax_num_frames_zero_default.png",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/apng/syntax_num_frames_zero_default.png",
+    "format": "png",
+    "licence": "Pillow test image (HPND)",
+    "note": "APNG"
+  },
+  {
+    "file": "pillow-hopper.ppm",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper.ppm",
+    "format": "ppm",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_8bit_plain.ppm",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_8bit_plain.ppm",
+    "format": "ppm",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_1bit_plain.pbm",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_1bit_plain.pbm",
+    "format": "pbm",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_16bit_plain.pgm",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_16bit_plain.pgm",
+    "format": "pgm",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_8bit_plain.pgm",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_8bit_plain.pgm",
+    "format": "pgm",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper.sgi",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper.sgi",
+    "format": "sgi",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper.ras",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper.ras",
+    "format": "sun",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper.xbm",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper.xbm",
+    "format": "xbm",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper.xpm",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper.xpm",
+    "format": "xpm",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-hopper_rgb.xpm",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/hopper_rgb.xpm",
+    "format": "xpm",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-p_16.tga",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/p_16.tga",
+    "format": "tga",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-la.tga",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/la.tga",
+    "format": "tga",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-01r_00.pcx",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/01r_00.pcx",
+    "format": "pcx",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-odd_stride.pcx",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/odd_stride.pcx",
+    "format": "pcx",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-pil184.pcx",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/pil184.pcx",
+    "format": "pcx",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-tga-common-200x32_rgb_bl_rle.tga",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/tga/common/200x32_rgb_bl_rle.tga",
+    "format": "tga",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-tga-common-200x32_l_bl_raw.tga",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/tga/common/200x32_l_bl_raw.tga",
+    "format": "tga",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-tga-common-200x32_rgba_tl_raw.tga",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/tga/common/200x32_rgba_tl_raw.tga",
+    "format": "tga",
+    "licence": "Pillow test image (HPND)"
+  },
+  {
+    "file": "pillow-tga-common-200x32_p_bl_raw.tga",
+    "url": "https://raw.githubusercontent.com/python-pillow/Pillow/main/Tests/images/tga/common/200x32_p_bl_raw.tga",
+    "format": "tga",
+    "licence": "Pillow test image (HPND)"
+  }
+]
