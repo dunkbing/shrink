@@ -119,11 +119,11 @@ t("COMMON-08 for 7z: the oracle rejects a different file, a dropped file and a c
   for (const [k, f] of Object.entries(variants)) {
     rmSync(src, { recursive: true, force: true });
     mkdirSync(src, { recursive: true });
-    Bun.spawnSync([SZ, "x", "-snl", `-o${src}`, orig]);
+    const x = Bun.spawnSync([SZ, "x", "-snl", `-o${src}`, orig], { stdout: "pipe", stderr: "pipe" });
     f(src);
     const out = join(e.dir, `${k}.7z`);
-    Bun.spawnSync([SZ, "a", "-snl", out, "."], { cwd: src });
-    expect(await sevenzip.oracle.same(prepared, out, ctx)).not.toBe(true);
+    const a = Bun.spawnSync([SZ, "a", "-snl", out, "."], { cwd: src, stdout: "pipe", stderr: "pipe" });
+    expect(await sevenzip.oracle.same(prepared, out, ctx), `${k}: x=${x.exitCode} ${x.stdout}${x.stderr} a=${a.exitCode} ${a.stdout}${a.stderr}`).not.toBe(true);
   }
 });
 
