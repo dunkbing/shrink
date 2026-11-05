@@ -8,6 +8,7 @@ export const c = {
   text: "#dce0e5",
   dim: "#a9afbc",
   faint: "#878a98",
+  selected: "#3a4a63",
   accent: "#74ade8",
   accentText: "#1b1f27",
   good: "#4ade80",

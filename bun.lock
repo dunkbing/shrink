@@ -13,7 +13,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@shrink/engine": "workspace:*",
-        "mantou-ui": "^0.3.1",
+        "mantou-ui": "^0.4.0",
       },
     },
     "packages/cli": {
@@ -142,17 +142,17 @@
 
     "lru-cache": ["lru-cache@5.1.1", "", { "dependencies": { "yallist": "^3.0.2" } }, "sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w=="],
 
-    "mantou-ui": ["mantou-ui@0.3.1", "", { "dependencies": { "@babel/core": "7.29.7", "@babel/preset-typescript": "7.29.7", "babel-preset-solid": "1.9.16", "solid-js": "1.9.18" }, "optionalDependencies": { "mantou-ui-darwin-arm64": "0.3.1", "mantou-ui-darwin-x64": "0.3.1", "mantou-ui-linux-arm64": "0.3.1", "mantou-ui-linux-x64": "0.3.1", "mantou-ui-windows-x64": "0.3.1" }, "bin": { "mantou": "runtime/cli.ts" } }, "sha512-M80bII2PdFWDuv6mfkPmNsrpwzF0g6IDu5GAB1bPHeByRYYqqNFb3ssuPxddGPXQgvHiLa8eHTHDpLDO/34BJw=="],
+    "mantou-ui": ["mantou-ui@0.4.0", "", { "dependencies": { "@babel/core": "7.29.7", "@babel/preset-typescript": "7.29.7", "babel-preset-solid": "1.9.16", "solid-js": "1.9.18" }, "optionalDependencies": { "mantou-ui-darwin-arm64": "0.4.0", "mantou-ui-darwin-x64": "0.4.0", "mantou-ui-linux-arm64": "0.4.0", "mantou-ui-linux-x64": "0.4.0", "mantou-ui-windows-x64": "0.4.0" }, "bin": { "mantou": "runtime/cli.ts" } }, "sha512-AJfwqyMUphlyD5MDkrWxOE1ip4h1XaKTBP2ugJQNqarTXTujQAztxAHTpXsP2z6+huVUUjY54sjX1hFLGoeE9A=="],
 
-    "mantou-ui-darwin-arm64": ["mantou-ui-darwin-arm64@0.3.1", "", { "os": "darwin", "cpu": "arm64" }, "sha512-i9Ex2hFO0ywPBndPaVNRM2mfBsRZF8rLvod1OIWCj7LZgiGqGrHRdS6X9xJnV1DWNohlvaeDvbBKZfF3epDvAQ=="],
+    "mantou-ui-darwin-arm64": ["mantou-ui-darwin-arm64@0.4.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-H1aNgX1TYH5wfgFLED9H976Y3sHFG7VpUT0CKucmqW3ceeA8xCbKWgvWQUA8FiZn+KKdYNOy2SN4CF5ObsGx1g=="],
 
-    "mantou-ui-darwin-x64": ["mantou-ui-darwin-x64@0.3.1", "", { "os": "darwin", "cpu": "x64" }, "sha512-dwzspYaCkoAqnOUvjfhZaxhUWo2Es+LEBjHiVPz6AG6nKg6EUdXvayPYSAwGPiqob8Hjgz+5hTWji7K4tNncNw=="],
+    "mantou-ui-darwin-x64": ["mantou-ui-darwin-x64@0.4.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-L0iV9GHJhtD3Wau8bE30NuRqstm1pYtjsLlVb0ZjkO1oNZ7WFYYCad2IjMifv/ZgRj9S3fU/eFUXECZqXCMe0Q=="],
 
-    "mantou-ui-linux-arm64": ["mantou-ui-linux-arm64@0.3.1", "", { "os": "linux", "cpu": "arm64", "libc": "glibc" }, "sha512-m6Mwmy1Xiyj9gcw+7VDo2AGRMPqq6FjI05QQujK478RgEbErpx22Y2uw004gkoeC2WCVumJ3WzcnMWahIbmH6w=="],
+    "mantou-ui-linux-arm64": ["mantou-ui-linux-arm64@0.4.0", "", { "os": "linux", "cpu": "arm64", "libc": "glibc" }, "sha512-CdfAvPjk23xd8QE3GzeM1QyeeQgn4lNbuML30HB6s0QMUngDyshnjy84LcRrTmv9XCUpWLx3XpxByjivZ6LuIQ=="],
 
-    "mantou-ui-linux-x64": ["mantou-ui-linux-x64@0.3.1", "", { "os": "linux", "cpu": "x64", "libc": "glibc" }, "sha512-eb/XQMAmfD7HGKi33/ujEpkw5NpOyRMfjSFAb13flyNCaSnSpnUhfsSWxnrudO1P4hp7jaRCSusYB2uNWu4AVA=="],
+    "mantou-ui-linux-x64": ["mantou-ui-linux-x64@0.4.0", "", { "os": "linux", "cpu": "x64", "libc": "glibc" }, "sha512-d+FPEh8akItCqkM0FuMFAq8WdI+Z01DceeZsNSKh1gqcedSJo5MZU04DDGQfO63Bexw+EzKhAOZLpGVJHUVxoA=="],
 
-    "mantou-ui-windows-x64": ["mantou-ui-windows-x64@0.3.1", "", { "os": "win32", "cpu": "x64" }, "sha512-lCBym+FQuBKzkq/mkU2qiiYtRVi80Y/WIvBAK17utSl7DWdwu3l8ODMBuPntT1kTO4NfXB9E4bFQy89VWlFCpw=="],
+    "mantou-ui-windows-x64": ["mantou-ui-windows-x64@0.4.0", "", { "os": "win32", "cpu": "x64" }, "sha512-nM8DpNz0/m1K2asyc1kCBVqzy9OsIgViLtDCbEadVX/iYw4C58GhJH1Vmf2PXDNYgRwlPt1qzfpuvi9wj+b2gA=="],
 
     "ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 

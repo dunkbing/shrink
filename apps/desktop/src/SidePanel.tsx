@@ -20,9 +20,15 @@ function Settings(props: { store: Store }) {
         {flag("lossy", "Allow lossy", "May change pixels slightly in images")}
         {flag("keepMetadata", "Keep metadata", "EXIF, comments, tags")}
         {flag("skipOptimized", "Skip optimized files", "Files done before are left alone")}
+        {flag("dryRun", "Dry run", "Report the sizes, change nothing")}
         <Labelled name="Workers" value={s().workers ? String(s().workers) : "Auto"}>
           <Slider value={s().workers} min={0} max={16} step={1} label="Workers" onChange={(workers) => set({ workers })} />
         </Labelled>
+      </Section>
+      <Section title="App">
+        {flag("notifications", "Notifications", "When a run ends")}
+        {flag("closeToTray", "Close to tray", "Closing the window keeps Shrink running")}
+        {flag("launchAtLogin", "Launch at login")}
       </Section>
       <Section title="Also optimize">
         {flag("html", "HTML")}

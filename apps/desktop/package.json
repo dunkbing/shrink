@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "@shrink/engine": "workspace:*",
-    "mantou-ui": "^0.3.1"
+    "mantou-ui": "^0.4.0"
   }
 }

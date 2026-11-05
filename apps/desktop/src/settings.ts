@@ -16,6 +16,13 @@ export interface AppSettings {
   js: boolean;
   exe: boolean;
   lua: boolean;
+  /** Optimize without writing: only report the sizes. */
+  dryRun: boolean;
+  /** A notification when a run ends. */
+  notifications: boolean;
+  /** Closing the window keeps the app in the tray. */
+  closeToTray: boolean;
+  launchAtLogin: boolean;
 }
 
 export const defaultSettings: AppSettings = {
@@ -29,6 +36,10 @@ export const defaultSettings: AppSettings = {
   js: false,
   exe: false,
   lua: false,
+  dryRun: false,
+  notifications: true,
+  closeToTray: false,
+  launchAtLogin: false,
 };
 
 const bool = (v: unknown, d: boolean) => (typeof v === "boolean" ? v : d);
@@ -49,6 +60,10 @@ export function sanitize(v: unknown): AppSettings {
     js: bool(o.js, d.js),
     exe: bool(o.exe, d.exe),
     lua: bool(o.lua, d.lua),
+    dryRun: bool(o.dryRun, d.dryRun),
+    notifications: bool(o.notifications, d.notifications),
+    closeToTray: bool(o.closeToTray, d.closeToTray),
+    launchAtLogin: bool(o.launchAtLogin, d.launchAtLogin),
   };
 }
 

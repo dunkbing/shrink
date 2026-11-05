@@ -1,9 +1,8 @@
-import { Button, Progress, Show, Text, View, createEffect, createSignal, message, useWindowSize, type DropEvent } from "mantou-ui";
+import { Button, Progress, Show, Text, View, createSignal, message, onKey, type DropEvent } from "mantou-ui";
 import { buttonText, primary, secondary } from "./controls";
 import { EmptyState, FileTable } from "./FileTable";
 import { percent, size } from "./files";
 import { pickFiles, pickFolders } from "./pick";
-import { rememberWindow } from "./window";
 import { SidePanel } from "./SidePanel";
 import type { Store } from "./store";
 import { c } from "./theme";
@@ -11,8 +10,14 @@ import { c } from "./theme";
 export function App(props: { store: Store }) {
   const { store } = props;
   const [over, setOver] = createSignal(false);
-  const size_ = useWindowSize();
-  createEffect(() => (size_(), rememberWindow()));
+  // Delete removes the selected rows; Cmd/Ctrl+A selects all, +O adds files
+  onKey((e) => {
+    if (e.type !== "keyDown") return;
+    const mod = e.meta || e.ctrl;
+    if (e.key === "Delete" || e.key === "Backspace") store.removeSelected();
+    else if (mod && e.key.toLowerCase() === "a") store.selectAll();
+    else if (mod && e.key.toLowerCase() === "o") void (e.shift ? pickFolders(store) : pickFiles(store));
+  });
   const addFiles = () => pickFiles(store);
   const addFolder = () => pickFolders(store);
   const queued = () => store.items().filter((i) => i.status === "queued").length;
@@ -42,7 +47,7 @@ export function App(props: { store: Store }) {
           </Show>
         </View>
         <Show when={store.items().length > 0} fallback={<EmptyState over={over()} />}>
-          <FileTable items={store.items()} />
+          <FileTable store={store} />
         </Show>
         <View style={{ flexShrink: 0, gap: 8, padding: 12, paddingLeft: 16, paddingRight: 16, borderTopWidth: 1, borderColor: c.line }}>
           <Progress value={fraction()} label={`${Math.round(fraction() * 100)}%`} style={{ height: 3, borderRadius: 1, backgroundColor: c.control, opacity: store.running() ? 1 : 0.5 }} />
@@ -51,7 +56,7 @@ export function App(props: { store: Store }) {
               {store.running() ? `${store.runDone()} of ${store.runTotal()} files` : `${store.items().length} ${store.items().length === 1 ? "file" : "files"}`}
             </Text>
             <Text style={{ fontSize: 12, color: store.totals().saved > 0 ? c.good : c.dim }} role="status">
-              {store.totals().saved > 0 ? `Saved ${size(store.totals().saved)} (${percent(store.totals().before, store.totals().before - store.totals().saved)})` : "Nothing saved yet"}
+              {store.totals().saved === 0 && store.drySaved() > 0 ? `Could save ${size(store.drySaved())}` : store.totals().saved > 0 ? `Saved ${size(store.totals().saved)} (${percent(store.totals().before, store.totals().before - store.totals().saved)})` : "Nothing saved yet"}
             </Text>
           </View>
         </View>

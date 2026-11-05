@@ -70,17 +70,17 @@ describe.skipIf(!hasCore)("the app", () => {
     const run = fakeRunner((p) => report(p));
     const { h, store, dir } = app({ makeRunner: run.make });
     h.press(byText(h, "Allow lossy"));
-    h.press(byText(h, "Executables"));
+    h.press(byText(h, "Dry run"));
     const [x0, y0, x1, y1] = h.rect(byLabel(h, "Level"))!;
     h.press([x0 + 8 + (7 / 8) * (x1 - x0 - 16), (y0 + y1) / 2]); // the 8th of 9 steps
-    expect(store.settings()).toMatchObject({ lossy: true, exe: true, level: 8 });
-    expect(JSON.parse(readFileSync(join(dir, "settings.json"), "utf8"))).toMatchObject({ lossy: true, exe: true, level: 8 });
+    expect(store.settings()).toMatchObject({ lossy: true, dryRun: true, level: 8 });
+    expect(JSON.parse(readFileSync(join(dir, "settings.json"), "utf8"))).toMatchObject({ lossy: true, dryRun: true, level: 8 });
     await store.add(["/x/a.png"]);
     await store.start();
-    expect(run.seen[0]).toMatchObject({ level: 8, png: { lossy: true, keepMetadata: false }, exe: { enabled: true }, web: { html: false } });
+    expect(run.seen[0]).toMatchObject({ level: 8, png: { lossy: true, keepMetadata: false }, exe: { enabled: false }, web: { html: false } });
 
     const again = createStore({ dir, makeRunner: run.make, saveDelay: 5 });
-    expect(again.settings()).toMatchObject({ lossy: true, exe: true, level: 8 });
+    expect(again.settings()).toMatchObject({ lossy: true, dryRun: true, level: 8 });
   });
 
   test("results are kept after a restart; a run that was interrupted comes back queued", async () => {

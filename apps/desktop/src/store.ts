@@ -14,11 +14,29 @@ export interface Item {
   after: number;
   status: ItemStatus;
   reason?: string;
+  /** A dry run: the sizes are what it would be; the file is untouched. */
+  dry?: boolean;
+}
+
+export type SortKey = "name" | "format" | "before" | "after" | "saved" | "status";
+export interface Sort {
+  key: SortKey;
+  dir: 1 | -1;
+}
+
+/** What a run came to, for the notification. */
+export interface RunSummary {
+  total: number;
+  optimized: number;
+  failed: number;
+  saved: number;
+  dry: boolean;
+  cancelled: boolean;
 }
 
 /** The part of the engine the app uses; tests supply a fake. */
 export interface Runner {
-  optimizeMany(paths: string[], o: { signal: AbortSignal; onResult: (r: Report) => void }): Promise<Report[]>;
+  optimizeMany(paths: string[], o: { dryRun?: boolean; signal: AbortSignal; onResult: (r: Report) => void }): Promise<Report[]>;
 }
 
 export interface StoreOptions {
@@ -53,6 +71,7 @@ function loadItems(file: string): Item[] {
       after: typeof o.after === "number" ? o.after : 0,
       status: st === "working" ? "queued" : st,
       reason: typeof o.reason === "string" ? o.reason : undefined,
+      dry: o.dry === true ? true : undefined,
     });
   }
   return out;
@@ -67,6 +86,10 @@ export function createStore(opts: StoreOptions) {
   /** Files finished in the current run, and how many it started with. */
   const [runDone, setRunDone] = createSignal(0);
   const [runTotal, setRunTotal] = createSignal(0);
+  const [selected, setSelected] = createSignal<ReadonlySet<string>>(new Set());
+  const [sort, setSort] = createSignal<Sort | null>(null);
+  const finishers: ((s: RunSummary) => void)[] = [];
+  let anchor: string | null = null;
   let abort: AbortController | null = null;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let current: Promise<void> = Promise.resolve();
@@ -87,7 +110,10 @@ export function createStore(opts: StoreOptions) {
     writeJson(settingsFile, next);
   };
 
-  const add = async (paths: string[]) => {
+  // one add at a time, so the same file arriving twice (drop and launch) is listed once
+  let adding: Promise<number> = Promise.resolve(0);
+  const add = (paths: string[]): Promise<number> => (adding = adding.then(() => addNow(paths)));
+  const addNow = async (paths: string[]) => {
     const files = await (opts.expand ?? expand)(paths);
     const have = new Set(items().map((i) => i.path));
     const fresh = files.filter((f, n) => !have.has(f) && files.indexOf(f) === n);
@@ -97,10 +123,57 @@ export function createStore(opts: StoreOptions) {
     return fresh.length;
   };
 
+  const rank = (i: Item, k: SortKey) => (k === "saved" ? (i.status === "optimized" && i.before ? 1 - i.after / i.before : -1) : i[k]);
+  /** The list as shown: in the chosen order (stable; the arrival order when none). */
+  const sorted = createMemo(() => {
+    const s = sort();
+    if (!s) return items();
+    return [...items()].sort((a, b) => {
+      const x = rank(a, s.key), y = rank(b, s.key);
+      return (typeof x === "string" && typeof y === "string" ? x.localeCompare(y, undefined, { numeric: true }) : Number(x) - Number(y)) * s.dir;
+    });
+  });
+  /** Clicking a column: ascending, then descending, then the original order. */
+  const sortBy = (key: SortKey) =>
+    setSort((s) => (s?.key !== key ? { key, dir: 1 } : s.dir === 1 ? { key, dir: -1 } : null));
+
+  /** A click on a row: alone, toggling (ctrl/cmd) or extending from the last one (shift). */
+  const select = (path: string, how: "one" | "toggle" | "range" = "one") => {
+    const list = sorted().map((i) => i.path);
+    if (how === "range" && anchor && list.includes(anchor)) {
+      const a = list.indexOf(anchor), b = list.indexOf(path);
+      setSelected(new Set(list.slice(Math.min(a, b), Math.max(a, b) + 1)));
+      return;
+    }
+    anchor = path;
+    if (how === "toggle") setSelected((s) => (s.has(path) ? new Set([...s].filter((p) => p !== path)) : new Set([...s, path])));
+    else setSelected(new Set([path]));
+  };
+  const selectAll = () => setSelected(new Set(items().map((i) => i.path)));
+
+  /** Drops files from the list (the ones being worked on stay). */
+  const remove = (paths: string[]) => {
+    const gone = new Set(paths);
+    setItems((l) => l.filter((i) => !gone.has(i.path) || i.status === "working"));
+    setSelected((s) => new Set([...s].filter((p) => !gone.has(p) || items().some((i) => i.path === p))));
+    flush();
+  };
+  const removeSelected = () => remove([...selected()]);
+
+  /** Puts finished files back in the queue (and starts, unless a run is on). */
+  const again = (paths: string[]) => {
+    const set = new Set(paths);
+    setItems((l) => l.map((i) => (set.has(i.path) && i.status !== "working" ? { ...i, status: "queued", reason: undefined } : i)));
+    later();
+    return start();
+  };
+
   const start = () => {
     if (running()) return current;
     const todo = items().filter((i) => i.status === "queued").map((i) => i.path);
     if (!todo.length) return current;
+    const dry = settings().dryRun;
+    let cancelled = false;
     const ctl = (abort = new AbortController());
     const runner = opts.makeRunner(toEngine(settings()));
     setRunning(true);
@@ -114,23 +187,27 @@ export function createStore(opts: StoreOptions) {
     const onResult = (r: Report) => {
       if (r.reason === "cancelled" && ctl.signal.aborted) patch(r.path, { status: "queued", reason: undefined });
       else {
-        patch(r.path, { status: r.status, format: r.format ?? "", before: r.before, after: r.after, reason: r.reason });
+        patch(r.path, { dry: dry && r.status === "optimized" ? true : undefined, status: r.status, format: r.format ?? "", before: r.before, after: r.after, reason: r.reason });
         setRunDone((d) => d + 1);
       }
       if (!ctl.signal.aborted) begin();
       later();
     };
     current = runner
-      .optimizeMany(todo, { signal: ctl.signal, onResult })
+      .optimizeMany(todo, { dryRun: dry, signal: ctl.signal, onResult })
       .then(() => undefined)
       .catch((e) => {
         for (const p of todo) setItems((l) => l.map((i) => (i.path === p && i.status === "working" ? { ...i, status: "failed", reason: errorMessage(e) } : i)));
       })
       .finally(() => {
         setItems((l) => l.map((i) => (i.status === "working" ? { ...i, status: "queued" } : i)));
+        cancelled = ctl.signal.aborted;
         abort = null;
         setRunning(false);
         flush();
+        const done = todo.map((p) => items().find((i) => i.path === p)).filter((i): i is Item => !!i);
+        const ok = done.filter((i) => i.status === "optimized");
+        finishers.forEach((f) => f({ total: todo.length, optimized: ok.length, failed: done.filter((i) => i.status === "failed").length, saved: ok.reduce((n, i) => n + i.before - i.after, 0), dry, cancelled }));
       });
     return current;
   };
@@ -140,21 +217,28 @@ export function createStore(opts: StoreOptions) {
   /** Removes finished and queued files; the running ones stay. */
   const clear = () => {
     setItems((l) => l.filter((i) => i.status === "working"));
+    setSelected(new Set<string>());
     flush();
   };
 
   const totals = createMemo(() => {
     let before = 0, saved = 0, optimized = 0;
     for (const i of items()) {
-      if (i.status !== "optimized") continue;
+      if (i.status !== "optimized" || i.dry) continue;
       optimized++;
       before += i.before;
       saved += i.before - i.after;
     }
     return { before, saved, optimized };
   });
+  /** What the dry-run files would save. */
+  const drySaved = createMemo(() => items().reduce((n, i) => (i.dry && i.status === "optimized" ? n + i.before - i.after : n), 0));
+  /** Files waiting or being worked on (the dock badge). */
+  const pending = createMemo(() => items().filter((i) => i.status === "queued" || i.status === "working").length);
 
-  return { settings, setSettings, items, running, runDone, runTotal, totals, add, start, stop, clear, flush, defaults: defaultSettings };
+  const onFinish = (f: (s: RunSummary) => void) => void finishers.push(f);
+
+  return { settings, setSettings, items, sorted, sort, sortBy, selected, select, selectAll, remove, removeSelected, again, onFinish, drySaved, pending, running, runDone, runTotal, totals, add, start, stop, clear, flush, defaults: defaultSettings };
 }
 
 export type Store = ReturnType<typeof createStore>;
