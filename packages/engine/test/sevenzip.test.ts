@@ -108,7 +108,7 @@ t("a truncated or corrupt 7z is untouched", async () => {
 t("COMMON-08 for 7z: the oracle rejects a different file, a dropped file and a changed attribute", async () => {
   const e = make({ level: 7 });
   const orig = build(e, "o.7z", ["-mx=1"]);
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {}, tools: { locate: async () => [SZ] }, run: async (tool: string, args: string[]) => { const r = Bun.spawnSync([tool === "7zz" ? SZ : tool, ...args], { stdout: "pipe", stderr: "pipe" }); return { code: r.exitCode, stdout: r.stdout.toString(), stderr: r.stderr.toString() }; } };
+  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {}, tools: { locate: async () => [SZ] }, run: async (tool: string, args: string[]) => { const r = Bun.spawnSync([tool === "7zz" ? SZ : tool, ...args], { stdout: "pipe", stderr: "pipe" }); return { code: r.exitCode, stdout: r.stdout.toString().replaceAll("\r\n", "\n"), stderr: r.stderr.toString().replaceAll("\r\n", "\n") }; } }; // like runCommand on Windows
   const prepared = await sevenzip.oracle.prepare!(orig, ctx);
   const src = join(e.dir, "alt");
   const variants: Record<string, (d: string) => void> = {
@@ -119,11 +119,11 @@ t("COMMON-08 for 7z: the oracle rejects a different file, a dropped file and a c
   for (const [k, f] of Object.entries(variants)) {
     rmSync(src, { recursive: true, force: true });
     mkdirSync(src, { recursive: true });
-    const x = Bun.spawnSync([SZ, "x", "-snl", `-o${src}`, orig], { stdout: "pipe", stderr: "pipe" });
+    Bun.spawnSync([SZ, "x", "-snl", `-o${src}`, orig]);
     f(src);
     const out = join(e.dir, `${k}.7z`);
-    const a = Bun.spawnSync([SZ, "a", "-snl", out, "."], { cwd: src, stdout: "pipe", stderr: "pipe" });
-    expect(await sevenzip.oracle.same(prepared, out, ctx), `${k}: x=${x.exitCode} a=${a.exitCode} orig=${(listing(orig).match(/(Path|CRC) = .*/g) ?? []).join(" ")} new=${(listing(out).match(/(Path|CRC) = .*/g) ?? []).join(" ")}`).not.toBe(true);
+    Bun.spawnSync([SZ, "a", "-snl", out, "."], { cwd: src });
+    expect(await sevenzip.oracle.same(prepared, out, ctx), k).not.toBe(true);
   }
 });
 
