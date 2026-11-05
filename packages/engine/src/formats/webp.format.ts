@@ -57,3 +57,5 @@ export const webp: Format = {
     },
   },
 };
+
+export const formats: Format[] = [webp];

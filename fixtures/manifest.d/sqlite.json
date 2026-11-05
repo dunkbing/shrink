@@ -1,0 +1,8 @@
+[
+  {
+    "file": "chinook.sqlite",
+    "url": "https://raw.githubusercontent.com/lerocha/chinook-database/master/ChinookDatabase/DataSources/Chinook_Sqlite.sqlite",
+    "format": "sqlite",
+    "licence": "Chinook sample database (MS-PL)"
+  }
+]

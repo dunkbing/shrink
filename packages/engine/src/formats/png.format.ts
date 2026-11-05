@@ -52,3 +52,5 @@ export const png: Format = {
     },
   },
 };
+
+export const formats: Format[] = [png];

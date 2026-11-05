@@ -7,7 +7,7 @@ import { allFormats } from "../src";
 import { env } from "./fake";
 
 const real = join(import.meta.dir, "../../../fixtures/real");
-const manifest: { file: string; format: string }[] = await Bun.file(join(real, "../manifest.json")).json();
+const manifest: { file: string; format: string }[] = (await Promise.all([...new Bun.Glob("*.json").scanSync(join(real, "../manifest.d"))].sort().map((f) => Bun.file(join(real, "../manifest.d", f)).json()))).flat();
 const e = env({ formats: allFormats, settings: { skipOptimized: false } });
 afterAll(() => e.cleanup());
 

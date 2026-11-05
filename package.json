@@ -6,7 +6,8 @@
   "workspaces": ["packages/*", "apps/*"],
   "scripts": {
     "test": "bun test",
-    "typecheck": "bun check",
+    "gen": "bun scripts/gen-formats.ts",
+    "typecheck": "bun scripts/gen-formats.ts && bun check",
     "fixtures:fetch": "bun scripts/fetch-fixtures.ts"
   },
   "devDependencies": {

@@ -77,3 +77,5 @@ export const jpeg: Format = {
     },
   },
 };
+
+export const formats: Format[] = [jpeg];
