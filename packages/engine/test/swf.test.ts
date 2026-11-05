@@ -5,6 +5,7 @@ import { deflateSync } from "node:zlib";
 import { parseSwf, swf } from "../src/formats/swf.format";
 import { env, type Env } from "./fake";
 import { lorem } from "./lib/zip";
+import { testCtx } from "./lib/ctx";
 
 const envs: Env[] = [];
 const make = (settings = {}) => (envs.push(env({ formats: [swf], settings })), envs[envs.length - 1]);
@@ -53,7 +54,7 @@ test("a truncated SWF is untouched; LZMA (ZWS) is skipped", async () => {
 test("COMMON-08 for SWF: the oracle rejects a changed tag stream", async () => {
   const e = make();
   const orig = await e.file("o.swf", makeSwf("CWS", 9));
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {} };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir });
   const prepared = await swf.oracle.prepare!(orig, ctx);
   expect(await swf.oracle.same(prepared, await e.file("c.swf", makeSwf("CWS", 9, lorem(30000, 2))), ctx)).not.toBe(true);
   expect(await swf.oracle.same(prepared, await e.file("v.swf", makeSwf("CWS", 10)), ctx)).not.toBe(true);

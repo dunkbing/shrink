@@ -6,6 +6,7 @@ import { sevenzip, unixMode } from "../src/formats/sevenzip.format";
 import { env, type Env } from "./fake";
 import { posix } from "./lib/platform";
 import { lorem, noise } from "./lib/zip";
+import { spawnRun, testCtx } from "./lib/ctx";
 
 // 7zz (Homebrew, 7-Zip.org), or 7z / 7zip (Debian, Windows)
 const SZ = ["7zz", "7z", "7zip"].find((n) => Bun.which(n)) ?? "7zz";
@@ -108,7 +109,7 @@ t("a truncated or corrupt 7z is untouched", async () => {
 t("COMMON-08 for 7z: the oracle rejects a different file, a dropped file and a changed attribute", async () => {
   const e = make({ level: 7 });
   const orig = build(e, "o.7z", ["-mx=1"]);
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {}, tools: { locate: async () => [SZ] }, run: async (tool: string, args: string[]) => { const r = Bun.spawnSync([tool === "7zz" ? SZ : tool, ...args], { stdout: "pipe", stderr: "pipe" }); return { code: r.exitCode, stdout: r.stdout.toString().replaceAll("\r\n", "\n"), stderr: r.stderr.toString().replaceAll("\r\n", "\n") }; } }; // like runCommand on Windows
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir, tools: { locate: async () => [SZ] }, run: (tool, args) => spawnRun((x) => x.replaceAll("\r\n", "\n"))(tool === "7zz" ? SZ : tool, args) }); // like runCommand on Windows
   const prepared = await sevenzip.oracle.prepare!(orig, ctx);
   const src = join(e.dir, "alt");
   const variants: Record<string, (d: string) => void> = {

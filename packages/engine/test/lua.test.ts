@@ -4,9 +4,11 @@ import { readFileSync } from "node:fs";
 import { lua, luac } from "../src/formats/lua.format";
 import { compactLua, tokenizeLua } from "../src/formats/lua-token";
 import { env, type Env } from "./fake";
+import type { DeepPartial, Settings } from "../src";
+import { testCtx } from "./lib/ctx";
 
 const envs: Env[] = [];
-const make = (settings: object = { lua: { minify: true } }) => (envs.push(env({ formats: [lua, luac], settings: settings as any })), envs[envs.length - 1]);
+const make = (settings: DeepPartial<Settings> = { lua: { minify: true } }) => (envs.push(env({ formats: [lua, luac], settings })), envs[envs.length - 1]);
 afterEach(() => envs.splice(0).forEach((e) => e.cleanup()));
 
 const src = `#!/usr/bin/env lua
@@ -66,7 +68,7 @@ test("COMMON-05 for lua: an unfinished string or long comment is untouched and r
 
 test("COMMON-08 for lua: the oracle rejects changed tokens, moved lines and broken output", async () => {
   const e = make();
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {} };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir });
   const prepared = await lua.oracle.prepare!(await e.file("o.lua", src), ctx);
   const check = async (t: string) => lua.oracle.same(prepared, await e.file(`${Math.random()}.lua`, t), ctx);
   expect(await check(src.replace("a - -b", "a - b"))).toContain("differs");

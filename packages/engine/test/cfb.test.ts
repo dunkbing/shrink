@@ -6,6 +6,7 @@ import { describe, readCfb } from "../src/formats/cfb-parse";
 import { env, type Env } from "./fake";
 import { makeCfb } from "./lib/cfb";
 import { lorem, noise } from "./lib/zip";
+import { testCtx } from "./lib/ctx";
 
 const envs: Env[] = [];
 const make = (settings = {}) => (envs.push(env({ formats: [cfb], settings })), envs[envs.length - 1]);
@@ -113,7 +114,7 @@ test("CFB-06: a damaged FAT or a truncated file is untouched", async () => {
 test("COMMON-08 for compound files: the oracle rejects changed bytes, a dropped stream and a changed CLSID", async () => {
   const e = make();
   const orig = await e.file("o.doc", doc());
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {} };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir });
   const prepared = await cfb.oracle.prepare!(orig, ctx);
   const alt: Record<string, Uint8Array> = {
     bytes: makeCfb({ clsid: Uint8Array.from({ length: 16 }, (_, i) => i + 1), streams: [{ path: "WordDocument", data: enc(lorem(20000, 9)) }, { path: "1Table", data: noise(9000) }, { path: "\u0005SummaryInformation", data: enc(lorem(300, 2)) }, { path: "Macros/VBA/Module1", data: enc(lorem(5000, 3)) }, { path: "Macros/VBA/dir", data: enc(lorem(100, 4)) }, { path: "Data", data: enc("") }] }),

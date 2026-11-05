@@ -10,6 +10,7 @@ import { env, type Env } from "./fake";
 import { makeJpeg } from "./lib/jpeg";
 import { makePng } from "./lib/png";
 import { scriptTool } from "./lib/platform";
+import { testCtx } from "./lib/ctx";
 
 const have = Bun.which("oxipng") !== null && Bun.which("jpegtran") !== null;
 const t = have ? test : test.skip;
@@ -133,7 +134,7 @@ test("MIME oracle: a changed text part or header is rejected", async () => {
   const p = await e.file("o.eml", m);
   const cand = await e.file("c.eml", m.replace("Subject: hello", "Subject: hullo"));
   const cand2 = await e.file("c2.eml", m.replace("Caf=C3=A9", "Caf=C3=A8"));
-  const ctx = { facts: {}, original: p } as any;
+  const ctx = testCtx({ original: p });
   const prepared = await f.oracle.prepare!(p, ctx);
   expect(await f.oracle.same(prepared, cand, ctx)).toBe("headers or structure changed");
   expect(await f.oracle.same(prepared, cand2, ctx)).toContain("changed");
@@ -145,7 +146,7 @@ const run = async (name: string, data: Uint8Array | string) => {
   const e = make(known);
   const p = await e.file(name, data);
   const r = await e.engine.optimizeFile(p);
-  expect(Buffer.from(readFileSync(p))).toEqual(Buffer.from(data as any));
+  expect(Buffer.from(readFileSync(p))).toEqual(Buffer.from(typeof data === "string" ? new TextEncoder().encode(data) : data));
   return r;
 };
 const ftyp = (brand: string, compat: string[] = []) => {

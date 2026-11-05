@@ -6,6 +6,7 @@ import { gzip } from "../src/formats/gzip.format";
 import { parseGzip } from "../src/formats/gzip-parse";
 import { env, type Env } from "./fake";
 import { lorem } from "./lib/zip";
+import { testCtx } from "./lib/ctx";
 
 const envs: Env[] = [];
 const make = (settings = {}) => (envs.push(env({ formats: [gzip], settings })), envs[envs.length - 1]);
@@ -92,7 +93,7 @@ test("GZ-06: a truncated file or a corrupt stream is untouched", async () => {
 test("COMMON-08 for gzip: the oracle rejects different data and lost header fields", async () => {
   const e = make({ archive: { keepMetadata: true } });
   const orig = await e.file("o.gz", named(text));
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {} };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir });
   const prepared = await gzip.oracle.prepare!(orig, ctx);
   expect(await gzip.oracle.same(prepared, await e.file("d.gz", named(text.replace("a", "b"))), ctx)).toContain("differ");
   expect(await gzip.oracle.same(prepared, await e.file("n.gz", gzipSync(text)), ctx)).toContain("header");

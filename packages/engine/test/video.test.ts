@@ -39,7 +39,7 @@ const probe = (b: Uint8Array | string, ext = "mp4") => {
   }
   return V.probeJson(p);
 };
-const tagsOf = (s: any) => Object.fromEntries(Object.entries(s.tags ?? {}).map(([k, v]) => [k.toLowerCase(), v]));
+const tagsOf = (s: { tags?: Record<string, unknown> } | undefined) => Object.fromEntries(Object.entries(s?.tags ?? {}).map(([k, v]) => [k.toLowerCase(), v]));
 const hashes = (b: Uint8Array | string, ext = "mp4") => {
   let p = b as string;
   if (typeof b !== "string") {
@@ -90,10 +90,10 @@ t("MP4-03: several audio tracks, a subtitle track, languages and titles are kept
   const { p, r } = await run(make(), "m.mp4", bytes);
   expect(r.status).toBe("optimized");
   const streams = probe(p).streams;
-  expect(streams.map((s: any) => s.codec_type).filter((c: string) => c !== "data")).toEqual(["video", "audio", "audio", "subtitle"]);
-  const audio = streams.filter((s: any) => s.codec_type === "audio").map(tagsOf);
-  expect(audio.map((a: any) => a.language)).toEqual(["eng", "fra"]);
-  expect(tagsOf(streams.find((s: any) => s.codec_type === "subtitle")).language).toBe("deu");
+  expect(streams.map((s) => s.codec_type).filter((c) => c !== "data")).toEqual(["video", "audio", "audio", "subtitle"]);
+  const audio = streams.filter((s) => s.codec_type === "audio").map(tagsOf);
+  expect(audio.map((a) => a.language)).toEqual(["eng", "fra"]);
+  expect(tagsOf(streams.find((s) => s.codec_type === "subtitle")).language).toBe("deu");
 });
 
 t("MP4-04: chapters and cover art go by default and stay with keepMetadata", async () => {
@@ -103,12 +103,12 @@ t("MP4-04: chapters and cover art go by default and stay with keepMetadata", asy
   expect(strip.r.status).toBe("optimized");
   const a = probe(strip.p);
   expect(a.chapters.length).toBe(0);
-  expect(a.streams.filter((s: any) => s.disposition.attached_pic).length).toBe(0);
+  expect(a.streams.filter((s) => s.disposition?.attached_pic).length).toBe(0);
   expect(tagsOf(a.format).title).toBeUndefined();
   const keep = await run(make({ video: { keepMetadata: true } }), "b.mp4", bytes);
   const b = probe(keep.p);
-  expect(b.chapters.map((c: any) => tagsOf(c).title)).toEqual(["One", "Two"]);
-  expect(b.streams.filter((s: any) => s.disposition.attached_pic).length).toBe(1);
+  expect(b.chapters.map((c) => tagsOf(c).title)).toEqual(["One", "Two"]);
+  expect(b.streams.filter((s) => s.disposition?.attached_pic).length).toBe(1);
   expect(tagsOf(b.format).title).toBe("Covered");
 });
 
@@ -127,12 +127,12 @@ t("MP4-06: edit lists (start offsets) are preserved", async () => {
     V.makeMp4(p.replace("edit", "edit-src"), { secs: 3, extra: [] });
     V.ffmpeg(["-ss", "0.37", "-i", p.replace("edit", "edit-src"), "-c", "copy", "-avoid_negative_ts", "disabled", "-metadata", `comment=${V.bigTag()}`, p]);
   });
-  const before = probe(bytes).streams.map((s: any) => [s.start_time, s.duration]);
+  const before = probe(bytes).streams.map((s) => [s.start_time, s.duration]);
   const { p, r } = await run(make(), "e.mp4", bytes);
   expect(r.status).toBe("optimized");
-  const after = probe(p).streams.map((s: any) => [s.start_time, s.duration]);
-  expect(after.map((a: any) => a[0])).toEqual(before.map((a: any) => a[0]));
-  after.forEach((a: any, i: number) => expect(Math.abs(Number(a[1]) - Number(before[i][1]))).toBeLessThan(0.05));
+  const after = probe(p).streams.map((s) => [s.start_time, s.duration]);
+  expect(after.map((a) => a[0])).toEqual(before.map((a) => a[0]));
+  after.forEach((a, i) => expect(Math.abs(Number(a[1]) - Number(before[i][1]))).toBeLessThan(0.05));
 });
 
 t("MP4-07: a file cut before its moov is untouched and reported damaged", async () => {
@@ -173,16 +173,16 @@ t("MKV-02: WebM is remuxed but never goes through mkclean", async () => {
 t("MKV-03: attachments (fonts) and chapters are kept; global tags go", async () => {
   const mk = gen("full.mkv", (p) => V.makeMkv(src, p));
   const before = probe(mk, "mkv");
-  expect(before.streams.some((s: any) => s.codec_type === "attachment")).toBe(true);
+  expect(before.streams.some((s) => s.codec_type === "attachment")).toBe(true);
   const { p, r } = await run(make(), "a.mkv", mk);
   expect(r.status).toBe("optimized");
   const after = probe(p);
-  const att = after.streams.filter((s: any) => s.codec_type === "attachment");
+  const att = after.streams.filter((s) => s.codec_type === "attachment");
   expect(att.length).toBe(1);
   expect(att[0].extradata_size).toBe(3000);
-  expect(after.chapters.map((c: any) => tagsOf(c).title)).toEqual(["One", "Two"]);
+  expect(after.chapters.map((c) => tagsOf(c).title)).toEqual(["One", "Two"]);
   expect(tagsOf(after.format).title).toBeUndefined();
-  const lang = after.streams.filter((s: any) => s.codec_type === "audio").map((s: any) => [tagsOf(s).language, tagsOf(s).title]);
+  const lang = after.streams.filter((s) => s.codec_type === "audio").map((s) => [tagsOf(s).language, tagsOf(s).title]);
   expect(lang).toEqual([["eng", undefined], ["fra", "Commentaire"]]);
 });
 

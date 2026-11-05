@@ -5,7 +5,8 @@ import { inflateRawSync } from "node:zlib";
 import { zip } from "../src/formats/zip.format";
 import { parseZip, readMember } from "../src/formats/zip-parse";
 import { env, type Env } from "./fake";
-import { lorem, makeZip, noise } from "./lib/zip";
+import { lorem, makeZip, noise, type ZMember } from "./lib/zip";
+import { testCtx } from "./lib/ctx";
 
 const envs: Env[] = [];
 const make = (settings = {}) => (envs.push(env({ formats: [zip], settings })), envs[envs.length - 1]);
@@ -66,14 +67,14 @@ test("ZIP-04: data descriptors and a large entry count", async () => {
 }, 60_000); // advzip -4 with iterations over 1500 members takes seconds
 
 test("ZIP-05: order, names (UTF-8 and CP437), directories, comments and timestamps with keepMetadata", async () => {
-  const members = [
+  const members: ZMember[] = [
     { name: "z-last-name.txt", data: lorem(5000, 1) },
     { name: "dir/", extAttr: 0x41ed0010 },
     { name: "dir/été 日本.txt", data: lorem(5000, 2), dosTime: 0x1234, dosDate: 0x4abc, comment: "member comment" },
     { name: "café.txt", data: lorem(5000, 3), utf8: false },
     { name: "a-first-name.txt", data: lorem(5000, 4) },
   ];
-  const bytes = makeZip(members as any, { comment: "archive comment" });
+  const bytes = makeZip(members, { comment: "archive comment" });
   const e = make({ archive: { keepMetadata: true } });
   const p = await e.file("a.zip", bytes);
   expect((await e.engine.optimizeFile(p)).status).toBe("optimized");
@@ -105,7 +106,7 @@ test("ZIP-07: a prepended stub or trailing data is not touched", async () => {
   }
 });
 
-const ooxml = (extra: any[] = []) => [
+const ooxml = (extra: ZMember[] = []): ZMember[] => [
   { name: "[Content_Types].xml", data: lorem(3000, 5) },
   { name: "_rels/.rels", data: lorem(2000, 6) },
   { name: "word/document.xml", data: lorem(40000, 7) },
@@ -119,7 +120,7 @@ test("ZIP-08: EPUB and ODF keep mimetype first and stored; OOXML keeps [Content_
     ["a.odt", [{ name: "mimetype", data: "application/vnd.oasis.opendocument.text", method: 0 }, { name: "content.xml", data: lorem(30000) }]],
     ["a.docx", ooxml()],
   ] as const) {
-    const p = await e.file(name, makeZip(members as any));
+    const p = await e.file(name, makeZip(members));
     expect((await e.engine.optimizeFile(p)).status).toBe("optimized");
     const z = parseZip(new Uint8Array(readFileSync(p)));
     expect(z.entries[0].name).toBe(members[0].name);
@@ -135,10 +136,10 @@ test("ZIP-08: EPUB and ODF keep mimetype first and stored; OOXML keeps [Content_
 test("ZIP-09: an Office file keeps every part byte-equal", async () => {
   const e = make();
   const m = ooxml([{ name: "word/media/x.bin", data: noise(3000), method: 0 }]);
-  const p = await e.file("a.docx", makeZip(m as any));
+  const p = await e.file("a.docx", makeZip(m));
   await e.engine.optimizeFile(p);
   expect(contents(p).map((c) => c[0])).toEqual(m.map((x) => x.name));
-  expect(contents(p).map((c) => c[1])).toEqual(m.map((x) => Buffer.from(x.data as any).toString("latin1")));
+  expect(contents(p).map((c) => c[1])).toEqual(m.map((x) => Buffer.from(typeof x.data === "string" ? new TextEncoder().encode(x.data) : (x.data ?? new Uint8Array())).toString("latin1")));
 });
 
 test("ZIP-10: signed JARs and signed package formats are skipped", async () => {
@@ -163,11 +164,11 @@ test.skipIf(!oxipng)("ZIP-11: with archive.recurse an inner file is optimised by
     return ee;
   };
   const off = mk(false);
-  const p1 = await off.file("a.zip", makeZip(members as any));
+  const p1 = await off.file("a.zip", makeZip(members));
   await off.engine.optimizeFile(p1);
   expect(Buffer.from(readMember(parseZip(new Uint8Array(readFileSync(p1))), parseZip(new Uint8Array(readFileSync(p1))).entries[1]))).toEqual(Buffer.from(img));
   const on = mk(true);
-  const p2 = await on.file("a.zip", makeZip(members as any));
+  const p2 = await on.file("a.zip", makeZip(members));
   const r = await on.engine.optimizeFile(p2);
   expect(r.status).toBe("optimized");
   const z = parseZip(new Uint8Array(readFileSync(p2)));
@@ -222,7 +223,7 @@ test("COMMON-08 for archives: the oracle rejects a result with one changed byte,
   };
   const e = make();
   const orig = await e.file("o.zip", bytes);
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {} };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir });
   const prepared = await zip.oracle.prepare!(orig, ctx);
   for (const [k, f] of Object.entries(cases)) {
     const c = await e.file(`${k}.zip`, f(bytes));
@@ -234,7 +235,7 @@ test("COMMON-08 for archives: the oracle rejects a result with one changed byte,
 test("a mimetype that was stored must stay stored", async () => {
   const e = make();
   const orig = await e.file("o.epub", makeZip([{ name: "mimetype", data: "application/epub+zip", method: 0 }, { name: "a.txt", data: lorem(9000) }]));
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {} };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir });
   const prepared = await zip.oracle.prepare!(orig, ctx);
   const c = await e.file("c.epub", makeZip([{ name: "mimetype", data: "application/epub+zip", method: 8 }, { name: "a.txt", data: lorem(9000) }]));
   expect(await zip.oracle.same(prepared, c, ctx)).toContain("mimetype");

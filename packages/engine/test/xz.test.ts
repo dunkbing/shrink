@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { lzma, xz } from "../src/formats/xz.format";
 import { env, type Env } from "./fake";
 import { lorem } from "./lib/zip";
+import { testCtx } from "./lib/ctx";
 
 const tool = !!Bun.which("xz");
 const envs: Env[] = [];
@@ -44,7 +45,7 @@ test.skipIf(!tool)("COMMON-05 for xz/lzma: a truncated file is untouched and rep
 
 test.skipIf(!tool)("COMMON-08 for xz/lzma: the oracle rejects different data and a broken stream", async () => {
   const e = make();
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {}, tools: { locate: async () => [Bun.which("xz")!] } };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir, tools: { locate: async () => [Bun.which("xz")!] } });
   const orig = await e.file("o.xz", pack(text, ["-0"]));
   const prepared = await xz.oracle.prepare!(orig, ctx);
   expect(await xz.oracle.same(prepared, await e.file("d.xz", pack(text.replace("a", "b"), ["-0"])), ctx)).toContain("differ");

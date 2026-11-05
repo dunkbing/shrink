@@ -7,6 +7,7 @@ import { parseTar } from "../src/formats/tar-parse";
 import { env, type Env } from "./fake";
 import { makePng } from "./lib/png";
 import { lorem } from "./lib/zip";
+import { testCtx } from "./lib/ctx";
 
 // members that are PNGs are optimised through oxipng
 const oxipng = Bun.which("oxipng") !== null;
@@ -111,7 +112,7 @@ test("a damaged or truncated tar is skipped untouched", async () => {
 test("COMMON-08 for tar: the oracle rejects changed data, dropped entries and changed headers", async () => {
   const e = make({ archive: { recurse: true } });
   const orig = await e.file("o.tar", sample());
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {} };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir });
   const prepared = await tar.oracle.prepare!(orig, ctx);
   const variants: Record<string, Buffer> = {
     data: Buffer.concat([entry("dir/", "", { type: "5", mode: 0o755 }), entry("dir/a.txt", lorem(3000).replace("a", "b"), { mtime: 1600000000, uid: 42 }), entry("dir/pic.png", img, { mode: 0o600 }), entry("link", "", { type: "2", link: "dir/a.txt" }), end]),

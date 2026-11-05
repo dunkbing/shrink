@@ -3,7 +3,7 @@ import { afterEach, beforeAll, expect, test } from "bun:test";
 import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { Engine, createTools, defaults } from "../src";
+import { Engine, createTools, defaults, type DeepPartial, type Settings } from "../src";
 import { exe } from "../src/formats/exe.format";
 import { parseAr, parseElf, sameElf } from "../src/formats/elf-parse";
 import { parseMacho, sameMacho } from "../src/formats/macho-parse";
@@ -12,7 +12,7 @@ import { env, type Env } from "./fake";
 import { makeAr, makeElf, makePe } from "./lib/exe";
 
 const envs: Env[] = [];
-const make = (settings: any = { exe: { enabled: true } }, extra: any = {}) => {
+const make = (settings: DeepPartial<Settings> = { exe: { enabled: true } }, extra: Partial<Env> = {}) => {
   const e = env({ formats: [exe], settings });
   envs.push(e);
   return Object.assign(e, extra) as Env;

@@ -8,6 +8,7 @@ import { parseCab } from "../src/formats/cab-parse";
 import { env, type Env } from "./fake";
 import { makeCab } from "./lib/cab";
 import { lorem, noise } from "./lib/zip";
+import { testCtx } from "./lib/ctx";
 
 const tool = !!Bun.which("cabextract");
 const envs: Env[] = [];
@@ -73,10 +74,10 @@ test.skipIf(!tool)("COMMON-05 for cab: truncated and corrupt cabinets are untouc
 
 test.skipIf(!tool)("COMMON-08 for cab: the oracle rejects other bytes, other names and other sizes", async () => {
   const e = make();
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {}, tools: { locate: async (n: string) => (Bun.which(n) ? [Bun.which(n)!] : null) }, run: async (t: string, args: string[]) => {
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir, tools: { locate: async (n: string) => (Bun.which(n) ? [Bun.which(n)!] : null) }, run: async (t: string, args: string[]) => {
     const r = Bun.spawnSync([Bun.which(t)!, ...args]);
     return { code: r.exitCode, stdout: r.stdout.toString(), stderr: r.stderr.toString() };
-  } };
+  } });
   const files = (x: string, name = "a.txt") => [{ name, data: x }];
   const prepared = await cab.oracle.prepare!(await e.file("o.cab", makeCab([{ files: files(a) }])), ctx);
   expect(await cab.oracle.same(prepared, await e.file("d.cab", makeCab([{ files: files(a.replace("alpha", "omega")) }])), ctx)).toContain("differ");

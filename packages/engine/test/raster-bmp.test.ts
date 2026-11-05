@@ -2,11 +2,12 @@
 import { afterEach, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { Engine } from "../src";
-import { decodeBmp, sameBitmap } from "../src/formats/bmp-decode";
+import { decodeBmp, sameBitmap, type Bitmap } from "../src/formats/bmp-decode";
 import { bmp } from "../src/formats/bmp.format";
-import { ico } from "../src/formats/ico.format";
+import { ico, type Ico } from "../src/formats/ico.format";
 import { png } from "../src/formats/png.format";
 import { env, type Env } from "./fake";
+import { testCtx } from "./lib/ctx";
 import { bands, makeBmp, makeIco, makeIconDib } from "./lib/raster";
 import { makePng } from "./lib/png";
 import { copyTool } from "./lib/platform";
@@ -164,8 +165,8 @@ t("ICO-01: PNG-compressed sizes are recompressed and every entry keeps its pixel
   const r = await e.engine.optimizeFile(p);
   expect(r.status).toBe("optimized");
   expect(r.after).toBeLessThan(r.before);
-  const s = await ico.oracle.prepare!(p, {} as any);
-  expect((s as any).entries.length).toBe(2);
+  const s = await ico.oracle.prepare!(p, testCtx());
+  expect((s as Ico).entries.length).toBe(2);
 });
 
 test("ICO-02 and ICO-03: BMP-based 32-bit images stay valid, every resolution is kept", async () => {
@@ -175,7 +176,7 @@ test("ICO-02 and ICO-03: BMP-based 32-bit images stay valid, every resolution is
   const r = await e.engine.optimizeFile(p);
   expect(r.status).not.toBe("failed");
   expect(readFileSync(p).length).toBeLessThanOrEqual(bytes.length);
-  expect((await ico.oracle.same(await ico.oracle.prepare!(p, {} as any), p, {} as any))).toBe(true);
+  expect((await ico.oracle.same(await ico.oracle.prepare!(p, testCtx()), p, testCtx()))).toBe(true);
   expect(readFileSync(p)[4]).toBe(3);
 });
 
@@ -211,10 +212,11 @@ test("ICO-07: the AND mask makes pixels transparent and the check sees it", asyn
   const w = 16;
   const mask = Array.from({ length: w * w }, (_, i) => i % 5 === 0);
   const dib = makeIconDib(w, w, bands(w, w, 4), 24, mask);
-  const info = (await ico.oracle.prepare!(await make().file("m.ico", makeIco([{ data: dib, w, h: w }])), {} as any)) as any;
-  expect(info.images[0].alpha).toBe(true);
-  expect(info.images[0].rgba[3]).toBe(0);
-  expect(info.images[0].rgba[7]).toBe(255);
+  const info = (await ico.oracle.prepare!(await make().file("m.ico", makeIco([{ data: dib, w, h: w }])), testCtx())) as Ico;
+  const img = info.images[0] as Bitmap;
+  expect(img.alpha).toBe(true);
+  expect(img.rgba[3]).toBe(0);
+  expect(img.rgba[7]).toBe(255);
 });
 
 t("ICO-08: a result with a changed pixel inside an entry is rejected", async () => {

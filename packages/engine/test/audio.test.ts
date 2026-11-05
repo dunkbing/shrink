@@ -11,21 +11,22 @@ import { mp3 } from "../src/formats/mp3.format";
 import { ogg, oggCodecs } from "../src/formats/ogg.format";
 import { parseWav } from "../src/formats/wav-parse";
 import { wav } from "../src/formats/wav.format";
-import { allFormats, type Step } from "../src";
+import { allFormats, type DeepPartial, type Format, type Report, type Settings, type Step } from "../src";
 import { env, type Env } from "./fake";
 import { concat, cover, decodeMd5, ff, have, makeWav, probe, run, SRC, text, workDir } from "./lib/audio";
+import { spawnRun, testCtx } from "./lib/ctx";
 
 const dir = workDir();
 afterAll(() => rmSync(dir, { recursive: true, force: true }));
 const envs: Env[] = [];
-const make = (formats: any[], settings = {}) => (envs.push(env({ formats, settings })), envs[envs.length - 1]);
+const make = (formats: Format[], settings: DeepPartial<Settings> = {}) => (envs.push(env({ formats, settings })), envs[envs.length - 1]);
 afterEach(() => envs.splice(0).forEach((e) => e.cleanup()));
 const f = (name: string) => join(dir, name);
 const tf = have.ffmpeg ? test : test.skip;
 const tflac = have.ffmpeg && have.flac ? test : test.skip;
 const read = (p: string) => new Uint8Array(readFileSync(p));
 const title = (p: string) => { const j = probe(p); const t = { ...j.format?.tags, ...j.streams?.[0]?.tags }; return t.title ?? t.TITLE; };
-const step = (r: any, id: string) => r.steps.find((s: any) => s.id === id);
+const step = (r: Report, id: string) => r.steps.find((s) => s.id === id);
 
 // ---------- WAV ----------
 
@@ -114,7 +115,7 @@ test("AUDIO-oracle (WAV): a candidate with one changed sample or a changed fmt i
   const bytes = makeWav();
   const e = make([wav]);
   const orig = await e.file("o.wav", bytes);
-  const ctx: any = { settings: { audio: { keepMetadata: false } }, run: async () => ({ code: 1, stdout: "", stderr: "" }), tools: { locate: async () => null } };
+  const ctx = testCtx({ settings: { audio: { keepMetadata: false } }, run: async () => ({ code: 1, stdout: "", stderr: "" }) });
   const prepared = await wav.oracle.prepare!(orig, ctx);
   const bad = bytes.slice();
   bad[parseWav(bytes).data.off + 100] ^= 1;
@@ -142,7 +143,7 @@ test("AUDIO-oracle (engine): a tool that changes a sample loses its output, orig
   const p = await e.file("a.wav", bytes);
   const r = await e.engine.optimizeFile(p);
   expect(r.status).toBe("unchanged");
-  expect(step(r, "wav.evil").outcome).toBe("rejected");
+  expect(step(r, "wav.evil")?.outcome).toBe("rejected");
   expect(Buffer.compare(read(p), bytes)).toBe(0);
 });
 
@@ -192,7 +193,7 @@ tflac("FLAC-02: tags, cuesheet and embedded art are stripped by default and kept
   expect((await k.engine.optimizeFile(q)).status).toBe("optimized");
   const kb = parseFlac(read(q)).blocks;
   expect([kb.get(4), kb.get(5), kb.get(6)]).toEqual([1, 1, 1]);
-  expect(probe(q).format.tags.TITLE ?? probe(q).format.tags.title).toBe("Song");
+  expect(probe(q).format.tags?.TITLE ?? probe(q).format.tags?.title).toBe("Song");
 });
 
 tflac("FLAC-04: 24-bit six channel 192 kHz, and 8-bit mono", async () => {
@@ -227,14 +228,7 @@ tflac("AUDIO-oracle (FLAC): different audio of the same length, or a different S
   const b = makeFlac("o2.flac", [], ["-f", "lavfi", "-i", "aevalsrc=0.3*sin(2*PI*500*t)+0.05*random(0):d=2:s=44100"]);
   const e = make([flac]);
   const pa = await e.file("a.flac", readFileSync(a));
-  const ctx: any = {
-    settings: { audio: { keepMetadata: false } },
-    tools: { locate: async () => ["x"] },
-    run: async (tool: string, args: string[]) => {
-      const r = Bun.spawnSync([tool, ...args], { stdout: "pipe", stderr: "pipe" });
-      return { code: r.exitCode, stdout: r.stdout.toString(), stderr: r.stderr.toString() };
-    },
-  };
+  const ctx = testCtx({ settings: { audio: { keepMetadata: false } }, tools: { locate: async () => ["x"] }, run: spawnRun() });
   const prepared = await flac.oracle.prepare!(pa, ctx);
   expect(await flac.oracle.same(prepared, a, ctx)).toBe(true);
   expect(await flac.oracle.same(prepared, b, ctx)).not.toBe(true);
@@ -290,7 +284,7 @@ tf("MP3-02: the encoder delay/padding header stays; dropping it is rejected by t
   expect(probe(p, "format=duration").format.duration).toBe(probe(src, "format=duration").format.duration);
   expect(decodeMd5(p)).toBe(decodeMd5(src));
   // a candidate without its first (Xing/LAME) frame changes the decoded length: rejected
-  const ctx: any = { settings: { audio: { keepMetadata: false } }, run: async (t: string, a: string[]) => { const x = Bun.spawnSync([t, ...a], { stdout: "pipe", stderr: "pipe" }); return { code: x.exitCode, stdout: x.stdout.toString(), stderr: x.stderr.toString() }; } };
+  const ctx = testCtx({ settings: { audio: { keepMetadata: false } }, run: spawnRun() });
   const orig = await audioSig(src, ctx);
   const bytes = read(p);
   const hdr = Buffer.from(bytes);
@@ -416,7 +410,7 @@ test("OGG-04: Theora video named .ogg is not claimed (video family), and has a s
   page.set(text("\x80theora"), 28);
   expect(oggCodecs(page)).toEqual(["theora"]);
   expect(ogg.detect(page, "a.ogg")).toBe(false);
-  expect(await ogg.skip!("", page, {} as any)).toBe("video stream");
+  expect(await ogg.skip!("", page, testCtx())).toBe("video stream");
 });
 
 tovb("OGG-05: a very short file is never given a different sample count", async () => {
@@ -432,7 +426,7 @@ tf("AUDIO-oracle (Ogg): a candidate with different samples is rejected", async (
   const a = makeOgg("x1.ogg", [], 1);
   const b = f("x2.ogg");
   ff(["-f", "lavfi", "-i", "aevalsrc=0.4*sin(2*PI*700*t):d=1:s=44100", "-ac", "2", "-c:a", "vorbis", "-strict", "-2", b]);
-  const ctx: any = { settings: { audio: { keepMetadata: false } }, run: async (t: string, x: string[]) => { const r = Bun.spawnSync([t, ...x], { stdout: "pipe", stderr: "pipe" }); return { code: r.exitCode, stdout: r.stdout.toString(), stderr: r.stderr.toString() }; } };
+  const ctx = testCtx({ settings: { audio: { keepMetadata: false } }, run: spawnRun() });
   const prepared = await ogg.oracle.prepare!(a, ctx).catch(() => null);
   if (!prepared) return; // the native encoder's file warned; nothing to compare
   expect(await ogg.oracle.same(prepared, a, ctx)).toBe(true);
@@ -474,8 +468,8 @@ tf("M4A-01: tags and cover art are stripped by default and kept with keepMetadat
   const rk = await k.engine.optimizeFile(q);
   expect(["optimized", "unchanged"]).toContain(rk.status);
   const kt = probe(q);
-  expect(kt.format.tags.title).toBe("Song");
-  expect(kt.format.tags.artist).toBe("Someone");
+  expect(kt.format.tags?.title).toBe("Song");
+  expect(kt.format.tags?.artist).toBe("Someone");
   expect(kt.streams.length).toBe(2);
   expect(decodeMd5(q)).toBe(decodeMd5(src));
 });
@@ -527,7 +521,7 @@ tf("M4A: truncated file (no moov) is untouched", async () => {
 tf("AUDIO-oracle (M4A): a remux that changes the audio is rejected", async () => {
   const a = makeM4a("o1.m4a"), b = f("o2.m4a");
   ff(["-f", "lavfi", "-i", "aevalsrc=0.3*sin(2*PI*600*t):d=3:s=44100", "-c:a", "aac", "-b:a", "96k", "-f", "ipod", b]);
-  const ctx: any = { settings: { audio: { keepMetadata: false } }, run: async (t: string, x: string[]) => { const r = Bun.spawnSync([t, ...x], { stdout: "pipe", stderr: "pipe" }); return { code: r.exitCode, stdout: r.stdout.toString(), stderr: r.stderr.toString() }; } };
+  const ctx = testCtx({ settings: { audio: { keepMetadata: false } }, run: spawnRun() });
   const prepared = await m4a.oracle.prepare!(a, ctx);
   expect(await m4a.oracle.same(prepared, a, ctx)).toBe(true);
   expect(await m4a.oracle.same(prepared, b, ctx)).not.toBe(true);

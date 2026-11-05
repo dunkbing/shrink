@@ -6,6 +6,7 @@ import { ar, deb } from "../src/formats/deb.format";
 import { parseArMembers } from "../src/formats/deb-ar";
 import { env, type Env } from "./fake";
 import { lorem } from "./lib/zip";
+import { testCtx } from "./lib/ctx";
 
 const xzTool = !!Bun.which("xz");
 const envs: Env[] = [];
@@ -74,7 +75,7 @@ test("COMMON-05 for deb: truncated archive, truncated member and corrupt gzip me
 
 test("COMMON-08 for deb: the oracle rejects changed members, names, headers and counts", async () => {
   const e = make();
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {}, tools: { locate: async () => (Bun.which("xz") ? [Bun.which("xz")!] : null) } };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir, tools: { locate: async () => (Bun.which("xz") ? [Bun.which("xz")!] : null) } });
   const prepared = await deb.oracle.prepare!(await e.file("o.deb", makeDeb(false)), ctx);
   const gz = (s: string) => gzipSync(s, { level: 9 });
   const mk = (name: string, ctl: string, mtime = 1700000000, extra: [string, string][] = []) => e.file(`${Math.random()}.deb`, writeAr([["debian-binary", "2.0\n"], [name, gz(ctl)], ["data.tar.gz", gz(payload)], ...extra], mtime));
@@ -87,7 +88,7 @@ test("COMMON-08 for deb: the oracle rejects changed members, names, headers and 
 
 test.skipIf(!xzTool)("COMMON-08 for deb: an xz member with different decompressed bytes is rejected", async () => {
   const e = make();
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {}, tools: { locate: async () => [Bun.which("xz")!] } };
+  const ctx = testCtx({ settings: e.engine.settings, dir: e.dir, tools: { locate: async () => [Bun.which("xz")!] } });
   const prepared = await deb.oracle.prepare!(await e.file("o.deb", makeDeb()), ctx);
   const alt = writeAr([["debian-binary", "2.0\n"], ["control.tar.gz", gzipSync(control, { level: 1 })], ["data.tar.xz", xzOf(payload.replace("a", "b"))]]);
   expect(await deb.oracle.same(prepared, await e.file("alt.deb", alt), ctx)).toContain("differ");
