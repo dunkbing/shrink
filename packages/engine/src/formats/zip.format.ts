@@ -1,5 +1,7 @@
 import { extname } from "node:path";
+import { statSync } from "node:fs";
 import { crc32 } from "node:zlib";
+import { iterations } from "./gzip.format";
 import { inPlaceStep } from "../step";
 import { SkipFile, type Format, type Settings, type Step } from "../types";
 import { bestDeflate, buildZip, type NewMember } from "./zip-build";
@@ -55,7 +57,7 @@ const advzip = inPlaceStep({
   id: "zip.advzip",
   tool: "advzip",
   minLevel: 2,
-  args: (file, ctx) => ["-z", ctx.level >= 4 ? "-4" : "-3", ...(ctx.level >= 4 ? ["-i", String(ctx.level >= 8 ? 50 : ctx.level >= 6 ? 20 : 10)] : []), file],
+  args: (file, ctx) => ["-z", ctx.level >= 4 ? "-4" : "-3", ...(ctx.level >= 4 ? ["-i", String(iterations(ctx.level, statSync(file).size))] : []), file],
 });
 
 /** With `archive.recurse`: members that are themselves known files go through their own format. */

@@ -74,7 +74,7 @@ function compare(a: Item[], b: Item[]): true | string {
     const x = sa[i], y = sb[i];
     if (x.path !== y.path) return `"${x.path}" became "${y.path}"`;
     if (x.folder !== y.folder || x.size !== y.size || x.crc !== y.crc) return `${x.path}: content differs`;
-    if (x.attr !== y.attr) return `${x.path}: attributes changed`;
+    if (x.attr && x.attr !== y.attr) return `${x.path}: attributes changed`;
     if (x.mtime !== y.mtime) return `${x.path}: time changed`;
   }
   return true;

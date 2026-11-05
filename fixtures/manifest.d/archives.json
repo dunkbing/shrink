@@ -1,0 +1,122 @@
+[
+  {
+    "file": "poi-52117.doc",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/document/52117.doc",
+    "format": "cfb",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-47304.doc",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/document/47304.doc",
+    "format": "cfb",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-53446.doc",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/document/53446.doc",
+    "format": "cfb",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-13796.xls",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/spreadsheet/13796.xls",
+    "format": "cfb",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-15375.xls",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/spreadsheet/15375.xls",
+    "format": "cfb",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-38256.ppt",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/slideshow/38256.ppt",
+    "format": "cfb",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-43781.ppt",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/slideshow/43781.ppt",
+    "format": "cfb",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-58214.msg",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/hsmf/58214_with_attachment.msg",
+    "format": "cfb",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-52288.docx",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/document/52288.docx",
+    "format": "zip",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-123233.xlsx",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/spreadsheet/123233_charts.xlsx",
+    "format": "zip",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "poi-51187.pptx",
+    "url": "https://raw.githubusercontent.com/apache/poi/trunk/test-data/slideshow/51187.pptx",
+    "format": "zip",
+    "licence": "Apache-2.0 (Apache POI test-data)"
+  },
+  {
+    "file": "pydocx-par-known-paragraphs.docx",
+    "url": "https://raw.githubusercontent.com/python-openxml/python-docx/master/features/steps/test_files/par-known-paragraphs.docx",
+    "format": "zip",
+    "licence": "MIT (python-docx)"
+  },
+  {
+    "file": "pydocx-doc-default.docx",
+    "url": "https://raw.githubusercontent.com/python-openxml/python-docx/master/features/steps/test_files/doc-default.docx",
+    "format": "zip",
+    "licence": "MIT (python-docx)"
+  },
+  {
+    "file": "lo-PageBackground.odt",
+    "url": "https://raw.githubusercontent.com/LibreOffice/core/master/sw/qa/extras/odfimport/data/PageBackground.odt",
+    "format": "zip",
+    "licence": "MPL-2.0 (LibreOffice test file)"
+  },
+  {
+    "file": "lo-annotation-formatting.odt",
+    "url": "https://raw.githubusercontent.com/LibreOffice/core/master/sw/qa/extras/odfimport/data/annotation-formatting.odt",
+    "format": "zip",
+    "licence": "MPL-2.0 (LibreOffice test file)"
+  },
+  {
+    "file": "alice.epub",
+    "url": "https://www.gutenberg.org/ebooks/11.epub.noimages",
+    "format": "zip",
+    "licence": "Project Gutenberg: public domain"
+  },
+  {
+    "file": "jsr305-3.0.2.jar",
+    "url": "https://repo1.maven.org/maven2/com/google/code/findbugs/jsr305/3.0.2/jsr305-3.0.2.jar",
+    "format": "zip",
+    "licence": "Apache-2.0 (jsr305)"
+  },
+  {
+    "file": "hello-1.3.tar.gz",
+    "url": "https://ftp.gnu.org/gnu/hello/hello-1.3.tar.gz",
+    "format": "gzip",
+    "licence": "GPL-3.0 (GNU hello source)"
+  },
+  {
+    "file": "py7zr-copy_bcj_1.7z",
+    "url": "https://raw.githubusercontent.com/miurahr/py7zr/master/tests/data/copy_bcj_1.7z",
+    "format": "7z",
+    "licence": "LGPL-2.1+ (py7zr test data)"
+  },
+  {
+    "file": "py7zr-bzip2_2.7z",
+    "url": "https://raw.githubusercontent.com/miurahr/py7zr/master/tests/data/bzip2_2.7z",
+    "format": "7z",
+    "licence": "LGPL-2.1+ (py7zr test data)"
+  }
+]

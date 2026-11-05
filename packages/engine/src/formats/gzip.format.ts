@@ -38,13 +38,16 @@ const libdeflate = payloadStep(
   },
 );
 
+/** Zopfli iterations: by level, fewer for big inputs. */
+export const iterations = (level: number, size: number) => Math.max(2, Math.floor((level >= 8 ? 60 : level >= 6 ? 25 : 10) / (size > 4 << 20 ? 5 : size > 1 << 20 ? 2 : 1)));
+
 const zopfli = payloadStep(
   "gzip.zopfli",
   "zopfli",
   async (data, dir, ctx) => {
     const f = join(dir, "data");
     await Bun.write(f, data);
-    await ctx.run("zopfli", ["--deflate", `--i${ctx.level >= 8 ? 60 : ctx.level >= 6 ? 25 : 10}`, f]);
+    await ctx.run("zopfli", ["--deflate", `--i${iterations(ctx.level, data.length)}`, f]);
     return new Uint8Array(await Bun.file(f + ".deflate").arrayBuffer());
   },
   { minLevel: 3 },
