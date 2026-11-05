@@ -44,7 +44,7 @@ jobs:
         shell: pwsh
         run: |
           # best effort: a package or download that is missing only skips that format's tests
-          foreach ($p in 'ffmpeg','imagemagick','7zip','qpdf','gifsicle','libjpeg-turbo','webp','flac','mupdf','sqlite','upx','mingw','minify') {
+          foreach ($p in 'ffmpeg','imagemagick','7zip','qpdf','gifsicle','libjpeg-turbo','webp','flac','mupdf','sqlite','upx','mingw','minify','gpac') {
             choco install -y --no-progress $p
             if ($LASTEXITCODE -ne 0) { Write-Warning "$p not installed" }
           }
