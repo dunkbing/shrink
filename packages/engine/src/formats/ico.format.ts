@@ -12,7 +12,8 @@ interface Entry {
   data: Uint8Array;
   png: boolean;
 }
-interface Ico {
+/** What the oracle reads from an icon file. */
+export interface Ico {
   type: number;
   entries: Entry[];
   /** Decoded pictures, one per entry. */

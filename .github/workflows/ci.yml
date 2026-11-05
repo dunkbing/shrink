@@ -75,4 +75,5 @@ jobs:
           which -a strip
           time timeout 120 bun test packages/engine/test/exe.test.ts 2>&1 | tail -40
       - run: bun run typecheck
+      - run: bun scripts/no-any.ts
       - run: bun test

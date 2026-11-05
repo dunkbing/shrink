@@ -7,7 +7,7 @@
   "scripts": {
     "test": "bun test",
     "gen": "bun scripts/gen-formats.ts",
-    "typecheck": "bun scripts/gen-formats.ts && bun check",
+    "typecheck": "bun scripts/gen-formats.ts && bun check && bun scripts/no-any.ts",
     "fixtures:fetch": "bun scripts/fetch-fixtures.ts"
   },
   "devDependencies": {

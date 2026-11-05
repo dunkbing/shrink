@@ -80,9 +80,9 @@ export function streamHashes(path: string): string {
   const r = Bun.spawnSync(["ffmpeg", "-v", "error", "-i", path, "-map", "0", "-c", "copy", "-f", "streamhash", "-hash", "sha256", "-"]);
   return r.stdout.toString();
 }
-export function probeJson(path: string): any {
+export function probeJson(path: string): Probe {
   const r = Bun.spawnSync(["ffprobe", "-v", "error", "-show_streams", "-show_chapters", "-show_format", "-of", "json", path]);
-  return JSON.parse(r.stdout.toString());
+  return parseProbe(r.stdout.toString());
 }
 
 // A private engine over the video formats only (no other family's formats are loaded).
@@ -90,6 +90,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync as wf } from "node:fs";
 import { tmpdir } from "node:os";
 import { Engine } from "../../src/optimize";
 import type { DeepPartial, Format, Settings, Step } from "../../src/types";
+import { parseProbe, type Probe } from "./ffprobe";
 
 export interface VEnv {
   dir: string;

@@ -1,6 +1,7 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { parseProbe, type Probe } from "./ffprobe";
 
 // Audio fixtures: a WAV writer in TypeScript, and ffmpeg / flac for the other formats.
 const u32 = (n: number) => new Uint8Array([n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255]);
@@ -105,4 +106,4 @@ export function decodeMd5(path: string): string {
   return run(["ffmpeg", "-v", "error", "-nostdin", "-i", path, "-map", "0:a", "-c:a", "pcm_f64le", "-f", "md5", "-"]).trim();
 }
 
-export const probe = (path: string, entries = "format_tags"): any => JSON.parse(run(["ffprobe", "-v", "error", "-show_entries", entries, "-show_streams", "-show_format", "-of", "json", path]));
+export const probe = (path: string, entries = "format_tags"): Probe => parseProbe(run(["ffprobe", "-v", "error", "-show_entries", entries, "-show_streams", "-show_format", "-of", "json", path]));

@@ -28,7 +28,7 @@ const le = (n: number, bytes: number) => {
   return b;
 };
 
-export function makeZip(members: ZMember[], o: { comment?: string; prefix?: Uint8Array; suffix?: Uint8Array; spanned?: boolean; zip64?: boolean; unicodeExtra?: boolean } = {}): Buffer {
+export function makeZip(members: readonly ZMember[], o: { comment?: string; prefix?: Uint8Array; suffix?: Uint8Array; spanned?: boolean; zip64?: boolean; unicodeExtra?: boolean } = {}): Buffer {
   const parts: Buffer[] = [];
   const central: Buffer[] = [];
   let pos = o.prefix?.length ?? 0;
