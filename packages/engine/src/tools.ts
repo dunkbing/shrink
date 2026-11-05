@@ -11,6 +11,9 @@ export class MissingTool extends Error {
 const KNOWN: Record<string, string[]> = {
   mozjpegtran: ["/opt/homebrew/opt/mozjpeg/bin/jpegtran", "/usr/local/opt/mozjpeg/bin/jpegtran", "/usr/bin/mozjpegtran"],
   ghostscript: ["gs"],
+  // GNU strip (ELF, PE, ar): Homebrew keeps binutils off PATH, and on macOS plain `strip` is the Mach-O one
+  "gnu-strip": ["/opt/homebrew/opt/binutils/bin/strip", "/usr/local/opt/binutils/bin/strip", "llvm-strip", "/opt/homebrew/opt/llvm/bin/llvm-strip", ...(process.platform === "darwin" ? [] : ["strip"])],
+  "7zz": ["7z", "7zip"],
 };
 
 /** Finds tools: the settings' `toolPaths`, then the tool folder, then PATH. */

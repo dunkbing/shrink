@@ -1,0 +1,7 @@
+{
+  "exe-a.exe": "cc3e07e36adaa19ee5f27b1ff806b83e9482440d8974ba094d5a966731769bd4",
+  "exe-consoleapp.exe": "50c8134698b24be04cac8417179acbcf06d9f9bb8a1619c50a7526b5fc0b67ca",
+  "exe-classcpp.elf": "cccdc9191bede78d81994d86fbb258e56332f61f124e67ec855832f2cc879ac3",
+  "exe-aarch64.elf": "cda867f58aede78575dd003fe3fd5c670646a7ab15546d27505f9caf24e61642",
+  "exe-aarch64-got.o": "afa0c909496a784d16a678d0791742efbd41d96e6b91b8749f719eb272dd6fc3"
+}
