@@ -11,7 +11,10 @@ export { decodePng, samePixels } from "./formats/png-decode";
 
 import { png as pngFormat } from "./formats/png";
 import { jpeg as jpegFormat } from "./formats/jpeg";
+import { webp as webpFormat } from "./formats/webp";
+export { webp } from "./formats/webp";
+export { parseWebp } from "./formats/webp-parse";
 export { jpeg } from "./formats/jpeg";
 export { parseJpeg } from "./formats/jpeg-parse";
 /** Every format the engine can optimise. */
-export const allFormats = [pngFormat, jpegFormat];
+export const allFormats = [pngFormat, jpegFormat, webpFormat];
