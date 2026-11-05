@@ -1,0 +1,14 @@
+{
+  "name": "shrink-desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "mantou dev src/main.tsx",
+    "start": "mantou run src/main.tsx"
+  },
+  "dependencies": {
+    "@shrink/engine": "workspace:*",
+    "mantou-ui": "^0.3.1"
+  }
+}

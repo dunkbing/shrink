@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext", "module": "ESNext", "moduleResolution": "bundler",
     "strict": true, "noUncheckedIndexedAccess": false, "skipLibCheck": true, "noEmit": true,
-    "types": ["bun"], "jsx": "preserve", "allowImportingTsExtensions": true
+    "types": ["bun"], "jsx": "preserve", "jsxImportSource": "mantou-ui", "allowImportingTsExtensions": true
   },
-  "include": ["packages/*/src", "packages/*/test", "apps/*/src"]
+  "include": ["packages/*/src", "packages/*/test", "apps/*/src", "apps/*/test"]
 }
