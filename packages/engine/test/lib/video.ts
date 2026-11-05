@@ -86,7 +86,7 @@ export function probeJson(path: string): any {
 }
 
 // A private engine over the video formats only (no other family's formats are loaded).
-import { mkdtempSync, rmSync, writeFileSync as wf } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync as wf } from "node:fs";
 import { tmpdir } from "node:os";
 import { Engine } from "../../src/optimize";
 import type { DeepPartial, Format, Settings, Step } from "../../src/types";
@@ -99,7 +99,7 @@ export interface VEnv {
 }
 export function venv(formats: Format[], settings: DeepPartial<Settings> = {}, tweak?: (f: Format) => Format): VEnv {
   const dir = mkdtempSync(join(tmpdir(), "shrink-video-"));
-  Bun.spawnSync(["mkdir", "-p", join(dir, "tmp")]);
+  mkdirSync(join(dir, "tmp"), { recursive: true });
   const engine = new Engine({ formats: tweak ? formats.map(tweak) : formats, settings: { workers: 4, ...settings }, cacheDir: join(dir, "cache"), tempDir: join(dir, "tmp") });
   return {
     dir,

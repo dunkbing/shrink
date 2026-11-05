@@ -62,7 +62,7 @@ test("ZIP-04: data descriptors and a large entry count", async () => {
   const r = await e.engine.optimizeFile(p);
   expect(r.status).toBe("optimized");
   expect(contents(p).length).toBe(1500);
-});
+}, 60_000); // advzip -4 with iterations over 1500 members takes seconds
 
 test("ZIP-05: order, names (UTF-8 and CP437), directories, comments and timestamps with keepMetadata", async () => {
   const members = [

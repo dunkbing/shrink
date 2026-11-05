@@ -25,17 +25,19 @@ jobs:
         run: |
           sudo apt-get update
           # one by one: a package missing from this Ubuntu only skips that format's tests
-          for p in jpegoptim libjpeg-turbo-progs webp gifsicle imagemagick libtiff-tools ffmpeg flac sqlite3 qpdf mupdf-tools \
+          for p in jpegoptim libjpeg-turbo-progs webp gifsicle imagemagick libtiff-tools flac sqlite3 qpdf mupdf-tools \
                    advancecomp zopfli p7zip-full binutils upx-ucl gpac libdeflate-tools cabextract xz-utils mkclean mp4v2-utils; do
             sudo apt-get install -y --no-install-recommends "$p" || echo "::warning::$p not available"
           done
+          # ffmpeg: Ubuntu's 6.1 remuxes Matroska with shifted start times, so use a current static build
+          curl -fsSL https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz | sudo tar xJ --strip-components=2 -C /usr/local/bin --wildcards '*/bin/ffmpeg' '*/bin/ffprobe' || { echo "::warning::static ffmpeg not installed"; sudo apt-get install -y ffmpeg; }
           # oxipng: static release binary
           curl -fsSL https://github.com/shssoichiro/oxipng/releases/latest/download/oxipng-10.2.1-x86_64-unknown-linux-musl.tar.gz | tar xz --strip-components=1 -C /tmp && sudo mv /tmp/oxipng /usr/local/bin/ || echo "::warning::oxipng not installed"
       - name: Tools (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install oxipng jpegoptim mozjpeg webp gifsicle imagemagick libtiff ffmpeg flac qpdf mupdf-tools \
-            advancecomp zopfli sevenzip binutils upx gpac mkclean mp4v2 libdeflate
+            advancecomp zopfli sevenzip binutils upx gpac mkclean mp4v2 libdeflate cabextract
           brew install tdewolff/tap/minify resvg || true
       - name: Tools (Windows)
         if: runner.os == 'Windows'

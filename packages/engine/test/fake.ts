@@ -1,6 +1,6 @@
 // A made-up format for testing the engine itself: "FAKE\n" + lines + "\nEND". Its content is the lines without
 // trailing spaces, so trimming them is a lossless optimisation.
-import { mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Engine } from "../src";
@@ -52,7 +52,7 @@ export interface Env {
 export function env(opts: { steps?: Step[]; settings?: DeepPartial<Settings>; format?: Format; formats?: Format[] } = {}): Env {
   const dir = mkdtempSync(join(tmpdir(), "shrink-test-"));
   const tempDir = join(dir, "tmp");
-  Bun.spawnSync(["mkdir", "-p", tempDir]);
+  mkdirSync(tempDir, { recursive: true });
   const engine = new Engine({
     formats: opts.formats ?? [opts.format ?? fakeFormat(opts.steps)],
     settings: { workers: 4, ...opts.settings },

@@ -1,4 +1,5 @@
 import { renameSync } from "node:fs";
+import { devNull } from "node:os";
 import { toolStep } from "../step";
 import { MissingTool } from "../tools";
 import { SkipFile, type Context, type Format } from "../types";
@@ -49,12 +50,12 @@ async function read(path: string, ctx: Context, ref?: Doc): Promise<Doc> {
   const check = await tool(ctx, "qpdf", ["--check", path]);
   const msg = check.stderr + check.stdout;
   if (check.code !== 0 && !(check.code === 3 && (original || ref?.warned) && !/damaged|reconstruct|recover|truncat|xref|end of file|EOF/i.test(msg)))
-    throw new Error(`qpdf --check: ${msg.trim().split("\n").find((l) => /error|warning|damaged|WARNING/i.test(l)) ?? `exit ${check.code}`}`);
+    throw new Error(`qpdf --check: ${msg.trim().split("\n").find((l) => /error|warning|damaged|WARNING/i.test(l)) ?? `exit ${check.code}: ${msg.trim().slice(0, 200)}`}`);
   const np = await tool(ctx, "qpdf", ["--show-npages", path]);
   const pages = parseInt(np.stdout.trim(), 10);
   if (!(pages >= 0)) throw new Error("no page count");
 
-  const draw = await tool(ctx, "mutool", ["draw", "-r", "72", "-s", "5", "-F", "pam", "-o", "/dev/null", path]);
+  const draw = await tool(ctx, "mutool", ["draw", "-r", "72", "-s", "5", "-F", "pam", "-o", devNull, path]);
   if (draw.code !== 0) throw new Error(`mutool cannot render it: ${draw.stderr.trim().split("\n").pop()}`);
   const renders: string[] = [];
   for (const m of draw.stderr.matchAll(/^page .* (\d+) ([0-9a-f]{32})\s*$/gm)) renders[+m[1] - 1] = m[2];

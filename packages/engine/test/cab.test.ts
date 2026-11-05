@@ -57,7 +57,7 @@ test("CAB-03: multi-cabinet sets, reserve areas and trailing data are skipped un
   }
 });
 
-test("COMMON-05 for cab: truncated and corrupt cabinets are untouched and reported damaged", async () => {
+test.skipIf(!tool)("COMMON-05 for cab: truncated and corrupt cabinets are untouched and reported damaged", async () => {
   const e = make();
   const src = makeCab([{ files: [{ name: "a.txt", data: a }] }]);
   const bad = Buffer.from(src);
@@ -85,7 +85,7 @@ test.skipIf(!tool)("COMMON-08 for cab: the oracle rejects other bytes, other nam
   expect(await cab.oracle.same(prepared, await e.file("ok.cab", makeCab([{ files: files(a), level: 9 }])), ctx)).toBe(true);
 });
 
-test("a second run changes nothing (idempotence)", async () => {
+test.skipIf(!tool)("a second run changes nothing (idempotence)", async () => {
   const e = make({ skipOptimized: false });
   const p = await e.file("a.cab", makeCab([{ files: [{ name: "a.txt", data: a }] }]));
   await e.engine.optimizeFile(p);

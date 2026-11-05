@@ -86,7 +86,7 @@ t("JPEG-08: subsampling, restart markers and optimised/unoptimised input keep th
   const e = make();
   for (const args of [["-sample", "1x1"], ["-sample", "2x1"], ["-sample", "2x2"], ["-restart", "5"], ["-baseline", "-notrellis"], ["-quality", "30"]]) {
     const bytes = await cjpeg({ args });
-    if (!bytes) return;
+    if (!bytes) continue;
     const p = await e.file(`s-${args.join("")}.jpg`, bytes);
     const r = await e.engine.optimizeFile(p);
     expect(["optimized", "unchanged"]).toContain(r.status);

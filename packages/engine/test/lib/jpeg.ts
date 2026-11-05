@@ -53,5 +53,7 @@ export async function cjpeg(opts: { gray?: boolean; args?: string[]; width?: num
   for (let i = 0; i < w * h; i++) px.set([(i * 7) & 255, ((i >> 3) * 5) & 255, (i * 3 + (i >> 5)) & 255], i * 3);
   const ppm = Uint8Array.from([...new TextEncoder().encode(`P6\n${w} ${h}\n255\n`), ...px]);
   const p = Bun.spawn([bin, ...(opts.gray ? ["-grayscale"] : []), ...(opts.args ?? [])], { stdin: new Response(ppm), stdout: "pipe", stderr: "ignore" });
-  return new Uint8Array(await new Response(p.stdout).arrayBuffer());
+  const out = new Uint8Array(await new Response(p.stdout).arrayBuffer());
+  // an option this cjpeg lacks (-notrellis is mozjpeg's) gives no picture: the caller skips that case
+  return (await p.exited) === 0 && out.length > 0 ? out : null;
 }

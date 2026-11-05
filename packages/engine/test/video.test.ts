@@ -147,7 +147,7 @@ t("MP4-07: a file cut before its moov is untouched and reported damaged", async 
 
 // ---------------------------------------------------------------- Matroska / WebM
 
-t("MKV-01: remux (and mkclean when allowed) shrinks, streams equal", async () => {
+tool("mkclean")("MKV-01: remux (and mkclean when allowed) shrinks, streams equal", async () => {
   const mk = gen("v3.mkv", (p) => {
     V.makeMkv(src, p.replace("v3", "v4src"));
     expect(Bun.spawnSync(["mkclean", "--quiet", "--doctype", "3", p.replace("v3", "v4src"), p]).exitCode).toBe(0);
