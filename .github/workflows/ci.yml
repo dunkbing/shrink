@@ -30,9 +30,9 @@ jobs:
             sudo apt-get install -y --no-install-recommends "$p" || echo "::warning::$p not available"
           done
           # ffmpeg: Ubuntu's 6.1 remuxes Matroska with shifted start times, so use a current static build
-          curl -fsSL https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz | sudo tar xJ --strip-components=2 -C /usr/local/bin --wildcards '*/bin/ffmpeg' '*/bin/ffprobe' || { echo "::warning::static ffmpeg not installed"; sudo apt-get install -y ffmpeg; }
+          curl -fsSL --retry 4 --retry-all-errors https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz | sudo tar xJ --strip-components=2 -C /usr/local/bin --wildcards '*/bin/ffmpeg' '*/bin/ffprobe' || { echo "::warning::static ffmpeg not installed"; sudo apt-get install -y ffmpeg; }
           # oxipng: static release binary
-          curl -fsSL https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-unknown-linux-musl.tar.gz | tar xz --strip-components=1 -C /tmp && sudo mv /tmp/oxipng /usr/local/bin/ || echo "::warning::oxipng not installed"
+          curl -fsSL --retry 4 --retry-all-errors https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-unknown-linux-musl.tar.gz | tar xz --strip-components=1 -C /tmp && sudo mv /tmp/oxipng /usr/local/bin/ || echo "::warning::oxipng not installed"
       - name: Tools (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -45,7 +45,7 @@ jobs:
         run: |
           choco install -y ffmpeg imagemagick 7zip qpdf gifsicle
           # oxipng: release binary, into a folder that is already on PATH
-          Invoke-WebRequest https://github.com/shssoichiro/oxipng/releases/latest/download/oxipng-10.2.1-x86_64-pc-windows-msvc.zip -OutFile oxipng.zip
+          curl.exe -fsSL --retry 4 --retry-all-errors -o oxipng.zip https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-pc-windows-msvc.zip
           Expand-Archive oxipng.zip -DestinationPath oxipng-x
           Copy-Item (Get-ChildItem oxipng-x -Recurse -Filter oxipng.exe | Select-Object -First 1).FullName C:\ProgramData\chocolatey\bin\
 
