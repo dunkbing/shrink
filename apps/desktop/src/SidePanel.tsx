@@ -1,9 +1,9 @@
-import { Button, For, Scroll, Slider, Tabs, Text, Toggle, View, createSignal, onMount, type JSX } from "mantou-ui";
+import { Button, For, Scroll, Show, Slider, Tabs, Text, Toggle, View, createEffect, createSignal, type JSX } from "mantou-ui";
 import { Labelled, Section, buttonText, caption, secondary, toggleRow } from "./controls";
 import type { AppSettings } from "./settings";
 import type { Store } from "./store";
 import { c } from "./theme";
-import { toolStatus, type ToolInfo } from "./toolstatus";
+import { toolStatus, type ToolInfo, type ToolsState } from "./toolstatus";
 
 function Settings(props: { store: Store }) {
   const s = props.store.settings;
@@ -41,30 +41,35 @@ function Settings(props: { store: Store }) {
   );
 }
 
-function Tools() {
+const label = (t: ToolInfo) =>
+  t.state === "ready" ? "ready" : t.state === "downloading" ? (t.progress !== undefined ? `downloading ${Math.round(t.progress * 100)}%` : "downloading") : t.state === "waiting" ? "waiting" : t.state === "on demand" ? "when needed" : t.state === "failed" ? "failed" : "unavailable";
+
+function Tools(props: { tools?: ToolsState }) {
   const [tools, setTools] = createSignal<ToolInfo[] | null>(null);
-  const refresh = () => {
-    setTools(null);
-    void toolStatus().then(setTools);
-  };
-  onMount(refresh);
-  const missing = () => tools()?.filter((t) => !t.found).length ?? 0;
+  // looks again whenever a download moves on
+  createEffect(() => {
+    props.tools?.packs();
+    void toolStatus({}, props.tools?.provisioner).then(setTools);
+  });
+  const missing = () => tools()?.filter((t) => t.state === "missing" || t.state === "failed").length ?? 0;
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "spaceBetween" }}>
-        <Text style={{ fontSize: 12, color: c.dim }} role="status">{tools() ? `${tools()!.length - missing()} found, ${missing()} missing` : "Looking…"}</Text>
-        <Button variant="secondary" onPress={refresh} style={secondary}>{buttonText("Check again")}</Button>
+        <Text style={{ fontSize: 12, color: c.dim }} role="status">{tools() ? `${tools()!.filter((t) => t.found).length} of ${tools()!.length} ready` : "Looking…"}</Text>
+        <Show when={props.tools?.failed()}>
+          <Button variant="secondary" onPress={() => props.tools?.retry()} style={secondary}>{buttonText("Retry")}</Button>
+        </Show>
       </View>
-      <Text style={{ fontSize: 11, color: c.faint }}>Formats whose tool is missing are skipped.</Text>
+      <Text style={{ fontSize: 11, color: c.faint }}>{missing() ? "Formats whose tool is unavailable are skipped." : "Tools are prepared automatically."}</Text>
       <For each={tools() ?? []}>
         {(t) => (
-          <View role="listItem" label={`${t.name}: ${t.found ? "found" : "missing"}`} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <View style={{ width: 6, height: 6, borderRadius: 3, flexShrink: 0, backgroundColor: t.found ? c.good : c.bad }} />
+          <View role="listItem" label={`${t.name}: ${label(t)}`} style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <View style={{ width: 6, height: 6, borderRadius: 3, flexShrink: 0, backgroundColor: t.state === "ready" ? c.good : t.state === "failed" || t.state === "missing" ? c.bad : c.faint }} />
             <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
               <Text style={{ fontSize: 13, color: t.found ? c.text : c.dim }}>{t.name}</Text>
               <Text style={{ fontSize: 11, color: c.faint, maxLines: 1 }}>{t.formats.join(", ")}</Text>
             </View>
-            <Text style={{ fontSize: 11, color: t.found ? c.faint : c.bad }}>{t.found ? "found" : "missing"}</Text>
+            <Text style={{ fontSize: 11, color: t.state === "failed" || t.state === "missing" ? c.bad : c.faint }}>{label(t)}</Text>
           </View>
         )}
       </For>
@@ -72,7 +77,7 @@ function Tools() {
   );
 }
 
-export function SidePanel(props: { store: Store }) {
+export function SidePanel(props: { store: Store; tools?: ToolsState }) {
   const [tab, setTab] = createSignal<"settings" | "tools">("settings");
   const name = (id: "settings" | "tools", text: string) => <Text style={{ fontSize: 13, fontWeight: 600, color: tab() === id ? c.text : c.dim }}>{text}</Text>;
   return (
@@ -83,7 +88,7 @@ export function SidePanel(props: { store: Store }) {
         onChange={setTab}
         style={{ flexGrow: 1, minHeight: 0, gap: 0, paddingTop: 8 }}
       >
-        {(id) => <Pane>{id === "settings" ? <Settings store={props.store} /> : <Tools />}</Pane>}
+        {(id) => <Pane>{id === "settings" ? <Settings store={props.store} /> : <Tools tools={props.tools} />}</Pane>}
       </Tabs>
     </View>
   );

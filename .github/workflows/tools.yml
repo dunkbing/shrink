@@ -1,0 +1,95 @@
+name: tools
+# Builds the tool packs (see docs/TOOLS.md) on each OS and, if asked, uploads them to the release `tools-<manifest version>`.
+# Run by hand only; nothing here runs on push.
+on:
+  workflow_dispatch:
+    inputs:
+      packs:
+        description: Packs to build (comma separated)
+        default: core,media,docs,archive,web,exe
+      publish:
+        description: Upload the packs and manifest.json to the release tools-<manifest version>
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: darwin-arm64, os: macos-14 }
+          - { platform: darwin-x64, os: macos-15-intel }
+          - { platform: linux-x64, os: ubuntu-22.04 } # oldest glibc we can get: the packs run on anything newer
+          - { platform: linux-arm64, os: ubuntu-22.04-arm }
+          - { platform: win32-x64, os: windows-2022 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Build tools (macOS)
+        if: runner.os == 'macOS'
+        run: brew install nasm
+      - name: Build tools (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends nasm
+      # ffmpeg is compiled inside MSYS2 on Windows
+      - name: ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: make diffutils nasm curl xz tar mingw-w64-x86_64-gcc mingw-w64-x86_64-pkgconf
+      - name: ffmpeg (Windows build)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: mkdir -p ffmpeg-out && scripts/tools/ffmpeg-min.sh "$PWD/ffmpeg-out" "$PWD/ffmpeg-work"
+      - name: Pack
+        shell: bash
+        env:
+          FFMPEG_PREBUILT: ${{ runner.os == 'Windows' && format('{0}/ffmpeg-out', github.workspace) || '' }}
+        run: |
+          if [ -z "$FFMPEG_PREBUILT" ]; then unset FFMPEG_PREBUILT; fi
+          bun scripts/tools/pack.ts --platform ${{ matrix.platform }} --packs "${{ inputs.packs }}" --out dist/tools --work "$RUNNER_TEMP/tools-work"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packs-${{ matrix.platform }}
+          path: dist/tools/*
+
+  manifest:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist/tools
+          pattern: packs-*
+          merge-multiple: true
+      - name: Merge the checksums into the manifest
+        run: |
+          bun scripts/tools/pack.ts --merge dist/tools/*.json
+          bun scripts/tools/third-party.ts
+          cp packages/engine/tools/manifest.json dist/tools/manifest.json
+          cp docs/THIRD_PARTY.md dist/tools/THIRD_PARTY.md
+      # commit manifest.json from this artifact: the app ships the checksums
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manifest
+          path: |
+            dist/tools/manifest.json
+            dist/tools/THIRD_PARTY.md
+      - name: Publish
+        if: inputs.publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="tools-$(jq .version packages/engine/tools/manifest.json)"
+          gh release view "$tag" >/dev/null 2>&1 || gh release create "$tag" --title "$tag" --notes "Tool packs for Shrink. Third-party licences: THIRD_PARTY.md."
+          gh release upload "$tag" dist/tools/*.tar.gz dist/tools/manifest.json dist/tools/THIRD_PARTY.md --clobber

@@ -4,10 +4,11 @@ import { EmptyState, FileTable } from "./FileTable";
 import { percent, size } from "./files";
 import { pickFiles, pickFolders } from "./pick";
 import { SidePanel } from "./SidePanel";
+import type { ToolsState } from "./toolstatus";
 import type { Store } from "./store";
 import { c } from "./theme";
 
-export function App(props: { store: Store }) {
+export function App(props: { store: Store; tools?: ToolsState }) {
   const { store } = props;
   const [over, setOver] = createSignal(false);
   // Delete removes the selected rows; Cmd/Ctrl+A selects all, +O adds files
@@ -51,17 +52,24 @@ export function App(props: { store: Store }) {
         </Show>
         <View style={{ flexShrink: 0, gap: 8, padding: 12, paddingLeft: 16, paddingRight: 16, borderTopWidth: 1, borderColor: c.line }}>
           <Progress value={fraction()} label={`${Math.round(fraction() * 100)}%`} style={{ height: 3, borderRadius: 1, backgroundColor: c.control, opacity: store.running() ? 1 : 0.5 }} />
-          <View style={{ flexDirection: "row", justifyContent: "spaceBetween" }}>
+          <View style={{ flexDirection: "row", justifyContent: "spaceBetween", alignItems: "center", gap: 12 }}>
             <Text style={{ fontSize: 12, color: c.dim }} role="status">
               {store.running() ? `${store.runDone()} of ${store.runTotal()} files` : `${store.items().length} ${store.items().length === 1 ? "file" : "files"}`}
             </Text>
+            <Show when={props.tools?.busy()} fallback={<Show when={props.tools?.failed()}><Text style={{ fontSize: 12, color: c.faint }} role="status">Some tools could not be downloaded</Text></Show>}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                <Text style={{ fontSize: 12, color: c.faint }} role="status">Preparing tools…</Text>
+                <Progress value={props.tools!.fraction()} label="Preparing tools" style={{ width: 70, height: 3, borderRadius: 1, backgroundColor: c.control }} />
+              </View>
+            </Show>
+            <View style={{ flexGrow: 1 }} />
             <Text style={{ fontSize: 12, color: store.totals().saved > 0 ? c.good : c.dim }} role="status">
               {store.totals().saved === 0 && store.drySaved() > 0 ? `Could save ${size(store.drySaved())}` : store.totals().saved > 0 ? `Saved ${size(store.totals().saved)} (${percent(store.totals().before, store.totals().before - store.totals().saved)})` : "Nothing saved yet"}
             </Text>
           </View>
         </View>
       </View>
-      <SidePanel store={store} />
+      <SidePanel store={store} tools={props.tools} />
       <Show when={over() && store.items().length > 0}>
         <View style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0, borderWidth: 2, borderColor: c.accent, backgroundColor: "#4c8dff1a", alignItems: "center", justifyContent: "center" }}>
           <Text style={{ fontSize: 18, fontWeight: 600, color: c.text }}>Drop to add</Text>

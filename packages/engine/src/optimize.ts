@@ -5,7 +5,8 @@ import { Cache, hashFile } from "./cache";
 import { detect, HEAD } from "./detect";
 import { MissingTool, createTools, runCommand } from "./tools";
 import { resolve } from "./settings";
-import { SkipFile, type Context, type Format, type Options, type Report, type Settings, type StepReport, type Step } from "./types";
+import { ToolProvisioner } from "./provision";
+import { SkipFile, type Tools, type Context, type Format, type Options, type Report, type Settings, type StepReport, type Step } from "./types";
 import { errorMessage } from "./errors";
 
 /** The part of a file that tells if it changed: size, mtime and a hash of its first and last blocks. */
@@ -34,10 +35,15 @@ export class Engine {
   private formats: Format[];
   private cache: Cache;
   private opts: Options;
+  /** Downloads missing tools; null when provisioning is off. */
+  readonly provisioner: ToolProvisioner | null;
+  private tools: Tools;
 
   constructor(opts: Options = {}) {
     this.opts = opts;
     this.settings = resolve(opts.settings);
+    this.provisioner = opts.provisioner ?? (opts.provision ? new ToolProvisioner() : null);
+    this.tools = createTools(this.settings, opts.toolDir, this.provisioner);
     this.formats = (opts.formats ?? []).map((f) => f.configure?.(this.settings) ?? f);
     this.cache = new Cache(opts.cacheDir);
   }
@@ -84,7 +90,7 @@ export class Engine {
       if (key && this.cache.has(key)) return skip("already optimized");
 
       dir = mkdtempSync(join(this.opts.tempDir ?? tmpdir(), "shrink-"));
-      const tools = createTools(settings, this.opts.toolDir);
+      const tools = this.tools;
       let cur = abort; // the running step's own controller: cancelled with the job, or when the step times out
       const ctx: Context = {
         settings,
@@ -138,9 +144,10 @@ export class Engine {
           sr.detail = why;
           continue;
         }
-        if (step.tool && !(await tools.locate(step.tool))) {
-          sr.detail = `${step.tool} not available`;
-          report.notes.push(`${step.id}: ${step.tool} not available`);
+        if (step.tool && !(await (tools.ensure ?? tools.locate)(step.tool))) {
+          const why = this.provisioner?.why(step.tool);
+          sr.detail = `${step.tool} not available${why ? ` (${why})` : ""}`;
+          report.notes.push(`${step.id}: ${sr.detail}`);
           continue;
         }
         const out = join(dir, `step${++n}${ext}`);
@@ -234,15 +241,49 @@ export class Engine {
     }
   }
 
-  /** Optimises many files, `workers` at a time; `onResult` hears each as it finishes. */
-  async optimizeMany(paths: string[], o: { dryRun?: boolean; signal?: AbortSignal; onResult?: (r: Report) => void } = {}): Promise<Report[]> {
+  /** The tools a file's format will want that are not here yet but can be downloaded. */
+  private async downloadable(path: string): Promise<string[]> {
+    const p = this.provisioner;
+    if (!p) return [];
+    try {
+      const head = new Uint8Array(await Bun.file(path).slice(0, HEAD).arrayBuffer());
+      const found = detect(head, basename(path), this.formats);
+      if (!found || "skip" in found) return [];
+      const want = new Set<string>();
+      const flags = found.format.flags?.(this.settings) ?? {};
+      for (const s of found.format.steps) if (s.tool && !(s.lossy && !flags.lossy) && !(s.minLevel && s.minLevel > this.settings.level)) want.add(s.tool);
+      const missing: string[] = [];
+      for (const t of want) if (!(await this.tools.locate(t)) && p.canProvide(t)) missing.push(t);
+      return missing;
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Optimises many files, `workers` at a time; `onResult` hears each as it finishes. A file whose tools are still
+   * being downloaded waits (its download starts at once) while the files that are ready go first.
+   */
+  async optimizeMany(paths: string[], o: { dryRun?: boolean; signal?: AbortSignal; onResult?: (r: Report) => void; onStart?: (path: string) => void } = {}): Promise<Report[]> {
     const n = this.settings.workers > 0 ? this.settings.workers : Math.max(1, navigator.hardwareConcurrency ?? 2);
     const out: Report[] = new Array(paths.length);
-    let next = 0;
+    const todo = paths.map((_, i) => i);
+    const later: number[] = [];
     await Promise.all(
       Array.from({ length: Math.min(n, paths.length) }, async () => {
-        while (next < paths.length) {
-          const i = next++;
+        for (;;) {
+          let i = todo.shift();
+          if (i === undefined) i = later.shift();
+          else if (this.provisioner) {
+            const missing = await this.downloadable(paths[i]);
+            if (missing.length) {
+              for (const t of missing) void this.provisioner.ensure(t);
+              later.push(i);
+              continue;
+            }
+          }
+          if (i === undefined) return;
+          o.onStart?.(paths[i]);
           out[i] = await this.optimizeFile(paths[i], o);
           o.onResult?.(out[i]);
         }

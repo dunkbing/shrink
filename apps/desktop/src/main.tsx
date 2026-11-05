@@ -6,18 +6,22 @@ import { openArgs } from "./open";
 import { pickFiles, pickFolders } from "./pick";
 import { attachShell, realShell } from "./shell";
 import { createStore } from "./store";
+import { createToolsState } from "./toolstatus";
 
 paths.setApp("Shrink");
 // a second launch hands its files to the first copy and quits
 let onLaunch = (_args: string[], _cwd: string) => {};
 if (!(await singleInstance((args, cwd) => onLaunch(args, cwd)))) process.exit(0);
 
+// tools (oxipng, ffmpeg...) come by themselves: the core pack is fetched now, the others when a file needs them
+const tools = createToolsState();
+void tools.provisioner.prefetch();
 const store = createStore({
   dir: paths.data,
-  makeRunner: (settings) => new Engine({ formats: allFormats, settings }),
+  makeRunner: (settings) => new Engine({ formats: allFormats, settings, provisioner: tools.provisioner }),
 });
 
-const core = run(() => <App store={store} />, { title: "Shrink", width: 1000, height: 640, minWidth: 760, minHeight: 440, restoreState: true, quitOnClose: false });
+const core = run(() => <App store={store} tools={tools} />, { title: "Shrink", width: 1000, height: 640, minWidth: 760, minHeight: 440, restoreState: true, quitOnClose: false });
 const shell = attachShell(store, realShell, { icon: fileURLToPath(new URL("../assets/tray.svg", import.meta.url)) });
 core.onEvent = (e) => {
   if (e.type === "closeRequested" && shell.closeRequested() === "quit") core.quit(0);

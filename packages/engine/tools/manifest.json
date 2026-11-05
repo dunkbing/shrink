@@ -1,0 +1,1105 @@
+{
+  "version": 1,
+  "baseUrl": "https://github.com/dunkbing/shrink/releases/download/tools-{version}",
+  "packs": {
+    "core": {
+      "description": "Images, SQLite, xz, zip and audio/video remux: needed for most files",
+      "tools": [
+        "oxipng",
+        "cwebp",
+        "advzip",
+        "gifsicle",
+        "sqlite3",
+        "xz",
+        "zopfli",
+        "jpegtran",
+        "mozjpegtran",
+        "ffmpeg",
+        "ffprobe"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "file": "core-darwin-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "darwin-x64": {
+          "file": "core-darwin-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-x64": {
+          "file": "core-linux-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-arm64": {
+          "file": "core-linux-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "win32-x64": {
+          "file": "core-win32-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        }
+      }
+    },
+    "media": {
+      "description": "FLAC, Matroska and MP4 tools",
+      "tools": [
+        "flac",
+        "metaflac",
+        "mkclean",
+        "MP4Box"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "file": "media-darwin-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "darwin-x64": {
+          "file": "media-darwin-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-x64": {
+          "file": "media-linux-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-arm64": {
+          "file": "media-linux-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "win32-x64": {
+          "file": "media-win32-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        }
+      }
+    },
+    "docs": {
+      "description": "PDF tools",
+      "tools": [
+        "qpdf",
+        "mutool"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "file": "docs-darwin-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "darwin-x64": {
+          "file": "docs-darwin-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-x64": {
+          "file": "docs-linux-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-arm64": {
+          "file": "docs-linux-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "win32-x64": {
+          "file": "docs-win32-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        }
+      }
+    },
+    "images": {
+      "description": "ImageMagick, libtiff, jpegoptim (experimental)",
+      "tools": [
+        "magick",
+        "tiffcp",
+        "jpegoptim"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "file": "images-darwin-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "darwin-x64": {
+          "file": "images-darwin-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-x64": {
+          "file": "images-linux-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-arm64": {
+          "file": "images-linux-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "win32-x64": {
+          "file": "images-win32-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        }
+      }
+    },
+    "archive": {
+      "description": "7-Zip and cabextract",
+      "tools": [
+        "7zz",
+        "cabextract"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "file": "archive-darwin-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "darwin-x64": {
+          "file": "archive-darwin-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-x64": {
+          "file": "archive-linux-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-arm64": {
+          "file": "archive-linux-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "win32-x64": {
+          "file": "archive-win32-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        }
+      }
+    },
+    "web": {
+      "description": "minify and resvg",
+      "tools": [
+        "minify",
+        "resvg"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "file": "web-darwin-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "darwin-x64": {
+          "file": "web-darwin-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-x64": {
+          "file": "web-linux-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-arm64": {
+          "file": "web-linux-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "win32-x64": {
+          "file": "web-win32-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        }
+      }
+    },
+    "exe": {
+      "description": "UPX",
+      "tools": [
+        "upx"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "file": "exe-darwin-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "darwin-x64": {
+          "file": "exe-darwin-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-x64": {
+          "file": "exe-linux-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "linux-arm64": {
+          "file": "exe-linux-arm64.tar.gz",
+          "sha256": null,
+          "size": null
+        },
+        "win32-x64": {
+          "file": "exe-win32-x64.tar.gz",
+          "sha256": null,
+          "size": null
+        }
+      }
+    }
+  },
+  "tools": {
+    "oxipng": {
+      "pack": "core",
+      "licence": "MIT",
+      "homepage": "https://github.com/shssoichiro/oxipng",
+      "minVersion": "9.0.0",
+      "platforms": {
+        "darwin-arm64": {
+          "version": "10.2.1",
+          "url": "https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-aarch64-apple-darwin.tar.gz",
+          "sha256": "7039fcfc78e8aa1ed2b57d848057a0296f082e92b3e1807ac65402d10d926764",
+          "member": "oxipng-10.2.1-aarch64-apple-darwin/oxipng"
+        },
+        "darwin-x64": {
+          "version": "10.2.1",
+          "url": "https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-apple-darwin.tar.gz",
+          "sha256": "111883bbe42b25e01cb1ca41f39f8094e4830b173f0e42be342ecc4ca48f3131",
+          "member": "oxipng-10.2.1-x86_64-apple-darwin/oxipng"
+        },
+        "linux-x64": {
+          "version": "10.2.1",
+          "url": "https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-unknown-linux-musl.tar.gz",
+          "sha256": "1813750ef592c5350ca79c88f98b2c0876d05c826dc7156245256d4255c1ad17",
+          "member": "oxipng-10.2.1-x86_64-unknown-linux-musl/oxipng"
+        },
+        "linux-arm64": {
+          "version": "10.2.1",
+          "url": "https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-aarch64-unknown-linux-musl.tar.gz",
+          "sha256": "ff21aa2a005b324c8dfbdf13cd2f469fb6728b27dacded82635824ecd12e3b35",
+          "member": "oxipng-10.2.1-aarch64-unknown-linux-musl/oxipng"
+        },
+        "win32-x64": {
+          "version": "10.2.1",
+          "url": "https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-pc-windows-msvc.zip",
+          "sha256": "7e940f83ee46874b73f53031f96a15834cb70b220af27391fb06fe7b4dd798e1",
+          "member": "oxipng-10.2.1-x86_64-pc-windows-msvc/oxipng.exe"
+        }
+      }
+    },
+    "minify": {
+      "pack": "web",
+      "licence": "MIT",
+      "homepage": "https://github.com/tdewolff/minify",
+      "platforms": {
+        "darwin-arm64": {
+          "version": "2.24.25",
+          "url": "https://github.com/tdewolff/minify/releases/download/v2.24.25/minify_darwin_arm64.tar.gz",
+          "sha256": "6f60f30161be0e0047a967188a37fe7ed18067f98261fd0cdfe074b7707df94f",
+          "member": "minify"
+        },
+        "darwin-x64": {
+          "version": "2.24.25",
+          "url": "https://github.com/tdewolff/minify/releases/download/v2.24.25/minify_darwin_amd64.tar.gz",
+          "sha256": "dd1ee9d5d0b0c3254b36db14c8d973cee4da88ab61a32116f21f8c7341d13c57",
+          "member": "minify"
+        },
+        "linux-x64": {
+          "version": "2.24.25",
+          "url": "https://github.com/tdewolff/minify/releases/download/v2.24.25/minify_linux_amd64.tar.gz",
+          "sha256": "936873fe59e57e190706ad0e675190c246d53df0bb2e97de1a663347eec47764",
+          "member": "minify"
+        },
+        "linux-arm64": {
+          "version": "2.24.25",
+          "url": "https://github.com/tdewolff/minify/releases/download/v2.24.25/minify_linux_arm64.tar.gz",
+          "sha256": "20e7fe14ad768b5ca3473c2a341ec0ca5021ef49058f399979a94fb18a1af105",
+          "member": "minify"
+        },
+        "win32-x64": {
+          "version": "2.24.25",
+          "url": "https://github.com/tdewolff/minify/releases/download/v2.24.25/minify_windows_amd64.zip",
+          "sha256": "dd0b489c107ff228cf83e90c0eaccaadfff2c57d0bd3f882be1532b20c112aab",
+          "member": "minify.exe"
+        }
+      }
+    },
+    "resvg": {
+      "pack": "web",
+      "licence": "MPL-2.0",
+      "homepage": "https://github.com/linebender/resvg",
+      "platforms": {
+        "darwin-arm64": {
+          "version": "0.49.0",
+          "url": "https://github.com/linebender/resvg/releases/download/v0.49.0/resvg-macos-aarch64.zip",
+          "sha256": "847acb5210c7c6244b5e8f07dd62fa1ce596108cce8193628ebfd5750504b259",
+          "member": "resvg"
+        },
+        "darwin-x64": {
+          "version": "0.49.0",
+          "url": "https://github.com/linebender/resvg/releases/download/v0.49.0/resvg-macos-x86_64.zip",
+          "sha256": "7c92cba55348f0254707c8d2c61e71651296981f8ccfadf8477782e91db5e171",
+          "member": "resvg"
+        },
+        "linux-x64": {
+          "version": "0.49.0",
+          "url": "https://github.com/linebender/resvg/releases/download/v0.49.0/resvg-linux-x86_64.tar.gz",
+          "sha256": "216637e75e909e53e3098b0875cd5f7da2fdc8b4359771b4a29b539afff9d3f5",
+          "member": "resvg"
+        },
+        "linux-arm64": {
+          "version": "0.49.0",
+          "url": "https://github.com/linebender/resvg/releases/download/v0.49.0/resvg-linux-aarch64.tar.gz",
+          "sha256": "00356cb6984836d7638fe10597a01ec4776b0c356e164538f165eca067f0d982",
+          "member": "resvg"
+        },
+        "win32-x64": {
+          "version": "0.49.0",
+          "url": "https://github.com/linebender/resvg/releases/download/v0.49.0/resvg-win-x86_64.zip",
+          "sha256": "38af9631b37e61118a32a5ef31e6be6af083eda63b4c17ffc4fdc63e449277df",
+          "member": "resvg.exe"
+        }
+      }
+    },
+    "upx": {
+      "pack": "exe",
+      "licence": "GPL-2.0-or-later with UPX exception",
+      "homepage": "https://upx.github.io",
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "brew": "upx",
+          "bin": "upx"
+        },
+        "darwin-x64": {
+          "system": true,
+          "brew": "upx",
+          "bin": "upx"
+        },
+        "linux-x64": {
+          "version": "5.3.0",
+          "url": "https://github.com/upx/upx/releases/download/v5.3.0/upx-5.3.0-amd64_linux.tar.xz",
+          "sha256": "79cea8a50b6fa102d10c7b79a419cd77dead3cc2d78661de2dc5e5815dc505c1",
+          "member": "upx-5.3.0-amd64_linux/upx"
+        },
+        "linux-arm64": {
+          "version": "5.3.0",
+          "url": "https://github.com/upx/upx/releases/download/v5.3.0/upx-5.3.0-arm64_linux.tar.xz",
+          "sha256": "2a4afa860ac7aa6968f88df7841823746e5d00ba56affdf9342c2f5254fb776f",
+          "member": "upx-5.3.0-arm64_linux/upx"
+        },
+        "win32-x64": {
+          "version": "5.3.0",
+          "url": "https://github.com/upx/upx/releases/download/v5.3.0/upx-5.3.0-win64.zip",
+          "sha256": "d127996c76615e431be810e9c8d2910dbe3dd400600c5c0c50276fc5a17a9705",
+          "member": "upx-5.3.0-win64/upx.exe"
+        }
+      }
+    },
+    "7zz": {
+      "pack": "archive",
+      "licence": "LGPL-2.1-or-later with unRAR restriction",
+      "homepage": "https://www.7-zip.org",
+      "alias": {
+        "win32-x64": "7z"
+      },
+      "platforms": {
+        "darwin-arm64": {
+          "version": "26.05",
+          "url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-mac.tar.xz",
+          "sha256": "12ef6830317743cfd3f0ab1724bde43fcc270d8b6d8564f8c12c2a2b7f993570",
+          "member": "7zz"
+        },
+        "linux-x64": {
+          "version": "26.05",
+          "url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-linux-x64.tar.xz",
+          "sha256": "22cf82fcc6eb7474f1d5bb4f02c0f8ebd573a718089d6833dc30f8350a3b232e",
+          "member": "7zz"
+        },
+        "linux-arm64": {
+          "version": "26.05",
+          "url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-linux-arm64.tar.xz",
+          "sha256": "0b71f6cfc34669b3bf69f2347efd3429f77020665003a13b9cdc53b784270421",
+          "member": "7zz"
+        },
+        "win32-x64": {
+          "system": true,
+          "choco": "7zip",
+          "bin": "7z"
+        },
+        "darwin-x64": {
+          "version": "26.05",
+          "url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-mac.tar.xz",
+          "sha256": "12ef6830317743cfd3f0ab1724bde43fcc270d8b6d8564f8c12c2a2b7f993570",
+          "member": "7zz"
+        }
+      }
+    },
+    "cwebp": {
+      "pack": "core",
+      "licence": "BSD-3-Clause",
+      "homepage": "https://developers.google.com/speed/webp",
+      "minVersion": "1.3.0",
+      "versionArgs": [
+        "-version"
+      ],
+      "platforms": {
+        "linux-arm64": {
+          "system": true,
+          "apt": "webp",
+          "bin": "cwebp"
+        },
+        "darwin-arm64": {
+          "version": "1.6.0",
+          "url": "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0-mac-arm64.tar.gz",
+          "sha256": "bc6bf84cc70f3f8574fba797d1e4a7dea4feebe9fa4be919f202413ea2b3b8f2",
+          "member": "libwebp-1.6.0-mac-arm64/bin/cwebp"
+        },
+        "darwin-x64": {
+          "version": "1.6.0",
+          "url": "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0-mac-x86-64.tar.gz",
+          "sha256": "f112dd83b420ab2a4b27d46610d9827ddf4200216023281de378647ecca31c2a",
+          "member": "libwebp-1.6.0-mac-x86-64/bin/cwebp"
+        },
+        "linux-x64": {
+          "version": "1.6.0",
+          "url": "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0-linux-x86-64.tar.gz",
+          "sha256": "1c5ffab71efecefa0e3c23516c3a3a1dccb45cc310ae1095c6f14ae268e38067",
+          "member": "libwebp-1.6.0-linux-x86-64/bin/cwebp"
+        },
+        "win32-x64": {
+          "version": "1.6.0",
+          "url": "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0-windows-x64.zip",
+          "sha256": "48886f506b21f62e4661f0f4cbfca19800897c385128e8902542d29a950c93f1",
+          "member": "libwebp-1.6.0-windows-x64/bin/cwebp.exe"
+        }
+      }
+    },
+    "advzip": {
+      "pack": "core",
+      "licence": "GPL-2.0-or-later",
+      "homepage": "https://www.advancemame.it/comp-readme",
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "brew": "advancecomp",
+          "bin": "advzip"
+        },
+        "darwin-x64": {
+          "system": true,
+          "brew": "advancecomp",
+          "bin": "advzip"
+        },
+        "linux-x64": {
+          "system": true,
+          "apt": "advancecomp",
+          "bin": "advzip"
+        },
+        "linux-arm64": {
+          "system": true,
+          "apt": "advancecomp",
+          "bin": "advzip"
+        },
+        "win32-x64": {
+          "version": "2.6",
+          "url": "https://github.com/amadvance/advancecomp/releases/download/v2.6/advancecomp-2.6-windows-x64.zip",
+          "sha256": null,
+          "member": "advzip.exe"
+        }
+      }
+    },
+    "gifsicle": {
+      "pack": "core",
+      "licence": "GPL-2.0-only",
+      "homepage": "https://www.lcdf.org/gifsicle/",
+      "minVersion": "1.92",
+      "versionArgs": [
+        "--version"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "gifsicle",
+          "brew": "gifsicle"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "gifsicle",
+          "brew": "gifsicle"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "gifsicle",
+          "apt": "gifsicle"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "gifsicle",
+          "apt": "gifsicle"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "gifsicle",
+          "choco": "gifsicle"
+        }
+      }
+    },
+    "sqlite3": {
+      "pack": "core",
+      "licence": "Public domain",
+      "homepage": "https://sqlite.org",
+      "minVersion": "3.35.0",
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "sqlite3",
+          "brew": "sqlite"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "sqlite3",
+          "brew": "sqlite"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "sqlite3",
+          "apt": "sqlite3"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "sqlite3",
+          "apt": "sqlite3"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "sqlite3",
+          "choco": "sqlite"
+        }
+      }
+    },
+    "xz": {
+      "pack": "core",
+      "licence": "0BSD / GPL-2.0-or-later (tool)",
+      "homepage": "https://tukaani.org/xz/",
+      "minVersion": "5.2.0",
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "xz",
+          "brew": "xz"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "xz",
+          "brew": "xz"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "xz",
+          "apt": "xz-utils"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "xz",
+          "apt": "xz-utils"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "xz",
+          "choco": "xz"
+        }
+      }
+    },
+    "zopfli": {
+      "pack": "core",
+      "licence": "Apache-2.0",
+      "homepage": "https://github.com/google/zopfli",
+      "versionArgs": [],
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "zopfli",
+          "brew": "zopfli"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "zopfli",
+          "brew": "zopfli"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "zopfli",
+          "apt": "zopfli"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "zopfli",
+          "apt": "zopfli"
+        }
+      }
+    },
+    "jpegtran": {
+      "pack": "core",
+      "licence": "BSD-3-Clause / IJG / Zlib",
+      "homepage": "https://github.com/mozilla/mozjpeg",
+      "versionArgs": [
+        "-version"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "jpegtran",
+          "brew": "mozjpeg"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "jpegtran",
+          "brew": "mozjpeg"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "jpegtran",
+          "apt": "libjpeg-turbo-progs"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "jpegtran",
+          "apt": "libjpeg-turbo-progs"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "jpegtran",
+          "choco": "libjpeg-turbo"
+        }
+      }
+    },
+    "mozjpegtran": {
+      "pack": "core",
+      "licence": "BSD-3-Clause / IJG / Zlib",
+      "homepage": "https://github.com/mozilla/mozjpeg",
+      "exeOf": "jpegtran",
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "jpegtran",
+          "brew": "mozjpeg"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "jpegtran",
+          "brew": "mozjpeg"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "jpegtran",
+          "apt": "libjpeg-turbo-progs"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "jpegtran",
+          "apt": "libjpeg-turbo-progs"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "jpegtran",
+          "choco": "libjpeg-turbo"
+        }
+      }
+    },
+    "ffmpeg": {
+      "pack": "core",
+      "licence": "LGPL-2.1-or-later (built without GPL parts)",
+      "homepage": "https://ffmpeg.org",
+      "minVersion": "7.0",
+      "versionArgs": [
+        "-version"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        },
+        "darwin-x64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        },
+        "linux-x64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        },
+        "linux-arm64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        },
+        "win32-x64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        }
+      }
+    },
+    "ffprobe": {
+      "pack": "core",
+      "licence": "LGPL-2.1-or-later",
+      "homepage": "https://ffmpeg.org",
+      "minVersion": "7.0",
+      "versionArgs": [
+        "-version"
+      ],
+      "builtWith": "ffmpeg",
+      "platforms": {
+        "darwin-arm64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        },
+        "darwin-x64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        },
+        "linux-x64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        },
+        "linux-arm64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        },
+        "win32-x64": {
+          "version": "8.1",
+          "build": "scripts/tools/ffmpeg-min.sh"
+        }
+      }
+    },
+    "flac": {
+      "pack": "media",
+      "licence": "BSD-3-Clause / GPL-2.0 (tools)",
+      "homepage": "https://xiph.org/flac/",
+      "minVersion": "1.3.0",
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "flac",
+          "brew": "flac"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "flac",
+          "brew": "flac"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "flac",
+          "apt": "flac"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "flac",
+          "apt": "flac"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "flac",
+          "choco": "flac"
+        }
+      }
+    },
+    "metaflac": {
+      "pack": "media",
+      "licence": "GPL-2.0-or-later",
+      "homepage": "https://xiph.org/flac/",
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "metaflac",
+          "brew": "flac"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "metaflac",
+          "brew": "flac"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "metaflac",
+          "apt": "flac"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "metaflac",
+          "apt": "flac"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "metaflac",
+          "choco": "flac"
+        }
+      }
+    },
+    "mkclean": {
+      "pack": "media",
+      "licence": "BSD-3-Clause",
+      "homepage": "https://www.matroska.org/downloads/mkclean.html",
+      "versionArgs": [
+        "--version"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "mkclean",
+          "brew": "mkclean"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "mkclean",
+          "brew": "mkclean"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "mkclean",
+          "apt": "mkclean"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "mkclean",
+          "apt": "mkclean"
+        }
+      }
+    },
+    "MP4Box": {
+      "pack": "media",
+      "licence": "LGPL-2.1-or-later",
+      "homepage": "https://gpac.io",
+      "versionArgs": [
+        "-version"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "MP4Box",
+          "brew": "gpac"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "MP4Box",
+          "brew": "gpac"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "MP4Box",
+          "apt": "gpac"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "MP4Box",
+          "apt": "gpac"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "MP4Box",
+          "choco": "gpac"
+        }
+      }
+    },
+    "qpdf": {
+      "pack": "docs",
+      "licence": "Apache-2.0",
+      "homepage": "https://qpdf.sourceforge.io",
+      "minVersion": "11.0.0",
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "qpdf",
+          "brew": "qpdf"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "qpdf",
+          "brew": "qpdf"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "qpdf",
+          "apt": "qpdf"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "qpdf",
+          "apt": "qpdf"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "qpdf",
+          "choco": "qpdf"
+        }
+      }
+    },
+    "mutool": {
+      "pack": "docs",
+      "licence": "AGPL-3.0-or-later (separate process)",
+      "homepage": "https://mupdf.com",
+      "versionArgs": [
+        "-v"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "mutool",
+          "brew": "mupdf-tools"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "mutool",
+          "brew": "mupdf-tools"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "mutool",
+          "apt": "mupdf-tools"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "mutool",
+          "apt": "mupdf-tools"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "mutool",
+          "choco": "mupdf"
+        }
+      }
+    },
+    "magick": {
+      "pack": "images",
+      "licence": "ImageMagick License",
+      "homepage": "https://imagemagick.org",
+      "minVersion": "7.0.0",
+      "versionArgs": [
+        "-version"
+      ],
+      "experimental": true,
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "magick",
+          "brew": "imagemagick"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "magick",
+          "brew": "imagemagick"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "magick",
+          "apt": "imagemagick"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "magick",
+          "apt": "imagemagick"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "magick",
+          "choco": "imagemagick"
+        }
+      }
+    },
+    "tiffcp": {
+      "pack": "images",
+      "licence": "libtiff License",
+      "homepage": "https://libtiff.gitlab.io/libtiff/",
+      "versionArgs": [
+        "-h"
+      ],
+      "experimental": true,
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "tiffcp",
+          "brew": "libtiff"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "tiffcp",
+          "brew": "libtiff"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "tiffcp",
+          "apt": "libtiff-tools"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "tiffcp",
+          "apt": "libtiff-tools"
+        }
+      }
+    },
+    "jpegoptim": {
+      "pack": "images",
+      "licence": "GPL-2.0-or-later",
+      "homepage": "https://github.com/tjko/jpegoptim",
+      "versionArgs": [
+        "--version"
+      ],
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "jpegoptim",
+          "brew": "jpegoptim"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "jpegoptim",
+          "brew": "jpegoptim"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "jpegoptim",
+          "apt": "jpegoptim"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "jpegoptim",
+          "apt": "jpegoptim"
+        },
+        "win32-x64": {
+          "system": true,
+          "bin": "jpegoptim",
+          "choco": "jpegoptim"
+        }
+      }
+    },
+    "cabextract": {
+      "pack": "archive",
+      "licence": "GPL-2.0-or-later",
+      "homepage": "https://www.cabextract.org.uk",
+      "platforms": {
+        "darwin-arm64": {
+          "system": true,
+          "bin": "cabextract",
+          "brew": "cabextract"
+        },
+        "darwin-x64": {
+          "system": true,
+          "bin": "cabextract",
+          "brew": "cabextract"
+        },
+        "linux-x64": {
+          "system": true,
+          "bin": "cabextract",
+          "apt": "cabextract"
+        },
+        "linux-arm64": {
+          "system": true,
+          "bin": "cabextract",
+          "apt": "cabextract"
+        }
+      }
+    }
+  }
+}

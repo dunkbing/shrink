@@ -1,3 +1,4 @@
+import type { ToolProvisioner } from "./provision";
 export interface Settings {
   /** 1 (fast) to 9 (extreme). */
   level: number;
@@ -60,6 +61,8 @@ export interface RunResult {
 export interface Tools {
   /** The command that runs a tool, or null when it isn't available. */
   locate(name: string): Promise<string[] | null>;
+  /** Like `locate`, but gets the tool first (downloads its pack) when it is missing and can be provisioned. */
+  ensure?(name: string): Promise<string[] | null>;
 }
 
 export interface Step {
@@ -143,6 +146,10 @@ export interface Options {
   formats?: Format[];
   /** Where tools are looked for besides PATH. */
   toolDir?: string;
+  /** Download missing tools by themselves (default false; the CLI and the app turn it on). */
+  provision?: boolean;
+  /** The provisioner to use (implies `provision`); lets a caller listen to its progress. */
+  provisioner?: ToolProvisioner;
   /** Where the already-optimised list is kept (default `~/.shrink`). */
   cacheDir?: string;
   /** Where job folders go (default the system temp folder). */

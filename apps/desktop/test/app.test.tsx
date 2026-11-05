@@ -100,10 +100,10 @@ describe.skipIf(!hasCore)("the app", () => {
     second.stop();
   });
 
-  test("the tools tab lists found and missing tools", async () => {
+  test("the tools tab lists the tools and how many are ready", async () => {
     const { h } = app();
     h.press(byText(h, "Tools"));
-    await until(h, () => texts(h).some((t) => /\d+ found, \d+ missing/.test(t)));
+    await until(h, () => texts(h).some((t) => /\d+ of \d+ ready/.test(t)));
     expect(texts(h)).toContain("oxipng");
   });
 });

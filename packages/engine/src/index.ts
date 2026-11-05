@@ -3,6 +3,8 @@ export { errorMessage } from "./errors";
 export { defaults, resolve } from "./settings";
 export { Cache, hashFile } from "./cache";
 export { createTools, runCommand, MissingTool } from "./tools";
+export { ToolProvisioner, type PackState, type PackPhase, type ProvisionOptions } from "./provision";
+export { manifest, currentPlatform, type Manifest, type Platform } from "./manifest";
 export { detect } from "./detect";
 export type * from "./types";
 export { SkipFile } from "./types";
