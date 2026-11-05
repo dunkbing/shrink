@@ -108,3 +108,13 @@ test("a second run changes nothing (idempotence)", async () => {
   expect(r.status).toBe("unchanged");
   expect(readFileSync(p).equals(once)).toBe(true);
 });
+
+test("a gzip bomb (huge expansion) is skipped before it is inflated", async () => {
+  const e = make();
+  const p = await e.file("b.gz", gzipSync(Buffer.alloc(600 * 1024 * 1024), { level: 9 }));
+  const before = readFileSync(p);
+  const r = await e.engine.optimizeFile(p);
+  expect(r.status).toBe("skipped");
+  expect(r.reason).toContain("bomb");
+  expect(readFileSync(p).equals(before)).toBe(true);
+}, 60000);

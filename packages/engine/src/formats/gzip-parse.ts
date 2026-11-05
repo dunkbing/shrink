@@ -19,7 +19,11 @@ export interface Gzip {
 
 const u32 = (b: Uint8Array, o: number) => (b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0;
 
+/** Output cap for inflating: a bomb is skipped, not allocated. */
+const MAX_OUT = 2 ** 29;
+
 export function parseGzip(b: Uint8Array): Gzip {
+  if (b.length > MAX_OUT) throw new SkipFile("larger than 1 GiB");
   if (b.length < 18) throw new Error("too small for gzip");
   if (b[0] !== 0x1f || b[1] !== 0x8b || b[2] !== 8) throw new Error("not a gzip member");
   const flags = b[3];
@@ -51,11 +55,11 @@ export function parseGzip(b: Uint8Array): Gzip {
   let data: Buffer;
   let used = 0;
   try {
-    const r: any = inflateRawSync(b.subarray(p, trailer), { info: true });
+    const r: any = inflateRawSync(b.subarray(p, trailer), { info: true, maxOutputLength: MAX_OUT });
     data = r.buffer;
     used = r.engine.bytesWritten;
   } catch (e: any) {
-    // a second member makes the first one's trailer land inside the stream: try to see that case
+    if (e?.code === "ERR_BUFFER_TOO_LARGE" || /larger than|too large/i.test(String(e?.message))) throw new SkipFile("zip bomb (more than 512 MiB uncompressed)");
     throw new Error(`cannot inflate: ${e?.message ?? e}`);
   }
   if (p + used !== trailer) {

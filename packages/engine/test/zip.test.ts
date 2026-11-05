@@ -239,3 +239,21 @@ test("a mimetype that was stored must stay stored", async () => {
   expect(await zip.oracle.same(prepared, c, ctx)).toContain("mimetype");
   void inflateRawSync;
 });
+
+test("ZIP-04: a zip64 archive (zip64 end record and extra fields) is read and rewritten with equal content", async () => {
+  const members = texts(4);
+  const e = make();
+  const p = await e.file("z64.zip", makeZip(members, { zip64: true }));
+  const r = await e.engine.optimizeFile(p);
+  expect(r.status).toBe("optimized");
+  expect(contents(p).map((c) => [c[0], c[1]])).toEqual(members.map((t) => [t.name, t.data]));
+});
+
+test("ZIP-05: Unicode path extra fields: the file is skipped", async () => {
+  const e = make();
+  const p = await e.file("u.zip", makeZip(texts(3), { unicodeExtra: true }));
+  const before = readFileSync(p);
+  const r = await e.engine.optimizeFile(p);
+  expect(r.status).toBe("skipped");
+  expect(readFileSync(p).equals(before)).toBe(true);
+});

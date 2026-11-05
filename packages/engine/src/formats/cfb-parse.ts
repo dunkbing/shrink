@@ -307,7 +307,7 @@ export function describe(c: Cfb): Map<string, string> {
 }
 
 export function signed(c: Cfb): boolean {
-  for (const p of c.paths.keys()) if (/\/(\u0005DigitalSignature|\u0005MsiDigitalSignatureEx)$/.test(p)) return true;
+  for (const p of c.paths.keys()) if (/\/\u0005(Msi)?DigitalSignature/.test(p)) return true;
   return false;
 }
 export { SkipFile };

@@ -1,8 +1,8 @@
 // 7z cases (docs/FORMATS.md, section 12) against the real 7zz.
 import { afterEach, expect, test } from "bun:test";
-import { mkdirSync, readFileSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { sevenzip } from "../src/formats/sevenzip.format";
+import { sevenzip, unixMode } from "../src/formats/sevenzip.format";
 import { env, type Env } from "./fake";
 import { lorem, noise } from "./lib/zip";
 
@@ -22,6 +22,8 @@ function build(e: Env, name: string, switches: string[], extra: (dir: string) =>
   writeFileSync(join(src, "sub", "r.bin"), noise(4000));
   symlinkSync("f0.txt", join(src, "link"));
   utimesSync(join(src, "f1.txt"), 1600000000, 1600000000);
+  chmodSync(join(src, "f2.txt"), 0o664); // group-writable: a plain extraction under umask 022 would lose it
+  chmodSync(join(src, "f3.txt"), 0o755);
   extra(src);
   const out = join(e.dir, name);
   const r2 = Bun.spawnSync(["7zz", "a", "-t7z", "-snl", ...switches, out, "."], { cwd: src, stdout: "pipe", stderr: "pipe" });
@@ -120,4 +122,21 @@ t("COMMON-08 for 7z: the oracle rejects a different file, a dropped file and a c
     Bun.spawnSync(["7zz", "a", "-snl", out, "."], { cwd: src });
     expect(await sevenzip.oracle.same(prepared, out, ctx)).not.toBe(true);
   }
+});
+
+t("an archive without stored times repacks, and unix modes survive the repack", async () => {
+  const e = make({ level: 7 });
+  const p = build(e, "nt.7z", ["-mx=1", "-mtm=off"]);
+  expect(listing(p)).toContain("Modified = \n");
+  const r = await e.engine.optimizeFile(p);
+  expect(r.status).toBe("optimized");
+  expect(listing(p)).toContain("-rw-rw-r--");
+  expect(listing(p)).toContain("-rwxr-xr-x");
+});
+
+test("unixMode reads the attribute text", () => {
+  expect(unixMode("A -rw-rw-r--")).toBe(0o664);
+  expect(unixMode("A -rwsr-xr-x")).toBe(0o4755);
+  expect(unixMode("D drwxrwxrwt")).toBe(0o1777);
+  expect(unixMode("A")).toBeNull();
 });

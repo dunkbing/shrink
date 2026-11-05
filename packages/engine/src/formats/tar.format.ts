@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { Format, Settings, Step } from "../types";
+import { SkipFile, type Format, type Settings, type Step } from "../types";
 import { recurseMembers, sameMember } from "./recurse";
 import { looksLikeTar, parseTar, type TarEntry } from "./tar-parse";
 
@@ -61,8 +61,8 @@ export const tar: Format = {
   steps: [recurse],
   oracle: {
     async prepare(path) {
+      if (Bun.file(path).size > MAX) throw new SkipFile("larger than 1 GiB");
       const b = new Uint8Array(await Bun.file(path).arrayBuffer());
-      if (b.length > MAX) throw new (await import("../types")).SkipFile("larger than 1 GiB");
       const { entries } = parseTar(b);
       return { b, entries, sha: entries.map((e) => digest(b.subarray(e.dataOffset, e.dataOffset + e.size))) } satisfies Facts;
     },

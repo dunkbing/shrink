@@ -1,4 +1,4 @@
-import { mkdirSync, renameSync, rmSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, renameSync, rmSync } from "node:fs";
 import { crc32 } from "node:zlib";
 import { basename, join } from "node:path";
 import type { Context, Format, Step } from "../types";
@@ -6,8 +6,10 @@ import { SkipFile } from "../types";
 
 const NOPASS = "-pshrink-no-password";
 
-/** Signature header check without any tool: magic, version, start-header CRC, next header inside the file and its CRC. */
-export function check7zHeader(b: Uint8Array): void {
+/** Signature header check without any tool: magic, start-header CRC, next header inside the file and its CRC. */
+export async function check7zHeader(path: string): Promise<void> {
+  const f = Bun.file(path);
+  const b = new Uint8Array(await f.slice(0, 32).arrayBuffer());
   if (b.length < 32) throw new Error("too small for 7z");
   const sig = [0x37, 0x7a, 0xbc, 0xaf, 0x27, 0x1c];
   if (sig.some((v, i) => b[i] !== v)) throw new Error("not a 7z signature");
@@ -15,8 +17,9 @@ export function check7zHeader(b: Uint8Array): void {
   if (dv.getUint32(8, true) !== crc32(b.subarray(12, 32))) throw new Error("start header CRC mismatch");
   const off = Number(dv.getBigUint64(12, true)), size = Number(dv.getBigUint64(20, true));
   if (size === 0 && off === 0) return; // empty archive
-  if (32 + off + size > b.length) throw new Error("truncated: header runs past the end");
-  if (dv.getUint32(28, true) !== crc32(b.subarray(32 + off, 32 + off + size))) throw new Error("header CRC mismatch");
+  if (32 + off + size > f.size) throw new Error("truncated: header runs past the end");
+  if (size > 1 << 28) throw new SkipFile("archive header larger than 256 MiB");
+  if (dv.getUint32(28, true) !== crc32(new Uint8Array(await f.slice(32 + off, 32 + off + size).arrayBuffer()))) throw new Error("header CRC mismatch");
 }
 
 interface Item {
@@ -74,10 +77,24 @@ function compare(a: Item[], b: Item[]): true | string {
     const x = sa[i], y = sb[i];
     if (x.path !== y.path) return `"${x.path}" became "${y.path}"`;
     if (x.folder !== y.folder || x.size !== y.size || x.crc !== y.crc) return `${x.path}: content differs`;
-    if (x.attr && x.attr !== y.attr) return `${x.path}: attributes changed`;
-    if (x.mtime !== y.mtime) return `${x.path}: time changed`;
+    // an archive made on Windows has only the DOS letters: compare those; the unix mode is then not part of the content
+    const [xa, xu] = [x.attr.split(" ")[0], x.attr.split(" ")[1]];
+    if (x.attr && (xu ? x.attr !== y.attr : xa !== y.attr.split(" ")[0])) return `${x.path}: attributes changed`;
+    if (x.mtime && x.mtime !== y.mtime) return `${x.path}: time changed`;
   }
   return true;
+}
+
+/** "A -rwsr-xr--" -> the mode bits, or null when the archive has no unix part. */
+export function unixMode(attr: string): number | null {
+  const m = attr.split(" ")[1];
+  if (!m || m.length < 10) return null;
+  let v = 0;
+  for (let i = 0; i < 9; i++) if (m[i + 1] !== "-" && m[i + 1] !== "S" && m[i + 1] !== "T") v |= 1 << (8 - i);
+  if ("sS".includes(m[3])) v |= 0o4000;
+  if ("sS".includes(m[6])) v |= 0o2000;
+  if ("tT".includes(m[9])) v |= 0o1000;
+  return v;
 }
 
 let seq = 0;
@@ -91,6 +108,12 @@ const repack: Step = {
     try {
       const r = await ctx.run("7zz", ["x", "-snl", "-y", NOPASS, `-o${dir}`, "--", input]);
       if (r.code !== 0) throw new Error("extraction failed: " + (r.stderr || r.stdout).trim().split("\n")[0]);
+      // extraction applies the umask; put the stored unix modes back so they are packed as they were
+      for (const it of (await list(input, ctx)).items) {
+        const mode = unixMode(it.attr);
+        const p = join(dir, it.path);
+        if (mode !== null && !it.attr.split(" ")[1].startsWith("l") && existsSync(p)) chmodSync(p, mode);
+      }
       const mx = ctx.level >= 7 ? "9" : "7";
       // 7zz appends ".7z" to a name without that extension
       const a = await ctx.run("7zz", ["a", "-t7z", `-mx=${mx}`, "-snl", "-y", output + ".7z", "."], { cwd: dir });
@@ -112,7 +135,7 @@ export const sevenzip: Format = {
   steps: [repack],
   oracle: {
     async prepare(path, ctx) {
-      check7zHeader(new Uint8Array(await Bun.file(path).arrayBuffer()));
+      await check7zHeader(path);
       if (!(await ctx.tools.locate("7zz"))) throw new SkipFile("7zz not available, cannot verify");
       const l = await list(path, ctx);
       if (l.items.some((i) => i.encrypted) || /AES|7zAES/.test(l.info.Method ?? "")) throw new SkipFile("encrypted archive");
@@ -123,7 +146,7 @@ export const sevenzip: Format = {
     },
     async same(original, candidate, ctx) {
       try {
-        check7zHeader(new Uint8Array(await Bun.file(candidate).arrayBuffer()));
+        await check7zHeader(candidate);
         await test7z(candidate, ctx);
         return compare(original as Item[], (await list(candidate, ctx)).items);
       } catch (e: any) {

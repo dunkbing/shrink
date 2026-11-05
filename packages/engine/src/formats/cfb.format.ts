@@ -25,8 +25,8 @@ export const cfb: Format = {
   steps: [compact],
   oracle: {
     async prepare(path) {
+      if (Bun.file(path).size > MAX) throw new SkipFile("larger than 1 GiB");
       const b = new Uint8Array(await Bun.file(path).arrayBuffer());
-      if (b.length > MAX) throw new SkipFile("larger than 1 GiB");
       const c = readCfb(b);
       if (signed(c)) throw new SkipFile("digitally signed");
       return { c, d: describe(c), major: c.major } satisfies Facts;

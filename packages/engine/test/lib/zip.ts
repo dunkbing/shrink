@@ -16,6 +16,11 @@ export interface ZMember {
   comment?: string;
 }
 
+const u64 = (n: number) => {
+  const b = Buffer.alloc(8);
+  b.writeBigUInt64LE(BigInt(n));
+  return b;
+};
 const le = (n: number, bytes: number) => {
   const b = Buffer.alloc(bytes);
   if (bytes === 2) b.writeUInt16LE(n);
@@ -23,7 +28,7 @@ const le = (n: number, bytes: number) => {
   return b;
 };
 
-export function makeZip(members: ZMember[], o: { comment?: string; prefix?: Uint8Array; suffix?: Uint8Array; spanned?: boolean } = {}): Buffer {
+export function makeZip(members: ZMember[], o: { comment?: string; prefix?: Uint8Array; suffix?: Uint8Array; spanned?: boolean; zip64?: boolean; unicodeExtra?: boolean } = {}): Buffer {
   const parts: Buffer[] = [];
   const central: Buffer[] = [];
   let pos = o.prefix?.length ?? 0;
@@ -47,11 +52,21 @@ export function makeZip(members: ZMember[], o: { comment?: string; prefix?: Uint
       pos += dd.length;
     }
     const cm = Buffer.from(m.comment ?? "");
-    central.push(Buffer.concat([le(0x02014b50, 4), le(0x031e, 2), le(20, 2), le(flags, 2), le(method, 2), le(t, 2), le(d, 2), le(crc, 4), le(comp.length, 4), le(raw.length, 4), le(name.length, 2), le(0, 2), le(cm.length, 2), le(0, 2), le(0, 2), le(m.extAttr ?? (isDir ? 0x41ed0010 : 0x81a40000), 4), le(offset, 4), name, cm]));
+    const z64 = o.zip64 ? Buffer.concat([le(1, 2), le(24, 2), u64(raw.length), u64(comp.length), u64(offset)]) : Buffer.alloc(0);
+    const uni = o.unicodeExtra ? Buffer.concat([le(0x7075, 2), le(5 + name.length, 2), Buffer.from([1]), le(0, 4), name]) : Buffer.alloc(0);
+    const ex = Buffer.concat([z64, uni]);
+    const f32 = (v: number) => (o.zip64 ? 0xffffffff : v);
+    central.push(Buffer.concat([le(0x02014b50, 4), le(0x031e, 2), le(o.zip64 ? 45 : 20, 2), le(flags, 2), le(method, 2), le(t, 2), le(d, 2), le(crc, 4), le(f32(comp.length), 4), le(f32(raw.length), 4), le(name.length, 2), le(ex.length, 2), le(cm.length, 2), le(0, 2), le(0, 2), le(m.extAttr ?? (isDir ? 0x41ed0010 : 0x81a40000), 4), le(f32(offset), 4), name, ex, cm]));
   }
   const cd = Buffer.concat(central);
   const comment = Buffer.from(o.comment ?? "");
-  parts.push(cd, le(0x06054b50, 4), le(0, 2), le(0, 2), le(members.length, 2), le(members.length, 2), le(cd.length, 4), le(pos, 4), le(comment.length, 2), comment);
+  parts.push(cd);
+  if (o.zip64) {
+    const z64pos = pos + cd.length;
+    parts.push(Buffer.concat([le(0x06064b50, 4), u64(44), le(45, 2), le(45, 2), le(0, 4), le(0, 4), u64(members.length), u64(members.length), u64(cd.length), u64(pos)]));
+    parts.push(Buffer.concat([le(0x07064b50, 4), le(0, 4), u64(z64pos), le(1, 4)]));
+  }
+  parts.push(Buffer.concat([le(0x06054b50, 4), le(0, 2), le(0, 2), le(o.zip64 ? 0xffff : members.length, 2), le(o.zip64 ? 0xffff : members.length, 2), le(o.zip64 ? 0xffffffff : cd.length, 4), le(o.zip64 ? 0xffffffff : pos, 4), le(comment.length, 2), comment]));
   if (o.suffix) parts.push(Buffer.from(o.suffix));
   return Buffer.concat(parts);
 }

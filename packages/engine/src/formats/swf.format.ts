@@ -16,12 +16,13 @@ export function parseSwf(b: Uint8Array): Swf {
   if (b.length < 12) throw new Error("too small for SWF");
   const sig = String.fromCharCode(b[0], b[1], b[2]);
   if (!["FWS", "CWS", "ZWS"].includes(sig) || b[3] === 0) throw new Error("not a SWF");
+  if (b.length > 2 ** 30) throw new SkipFile("larger than 1 GiB");
   const length = (b[4] | (b[5] << 8) | (b[6] << 16) | (b[7] << 24)) >>> 0;
   if (sig === "ZWS") throw new SkipFile("LZMA-compressed SWF");
   let body: Uint8Array = b.subarray(8);
   if (sig === "CWS") {
     try {
-      body = inflateSync(body);
+      body = inflateSync(body, { maxOutputLength: Math.min(Math.max(length - 8, 1), 2 ** 30) + 1 });
     } catch (e: any) {
       throw new Error(`cannot inflate: ${e?.message ?? e}`);
     }

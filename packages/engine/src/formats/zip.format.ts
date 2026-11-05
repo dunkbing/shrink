@@ -31,6 +31,10 @@ function load(bytes: Uint8Array): ZipFacts {
   if (bad) throw new SkipFile(bad);
   const names = new Set<string>();
   for (const e of zip.entries) {
+    for (let q = 0; q + 4 <= e.extra.length; q += 4 + (e.extra[q + 2] | (e.extra[q + 3] << 8))) {
+      const id = e.extra[q] | (e.extra[q + 1] << 8);
+      if (id === 0x7075 || id === 0x6375) throw new SkipFile("Unicode path/comment extra fields");
+    }
     if (names.has(e.name)) throw new SkipFile("duplicate member names");
     names.add(e.name);
   }
@@ -91,6 +95,7 @@ export const zip: Format = {
   steps: [native, advzip, recurse],
   oracle: {
     async prepare(path, ctx) {
+      if (Bun.file(path).size > 2 ** 30) throw new SkipFile("larger than 1 GiB");
       const facts = load(new Uint8Array(await Bun.file(path).arrayBuffer()));
       if (facts.zip.entries.some((e) => SIGNATURE_NAMES.test(e.name))) throw new SkipFile("signed package");
       // an APK signing block sits between the entries and the central directory
