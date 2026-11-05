@@ -42,7 +42,12 @@ jobs:
       - name: Tools (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        run: choco install -y ffmpeg imagemagick 7zip qpdf gifsicle
+        run: |
+          choco install -y ffmpeg imagemagick 7zip qpdf gifsicle
+          # oxipng: release binary, into a folder that is already on PATH
+          Invoke-WebRequest https://github.com/shssoichiro/oxipng/releases/latest/download/oxipng-10.2.1-x86_64-pc-windows-msvc.zip -OutFile oxipng.zip
+          Expand-Archive oxipng.zip -DestinationPath oxipng-x
+          Copy-Item (Get-ChildItem oxipng-x -Recurse -Filter oxipng.exe | Select-Object -First 1).FullName C:\ProgramData\chocolatey\bin\
 
       - run: bun run fixtures:fetch
         continue-on-error: true # a mirror can be down; the corpus test skips what is missing

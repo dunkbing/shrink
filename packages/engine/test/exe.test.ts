@@ -9,6 +9,7 @@ import { parseAr, parseElf, sameElf } from "../src/formats/elf-parse";
 import { parseMacho, sameMacho } from "../src/formats/macho-parse";
 import { parsePe, peChecksum, samePe } from "../src/formats/pe-parse";
 import { env, type Env } from "./fake";
+import { posix } from "./lib/platform";
 import { makeAr, makeElf, makePe } from "./lib/exe";
 
 const envs: Env[] = [];
@@ -217,7 +218,7 @@ test("EXE-06: a .NET assembly is skipped", async () => {
   expect(r.reason).toContain(".NET");
 });
 
-test("EXE-07: UPX never runs unless exe.upx is on", async () => {
+test.skipIf(!posix)("EXE-07: UPX never runs unless exe.upx is on", async () => {
   const marker = join(scratch, "upx-ran");
   rmSync(marker, { force: true });
   const fake = join(scratch, "fake-upx.sh");
@@ -234,7 +235,7 @@ test("EXE-07: UPX never runs unless exe.upx is on", async () => {
   expect(await Bun.file(marker).exists()).toBe(true);
 });
 
-withGnu("EXE-08 / COMMON-08: a strip that changes code is rejected and the file is untouched", async () => {
+need(() => gnuStrip && posix)("EXE-08 / COMMON-08: a strip that changes code is rejected and the file is untouched", async () => {
   const original = makeElf();
   const liar = join(scratch, "liar.sh");
   // copies the input to the output and flips the first code byte

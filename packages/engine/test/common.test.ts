@@ -4,6 +4,7 @@ import { chmodSync, linkSync, lstatSync, readFileSync, statSync, symlinkSync, ut
 import { join } from "node:path";
 import type { Step } from "../src";
 import { env, fakeFormat, sample, trim, type Env } from "./fake";
+import { posix } from "./lib/platform";
 
 const envs: Env[] = [];
 const make = (o?: Parameters<typeof env>[0]) => (envs.push(env(o)), envs[envs.length - 1]);
@@ -144,14 +145,14 @@ test("COMMON-13: timestamps, permissions, hard links and symlinks", async () => 
   await e.engine.optimizeFile(sym); // through the symlink
   expect(lstatSync(sym).isSymbolicLink()).toBe(true);
   expect(statSync(p).mtime.getTime()).toBe(old.getTime());
-  expect(statSync(p).mode & 0o777).toBe(0o640);
+  if (posix) expect(statSync(p).mode & 0o777).toBe(0o640); // Windows has no permission bits
   expect(readFileSync(link, "utf8")).toBe(readFileSync(p, "utf8")); // the same inode
   expect(statSync(link).size).toBeLessThan(sample().length);
 });
 
 test("COMMON-14: unusual names work", async () => {
   const e = make();
-  for (const name of ["with space.fake", "ünïcödé-日本語.fake", "-leading-dash.fake", "a'quote\".fake", "x".repeat(150) + ".fake"]) {
+  for (const name of ["with space.fake", "ünïcödé-日本語.fake", "-leading-dash.fake", ...(posix ? ["a'quote\".fake"] : []), "x".repeat(150) + ".fake"]) {
     const p = await e.file(name, sample());
     expect((await e.engine.optimizeFile(p)).status).toBe("optimized");
   }

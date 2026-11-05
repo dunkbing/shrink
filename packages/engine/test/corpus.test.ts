@@ -2,7 +2,7 @@
 // and what was kept passed the format's own check.
 import { afterAll, expect, test } from "bun:test";
 import { copyFileSync, existsSync, readdirSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { allFormats } from "../src";
 import { env } from "./fake";
 
@@ -37,7 +37,7 @@ test("PngSuite: all valid files keep their pixels, the deliberately broken ones 
   if (!suite.length) return;
   let optimized = 0, skipped = 0;
   for (const path of suite) {
-    const name = path.split("/").pop()!;
+    const name = basename(path);
     const r = await run(path, "suite-" + name);
     if (name.startsWith("x")) expect(r.status, name).toBe("skipped"); // x*.png are corrupt on purpose
     else if (r.status === "optimized") optimized++;

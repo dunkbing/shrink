@@ -11,6 +11,7 @@ const envs: Env[] = [];
 const make = (settings = {}) => (envs.push(env({ formats: [zip], settings })), envs[envs.length - 1]);
 afterEach(() => envs.splice(0).forEach((e) => e.cleanup()));
 const have = Bun.which("advzip") !== null;
+const oxipng = Bun.which("oxipng") !== null; // an inner PNG is optimised through it
 
 const contents = (path: string) => {
   const z = parseZip(new Uint8Array(readFileSync(path)));
@@ -151,7 +152,7 @@ test("ZIP-10: signed JARs and signed package formats are skipped", async () => {
   }
 });
 
-test("ZIP-11: with archive.recurse an inner file is optimised by its own format; off, it is left", async () => {
+test.skipIf(!oxipng)("ZIP-11: with archive.recurse an inner file is optimised by its own format; off, it is left", async () => {
   const { makePng } = await import("./lib/png");
   const { png } = await import("../src/formats/png.format");
   const img = makePng({ width: 64, height: 64, colorType: 2, bitDepth: 8, compression: 0 });

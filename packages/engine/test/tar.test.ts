@@ -8,6 +8,9 @@ import { env, type Env } from "./fake";
 import { makePng } from "./lib/png";
 import { lorem } from "./lib/zip";
 
+// members that are PNGs are optimised through oxipng
+const oxipng = Bun.which("oxipng") !== null;
+
 const envs: Env[] = [];
 const make = (settings = {}) => (envs.push(env({ formats: [tar, png], settings })), envs[envs.length - 1]);
 afterEach(() => envs.splice(0).forEach((e) => e.cleanup()));
@@ -58,7 +61,7 @@ test("TAR-01: with recurse off the tar is untouched", async () => {
   expect(readFileSync(p).equals(before)).toBe(true);
 });
 
-test("TAR-02: with recurse on, members are optimised and headers (mode, uid, mtime) stay", async () => {
+test.skipIf(!oxipng)("TAR-02: with recurse on, members are optimised and headers (mode, uid, mtime) stay", async () => {
   const e = make({ archive: { recurse: true } });
   const src = sample();
   const p = await e.file("a.tar", src);
@@ -70,7 +73,7 @@ test("TAR-02: with recurse on, members are optimised and headers (mode, uid, mti
   expect(b[1].size).toBe(a[1].size);
 });
 
-test("TAR-03: long names and pax headers survive", async () => {
+test.skipIf(!oxipng)("TAR-03: long names and pax headers survive", async () => {
   const long = "very/long/".repeat(20) + "file.png";
   const pax = paxRecord("path", long) + paxRecord("mtime", "1700000000.5");
   const src = Buffer.concat([entry("PaxHeaders/x", pax, { type: "x" }), entry("short", img), entry("././@LongLink", long + "\0", { type: "L" }), entry("trunc", lorem(2000)), end]);
