@@ -123,7 +123,7 @@ t("COMMON-08 for 7z: the oracle rejects a different file, a dropped file and a c
     f(src);
     const out = join(e.dir, `${k}.7z`);
     const a = Bun.spawnSync([SZ, "a", "-snl", out, "."], { cwd: src, stdout: "pipe", stderr: "pipe" });
-    expect(await sevenzip.oracle.same(prepared, out, ctx), `${k}: x=${x.exitCode} ${x.stdout}${x.stderr} a=${a.exitCode} ${a.stdout}${a.stderr}`).not.toBe(true);
+    expect(await sevenzip.oracle.same(prepared, out, ctx), `${k}: x=${x.exitCode} a=${a.exitCode} orig=${(listing(orig).match(/(Path|CRC) = .*/g) ?? []).join(" ")} new=${(listing(out).match(/(Path|CRC) = .*/g) ?? []).join(" ")}`).not.toBe(true);
   }
 });
 
