@@ -32,7 +32,7 @@ jobs:
           # ffmpeg: Ubuntu's 6.1 remuxes Matroska with shifted start times, so use a current static build
           curl -fsSL https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz | sudo tar xJ --strip-components=2 -C /usr/local/bin --wildcards '*/bin/ffmpeg' '*/bin/ffprobe' || { echo "::warning::static ffmpeg not installed"; sudo apt-get install -y ffmpeg; }
           # oxipng: static release binary
-          curl -fsSL https://github.com/shssoichiro/oxipng/releases/latest/download/oxipng-10.2.1-x86_64-unknown-linux-musl.tar.gz | tar xz --strip-components=1 -C /tmp && sudo mv /tmp/oxipng /usr/local/bin/ || echo "::warning::oxipng not installed"
+          curl -fsSL https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-unknown-linux-musl.tar.gz | tar xz --strip-components=1 -C /tmp && sudo mv /tmp/oxipng /usr/local/bin/ || echo "::warning::oxipng not installed"
       - name: Tools (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -49,6 +49,16 @@ jobs:
           Expand-Archive oxipng.zip -DestinationPath oxipng-x
           Copy-Item (Get-ChildItem oxipng-x -Recurse -Filter oxipng.exe | Select-Object -First 1).FullName C:\ProgramData\chocolatey\bin\
 
+      - name: debug qpdf
+        if: runner.os == 'Linux'
+        continue-on-error: true
+        run: |
+          which -a qpdf; id; umask
+          d=$(mktemp -d); mkdir -m 700 $d/t; cp fixtures/real/*.pdf $d/t/ 2>/dev/null; ls -l $d/t | head -3
+          printf '%%PDF-1.4\n' > $d/t/x.pdf; qpdf --check $d/t/x.pdf; echo "exit $?"
+          cd /tmp && mkdir -m 700 /tmp/dbg1 && cp /etc/hostname /tmp/dbg1/original && ls -l /tmp/dbg1 && qpdf --check /tmp/dbg1/original; echo "exit $?"
+          timeout 60 bun scripts/dbg.ts 2>&1 | head -80
+          cat /etc/apparmor.d/*qpdf* 2>/dev/null | head; sudo aa-status 2>&1 | grep -i "qpdf\|mutool" | head
       - run: bun run fixtures:fetch
         continue-on-error: true # a mirror can be down; the corpus test skips what is missing
       - run: bun run typecheck
