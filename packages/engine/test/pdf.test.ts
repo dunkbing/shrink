@@ -223,7 +223,7 @@ for (const name of ["tracemonkey.pdf", "annotation-text-widget.pdf", "form_two_p
   (have ? test : test.skip)(`real file ${name} never grows and stays sound`, async () => {
     if (!(await file.exists())) return;
     const e = make();
-    const p = await e.file(name, file);
+    const p = await e.file(name, new Uint8Array(await file.arrayBuffer()));
     const r = await e.engine.optimizeFile(p);
     expect(r.after).toBeLessThanOrEqual(r.before);
     if (r.status === "optimized") expect(sh(["qpdf", "--check", p]).exitCode).toBeLessThan(3 + 1);
