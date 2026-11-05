@@ -217,7 +217,7 @@ test$("PNG-09: a 9-patch keeps every border pixel (the stretch and padding marke
 
 // ---------------------------------------------------------------- PNG-12
 
-const big = totalmem() >= 8 * 2 ** 30 ? test : test.skip;
+const big = totalmem() >= 4 * 2 ** 30 ? test : test.skip;
 const MB = 1 << 20;
 
 /** 8000x8000 gray, mostly flat (a stripe every 500 rows): about 64 MP, a few hundred KB on disk. */
