@@ -202,7 +202,7 @@ Cases: MP4-01 faststart/`moov` placement and free-space removal shrink, packets 
 Extensions: .exe .dll .ocx .cpl .scr .sys .drv .msi (compound file, see 17) .o .a .lib. Setting `exe.enabled` required.
 Steps: Leanify (PE without ASLR), PETrim, `strip` (ELF/Mach-O, GNU strip or `strip -x`), UPX only with `exe.upx` (changes runtime behaviour: AV false positives, startup cost; never default).
 Skip: Authenticode-signed, installers/self-extractors (appended data, PyInstaller, .NET single-file), notarised macOS binaries (stripping breaks the signature).
-Oracle: `bytes-subset`. Cases: EXE-01 PE with debug symbols and slack shrinks and still runs (smoke test); EXE-02 signed skipped; EXE-03 appended overlay data preserved or skipped; EXE-04 ELF `strip` keeps loadability (`readelf`/run); EXE-05 Mach-O fat binaries and code signature (skipped when signed); EXE-06 .NET assemblies skipped; EXE-07 `exe.upx` off never runs UPX.
+Implemented steps: a native PE step that drops a trailing COFF symbol table (checksum fixed), `gnu-strip` (GNU/LLVM strip: ELF, PE debug sections, `ar` of ELF objects; objects and archives only lose debug data), Apple `strip -x` for Mach-O (ad hoc/linker signatures are re-made by strip and checked with `codesign --verify`), Leanify when installed (not in Homebrew), UPX with `exe.upx` (verified by unpacking). Oracle: `bytes-subset`: parses both files and compares segments/sections, relocations and symbol names. Cases: EXE-01 PE with debug symbols and slack shrinks and still runs (smoke test); EXE-02 signed skipped; EXE-03 appended overlay data preserved or skipped; EXE-04 ELF `strip` keeps loadability (`readelf`/run); EXE-05 Mach-O fat binaries and code signature (skipped when signed); EXE-06 .NET assemblies skipped; EXE-07 `exe.upx` off never runs UPX.
 
 ## 17. Office legacy / compound documents (tier 3)
 
@@ -221,7 +221,7 @@ Rare raster, vector and data formats. Strategy per format: **re-encode into the 
 
 - **Raster (ImageMagick delegates):** .aai .art .avs .bpg (needs bpgenc) .cin .cmyk .cmyka .dcx .dds .dpx .fits .fpx .gray .grs .hdr .hrz .icb .jng .jp2 .j2c .j2k .jpc .jxl (skipped: unsupported) .mng .mono .msl .mtv .otb .palm .pbm .pcd .pcds .pcx .pfm .pgm .pict .picon .pnm .ppm .psb .psd (layers: skipped) .rgb .rgba .sgi .sun .tga .vda .vicar .viff .wbmp .wal .xbm .xpm .xwd .ycbr .ycbra .uyvy .heic/.heif/.avif (skipped: unsupported; verify-only decode via `Bun.Image` on macOS).
 - **Vector / print:** .ai (family 9), .eps/.ps via Ghostscript only with a PDF profile, .cdr (family 11 if zip), .dwf/.dwfx, .kml/.kmz (XML + zip).
-- **Documents/text:** .eml .emlx .mht .mhtml (MIME: recompress parts), .vcf .vcard, .fb2, .chm/.chi/.chq/.chs/.chw (CHM: container rewrite), .lit, .ink/.lnk (skipped).
+- **Documents/text:** .eml .emlx .mht .mhtml (MIME: base64 PNG/JPEG/GIF parts recompressed, every other byte kept; DKIM/S/MIME/PGP-signed messages skipped), .fb2 (XML, section 10), .vcf .vcard, .chm/.chi/.chq/.chs/.chw (CHM: no safe rewriter, skipped), .lit, .ink/.lnk (skipped). Skipped ones report `unsupported: <reason>` (`known-unsupported.format.ts`).
 - **Games/apps:** .pk3 (zip), .wsz/.wmz/.stz (zip skins), .r2skin/.rmskin (zip), .s3z, .itz, .xap, .air, .ipk (ar+tar), .ipsw (zip, signed: skipped), .cbt (tar), .cbz (zip).
 - **DBs/other:** .mdb/.mdt/.mdz (Access: skipped), .odb (zip), .rdb, .onenote (`.one`: skipped), .bsz, .gft, .ksf, .lzl, .nbk.
 
