@@ -1,0 +1,3 @@
+[test]
+# the external tools (ImageMagick, strip, advzip) are slow to start on CI runners
+timeout = 30000
