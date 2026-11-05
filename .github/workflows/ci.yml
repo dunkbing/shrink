@@ -53,6 +53,7 @@ jobs:
         if: runner.os == 'Linux'
         continue-on-error: true
         run: |
+          set +e
           which -a qpdf; id; umask
           d=$(mktemp -d); mkdir -m 700 $d/t; cp fixtures/real/*.pdf $d/t/ 2>/dev/null; ls -l $d/t | head -3
           printf '%%PDF-1.4\n' > $d/t/x.pdf; qpdf --check $d/t/x.pdf; echo "exit $?"
