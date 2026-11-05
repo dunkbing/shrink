@@ -1,0 +1,26 @@
+[
+  {
+    "file": "flower.mp4",
+    "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "format": "mp4",
+    "licence": "CC0 (MDN interactive examples)"
+  },
+  {
+    "file": "flower.webm",
+    "url": "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm",
+    "format": "matroska",
+    "licence": "CC0 (MDN interactive examples)"
+  },
+  {
+    "file": "elephants-dream.ogv",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Elephants_Dream_1024.avi.212to221.2w784vbr900soft-targetabr112.ogv",
+    "format": "ogv",
+    "licence": "CC-BY 2.5 Blender Foundation (Wikimedia Commons)"
+  },
+  {
+    "file": "vidikovac.ogv",
+    "url": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Vidikovac_iznad_Vignja873.theora.ogv",
+    "format": "ogv",
+    "licence": "Wikimedia Commons (free licence, see the file page)"
+  }
+]
