@@ -1,5 +1,5 @@
 import { toolStep } from "../step";
-import type { Format, Settings } from "../types";
+import { SkipFile, type Format, type Settings } from "../types";
 import { decodePng, samePixels, type PngInfo } from "./png-decode";
 
 const SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
@@ -27,7 +27,7 @@ export const png: Format = {
   oracle: {
     async prepare(path, ctx) {
       const info = decodePng(new Uint8Array(await Bun.file(path).arrayBuffer()));
-      if (info.animated) throw new Error("animated PNG is not supported yet");
+      if (info.animated) throw new SkipFile("animated PNG is not supported yet");
       if (isProtected(info)) ctx.facts.protected = true;
       return info;
     },

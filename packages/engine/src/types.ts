@@ -98,6 +98,9 @@ export interface Format {
   extensions?: string[];
 }
 
+/** Thrown by a format's reader for a file it will not touch (animated, unsupported variant...): reported as skipped, not damaged. */
+export class SkipFile extends Error {}
+
 export type Status = "optimized" | "unchanged" | "skipped" | "failed";
 
 export interface StepReport {

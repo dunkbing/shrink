@@ -5,7 +5,7 @@ import { Cache, hashFile } from "./cache";
 import { detect, HEAD } from "./detect";
 import { MissingTool, createTools, runCommand } from "./tools";
 import { resolve } from "./settings";
-import type { Context, Format, Options, Report, Settings, StepReport, Step } from "./types";
+import { SkipFile, type Context, type Format, type Options, type Report, type Settings, type StepReport, type Step } from "./types";
 
 /** The part of a file that tells if it changed: size, mtime and a hash of its first and last blocks. */
 async function fingerprint(path: string): Promise<string> {
@@ -114,7 +114,7 @@ export class Engine {
       try {
         prepared = await format.oracle.prepare?.(work, ctx);
       } catch (e: any) {
-        return skip(`damaged: ${e?.message ?? e}`);
+        return skip(e instanceof SkipFile ? e.message : `damaged: ${e?.message ?? e}`);
       }
 
       let best = work;
