@@ -1,6 +1,6 @@
 import { constants, copyFileSync, mkdtempSync, rmSync, statSync, realpathSync, utimesSync, accessSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, extname, join } from "node:path";
 import { Cache, hashFile } from "./cache";
 import { detect, HEAD } from "./detect";
 import { MissingTool, createTools, runCommand } from "./tools";
@@ -108,7 +108,9 @@ export class Engine {
       if (reason) return skip(reason);
 
       const before = await fingerprint(path);
-      const work = join(dir, "original");
+      // work files keep the extension: some tools (and their AppArmor profiles, like qpdf's on Ubuntu) only open files that carry it
+      const ext = format.id === "pdf" ? ".pdf" : extname(path);
+      const work = join(dir, "original" + ext);
       copyFileSync(path, work); // the copy steps read, and the way back if writing the result fails
       let prepared: unknown;
       try {
@@ -139,7 +141,7 @@ export class Engine {
           report.notes.push(`${step.id}: ${step.tool} not available`);
           continue;
         }
-        const out = join(dir, `step${++n}`);
+        const out = join(dir, `step${++n}${ext}`);
         const t0 = performance.now();
         const stepAbort = new AbortController();
         const onJobAbort = () => stepAbort.abort(new Error("cancelled"));

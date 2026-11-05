@@ -9,7 +9,6 @@ import { parseAr, parseElf, sameElf } from "../src/formats/elf-parse";
 import { parseMacho, sameMacho } from "../src/formats/macho-parse";
 import { parsePe, peChecksum, samePe } from "../src/formats/pe-parse";
 import { env, type Env } from "./fake";
-import { posix } from "./lib/platform";
 import { makeAr, makeElf, makePe } from "./lib/exe";
 
 const envs: Env[] = [];
@@ -218,30 +217,31 @@ test("EXE-06: a .NET assembly is skipped", async () => {
   expect(r.reason).toContain(".NET");
 });
 
-test.skipIf(!posix)("EXE-07: UPX never runs unless exe.upx is on", async () => {
+test("EXE-07: UPX never runs unless exe.upx is on", async () => {
   const marker = join(scratch, "upx-ran");
   rmSync(marker, { force: true });
-  const fake = join(scratch, "fake-upx.sh");
-  writeFileSync(fake, `#!/bin/sh\ntouch "${marker}"\nexit 1\n`);
-  chmodSync(fake, 0o755);
+  // a fake tool as a bun script, so it runs the same everywhere
+  const script = join(scratch, "fake-upx.js");
+  writeFileSync(script, `require("node:fs").writeFileSync(${JSON.stringify(marker)}, "");\nprocess.exit(1);\n`);
+  const fake = [process.execPath, script];
   const original = makePe({ symbols: 40 });
-  const off = make({ exe: { enabled: true }, toolPaths: { upx: [fake] }, level: 9 });
+  const off = make({ exe: { enabled: true }, toolPaths: { upx: fake }, level: 9 });
   const r = await off.engine.optimizeFile(await off.file("a.exe", original));
   expect(r.steps.find((s) => s.id === "exe.upx")?.detail).toContain("exe.upx");
   expect(await Bun.file(marker).exists()).toBe(false);
-  const on = make({ exe: { enabled: true, upx: true }, toolPaths: { upx: [fake] }, level: 9 });
+  const on = make({ exe: { enabled: true, upx: true }, toolPaths: { upx: fake }, level: 9 });
   const r2 = await on.engine.optimizeFile(await on.file("b.exe", original));
   expect(r2.steps.find((s) => s.id === "exe.upx")?.outcome).toBe("failed");
   expect(await Bun.file(marker).exists()).toBe(true);
 });
 
-need(() => gnuStrip && posix)("EXE-08 / COMMON-08: a strip that changes code is rejected and the file is untouched", async () => {
+withGnu("EXE-08 / COMMON-08: a strip that changes code is rejected and the file is untouched", async () => {
   const original = makeElf();
-  const liar = join(scratch, "liar.sh");
-  // copies the input to the output and flips the first code byte
-  writeFileSync(liar, `#!/bin/sh\ncp "$4" "$3"\nprintf 'X' | dd of="$3" bs=1 seek=120 conv=notrunc 2>/dev/null\nhead -c 300 "$3" > "$3.t" && mv "$3.t" "$3"\n`);
-  chmodSync(liar, 0o755);
-  const e = make({ exe: { enabled: true }, toolPaths: { "gnu-strip": [liar] } });
+  const script = join(scratch, "liar.js");
+  // gets `-s -o out in`: copies the input to the output, flips a code byte and cuts the file at 300 bytes
+  writeFileSync(script, `const fs = require("node:fs");\nconst [, , out, inp] = process.argv.slice(2);\nconst b = fs.readFileSync(inp);\nb[120] = 0x58;\nfs.writeFileSync(out, b.subarray(0, 300));\n`);
+  const liar = [process.execPath, script];
+  const e = make({ exe: { enabled: true }, toolPaths: { "gnu-strip": liar } });
   const p = await e.file("prog", original);
   const r = await e.engine.optimizeFile(p);
   const step = r.steps.find((s) => s.id === "exe.strip")!;

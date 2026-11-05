@@ -43,23 +43,24 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          choco install -y ffmpeg imagemagick 7zip qpdf gifsicle
-          # oxipng: release binary, into a folder that is already on PATH
-          curl.exe -fsSL --retry 4 --retry-all-errors -o oxipng.zip https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-pc-windows-msvc.zip
-          Expand-Archive oxipng.zip -DestinationPath oxipng-x
-          Copy-Item (Get-ChildItem oxipng-x -Recurse -Filter oxipng.exe | Select-Object -First 1).FullName C:\ProgramData\chocolatey\bin\
+          # best effort: a package or download that is missing only skips that format's tests
+          foreach ($p in 'ffmpeg','imagemagick','7zip','qpdf','gifsicle','libjpeg-turbo','webp','flac','mupdf','sqlite','xz','upx','mingw','advancecomp','minify','resvg','jpegoptim','zopfli','cabextract') {
+            choco install -y --no-progress $p
+            if ($LASTEXITCODE -ne 0) { Write-Warning "$p not installed" }
+          }
+          # release binaries, into a folder that is already on PATH
+          $bin = 'C:\ProgramData\chocolatey\bin'
+          function Get-Zip($url, $name) {
+            curl.exe -fsSL --retry 4 --retry-all-errors -o "$name.zip" $url
+            if ($LASTEXITCODE -ne 0) { Write-Warning "$name not downloaded"; return }
+            Expand-Archive "$name.zip" -DestinationPath "$name-x" -Force
+            Get-ChildItem "$name-x" -Recurse -Filter '*.exe' | ForEach-Object { Copy-Item $_.FullName $bin -Force }
+          }
+          Get-Zip 'https://github.com/shssoichiro/oxipng/releases/download/v10.2.1/oxipng-10.2.1-x86_64-pc-windows-msvc.zip' oxipng
+          Get-Zip 'https://github.com/tdewolff/minify/releases/latest/download/minify_windows_amd64.zip' minify
+          Get-Zip 'https://github.com/linebender/resvg/releases/latest/download/resvg-win64.zip' resvg
+          $global:LASTEXITCODE = 0
 
-      - name: debug qpdf
-        if: runner.os == 'Linux'
-        continue-on-error: true
-        run: |
-          set +e
-          which -a qpdf; id; umask
-          d=$(mktemp -d); mkdir -m 700 $d/t; cp fixtures/real/*.pdf $d/t/ 2>/dev/null; ls -l $d/t | head -3
-          printf '%%PDF-1.4\n' > $d/t/x.pdf; qpdf --check $d/t/x.pdf; echo "exit $?"
-          cd /tmp && mkdir -m 700 /tmp/dbg1 && cp /etc/hostname /tmp/dbg1/original && ls -l /tmp/dbg1 && qpdf --check /tmp/dbg1/original; echo "exit $?"
-          timeout 60 bun scripts/dbg.ts 2>&1 | head -80
-          cat /etc/apparmor.d/*qpdf* 2>/dev/null | head; sudo aa-status 2>&1 | grep -i "qpdf\|mutool" | head
       - run: bun run fixtures:fetch
         continue-on-error: true # a mirror can be down; the corpus test skips what is missing
       - run: bun run typecheck
