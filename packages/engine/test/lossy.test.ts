@@ -80,7 +80,9 @@ test("the similarity measure treats alpha as part of the picture", () => {
 // ---------------------------------------------------------------- JPEG-13
 
 const cjpeg = Bun.which("cjpeg") !== null;
-const tj = cjpeg ? test : test.skip;
+// tools start slowly on CI runners (Windows), and these run a search of several encodes
+const slow = (name: string, fn: () => Promise<void>) => test(name, fn, 90000);
+const tj = cjpeg ? slow : test.skip;
 const jpegSource = async () => icc3(await makeJpegFrom(256, 192));
 async function makeJpegFrom(w: number, h: number): Promise<Uint8Array> {
   return new Uint8Array(await new Bun.Image(pngOf(w, h)).jpeg({ quality: 97 }).bytes());
@@ -148,7 +150,7 @@ tj("JPEG-13: a too-lossy or tampered result is rejected and the file is untouche
 // ---------------------------------------------------------------- PNG-10
 
 const pngquant = Bun.which("pngquant") !== null;
-const tp = pngquant ? test : test.skip;
+const tp = pngquant ? slow : test.skip;
 
 tp("PNG-10: lossy off never quantises", async () => {
   const bytes = pngOf(256, 192);
@@ -208,7 +210,7 @@ tp("PNG-10: a too-lossy or tampered result is rejected and the file is untouched
 // ---------------------------------------------------------------- WEBP-02
 
 const cwebp = Bun.which("cwebp") !== null;
-const tw = cwebp ? test : test.skip;
+const tw = cwebp ? slow : test.skip;
 const webpSource = async (alpha = false) => {
   const dir = e0();
   await Bun.write(`${dir}/in.png`, pngOf(256, 192, alpha));

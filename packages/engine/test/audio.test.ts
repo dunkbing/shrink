@@ -616,7 +616,7 @@ tflac("FLAC-03: trimSilence off never runs the step; the samples are untouched",
   expect(step(r, "flac.trim")).toMatchObject({ outcome: "skipped", detail: "lossy steps are off" });
   expect(r.lossy).toBeUndefined();
   expect(Buffer.compare(rawOf(p), rawOf(src))).toBe(0);
-});
+}, 60000);
 
 for (const [bits, channels] of [[16, 2], [24, 3]] as const) {
   tflac(`FLAC-03: trimSilence on cuts the silent ends (${bits}-bit, ${channels} channels), keeps the samples between and the tags, and says so`, async () => {
@@ -635,7 +635,7 @@ for (const [bits, channels] of [[16, 2], [24, 3]] as const) {
     expect(Buffer.compare(after, before.subarray(lead * frame, (lead + body) * frame))).toBe(0);
     expect(parseFlac(read(p)).totalSamples).toBe(BigInt(body));
     expect(title(p)).toBe("Keep me");
-  });
+  }, 60000);
 }
 
 tflac("FLAC-03: near-silent noise of one step at the ends counts as silence", async () => {
@@ -644,7 +644,7 @@ tflac("FLAC-03: near-silent noise of one step at the ends counts as silence", as
   const p = await e.file("a.flac", readFileSync(src));
   expect((await e.engine.optimizeFile(p)).lossy).toBe(true);
   expect(rawOf(p).length).toBe(30000 * 4);
-});
+}, 60000);
 
 tflac("FLAC-03: a file without silent ends, or silent all through, is not cut", async () => {
   for (const [name, spec] of [["t-none.flac", { lead: 0, body: 30000, trail: 0 }], ["t-all.flac", { lead: 40000, body: 0, trail: 0 }]] as const) {
@@ -655,7 +655,7 @@ tflac("FLAC-03: a file without silent ends, or silent all through, is not cut", 
     expect(r.lossy).toBeUndefined();
     expect(Buffer.compare(rawOf(p), rawOf(src))).toBe(0);
   }
-});
+}, 60000);
 
 tflac("FLAC-03: a result with a changed sample or a cut into the music is rejected and the file untouched", async () => {
   const src = encodeFlac("t-tamper.flac", silentEnds({ lead: 20000, body: 30000, trail: 15000 }));
@@ -682,4 +682,4 @@ tflac("FLAC-03: a result with a changed sample or a cut into the music is reject
     expect(step(r, "flac.liar")?.detail).toContain("between the silent ends");
     expect(Buffer.compare(read(p), read(src))).toBe(0);
   }
-});
+}, 60000);
