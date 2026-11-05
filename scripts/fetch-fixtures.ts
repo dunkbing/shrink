@@ -23,7 +23,7 @@ for (const f of [...new Bun.Glob("*.json").scanSync(join(root, "manifest.d"))].s
     total++;
     const path = join(dir, m.file);
     if (!existsSync(path)) {
-      const res = await fetch(m.url, { redirect: "follow", headers: { "user-agent": "shrink-fixtures" } }).catch(() => null);
+      const res = await fetch(m.url, { redirect: "follow", headers: { "user-agent": "shrink-fixtures/0.1 (test corpus fetcher; https://github.com/dunkbing)" } }).catch(() => null);
       if (!res?.ok) {
         console.error(`FAILED ${m.file}: ${res ? res.status : "no response"} ${m.url}`);
         bad++;
