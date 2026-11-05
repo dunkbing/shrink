@@ -109,7 +109,7 @@ Cases: ICO-01 PNG-compressed icon sizes; ICO-02 BMP-based 32-bit; ICO-03 multi-r
 ## 8. SVG / SVGZ (tier 1)
 
 Detect: XML root `<svg`. Oracle: `text-structure` plus a rendered-pixel compare (resvg or ImageMagick).
-Steps: Leanify, minify (SVG). SVGZ: unpack, optimize as SVG, gzip with the GZip chain.
+Steps: minify (SVG). SVGZ: unpack, minify, gzip at level 9. Editor data (Inkscape/Sodipodi/RDF metadata) is dropped; the oracle compares structure with names resolved through namespaces, and the rendered pictures (resvg, 2x) must be byte-identical.
 Skip: SVG with `<text>` (minification removes whitespace between `<tspan>`s) unless the oracle proves equal.
 Cases: SVG-01 Inkscape output with metadata shrinks a lot; SVG-02 `<style>`/CSS, IDs referenced by `use`/`url(#x)` still resolve; SVG-03 embedded base64 images kept; SVG-04 SVG with text skipped; SVG-05 `xml:space="preserve"` respected; SVG-06 SVGZ roundtrip; SVG-07 malformed XML untouched; SVG-08 DOCTYPE/entities do not enable external entity loading (security).
 
@@ -138,7 +138,7 @@ Skip: signed PDFs (`/ByteRange`, `/DocMDP`), PDF/A, encrypted without a password
 ## 10. HTML / CSS / JavaScript / JSON / XML (tier 2; off by default except SVG)
 
 Detect by extension plus content sniffing. Oracle: `text-structure`.
-HTML (`web.html`): minify (whitespace between tags, comments, optional attributes); skip documents with whitespace-sensitive content (`pre`, `textarea`, `white-space: pre*`, `xmp`, `listing`, `plaintext`, inline SVG `<text>`). CSS (`web.css`): minify. JS/JSON (`web.js`): minify; JSON keeps number spellings; `jsExtensions` for extra extensions; never JSX/TypeScript. XML-family (.xml .xhtml .xsl .xslt .kml .smil .sgml .fb2) : whitespace/comment removal only where the DOM compare proves equal.
+HTML (`web.html`): minify (whitespace between tags, comments, optional attributes); skip documents with whitespace-sensitive content (`pre`, `textarea`, `white-space: pre*`, `xmp`, `listing`, `plaintext`, inline SVG `<text>`). CSS (`web.css`): minify. JS/JSON (`web.js`): JS uses a native whitespace/comment step (the minifier's rewrites cannot be proven equal by tokens); JSON keeps number spellings (`--json-keep-numbers`); `jsExtensions` for extra extensions; never JSX/TypeScript. XML-family (.xml .xhtml .xsl .xslt .kml .smil .fb2; `.sgml` is not XML and is not handled; setting `web.html`) : whitespace/comment removal only where the DOM compare proves equal.
 Cases: WEB-01 HTML with comments; WEB-02 `<pre>` preserved byte-exact; WEB-03 inline `<script>`/`<style>` handled; WEB-04 conditional comments kept; WEB-05 CSS `calc()` spacing, `@media` queries, `!important`, custom properties; WEB-06 JS ASI hazards, regex literals vs division, template literals, strict-mode strings; WEB-07 JSON big numbers/`-0`/exponent spelling unchanged, duplicate keys left alone; WEB-08 BOM and CRLF handling; WEB-09 invalid input untouched; WEB-10 setting off: untouched (except SVG); WEB-11 XML entity expansion limits (billion-laughs file is rejected, never expanded).
 
 ## 11. ZIP-based containers (tier 1)
