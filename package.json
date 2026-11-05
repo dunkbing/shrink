@@ -1,0 +1,14 @@
+{
+  "name": "shrink",
+  "private": true,
+  "description": "Makes files smaller without changing what they contain: an engine, a CLI and a desktop app.",
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bun check"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.4"
+  }
+}
