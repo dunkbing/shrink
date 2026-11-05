@@ -1,0 +1,20 @@
+{
+  "bootstrap.css": "18a105d7cb38e01e5ed0ca255c092992a2e211b39594a7fa57262bfc6fc4ea9c",
+  "normalize.css": "580818700724d42d7fcc4979b0197971fca1c6d2e0286769237a0ac897df5512",
+  "jquery.js": "78a85aca2f0b110c29e0d2b137e09f0a1fb7a8e554b499f740d6744dc8962cfe",
+  "underscore.js": "56bf845439057fbf61e9925905b3c5bea88886604189dcb5312bd5281e4415f5",
+  "lodash.js": "4c04561befdf653aef017a42ac5addf68ea943cdfca6bdee5ce04e04e8139f54",
+  "lodash-package.json": "0d486d8dd5d67f09a44aa72a6acecba39a5a66c07ec4f988e9c2ee3075563a5e",
+  "vscode-package.json": "1e757c287258e33e1733ee62c1cb0de05a99af7ede5930bcd3542c807cb6a72a",
+  "box.gltf": "4a0d69eecfce0672a50b71dc218cbacec6c53fe2445040c235c6314b1b2c41b9",
+  "html5-boilerplate.html": "1dacff6e4b61aa96a8b6b94ba2280eb9a767f0d688775a088b430994c1f9ebb0",
+  "jquery-test.html": "669b3c566aab16abfdaabe89ac1aa0faa143a0df8b87925b33fac140b4a9ec14",
+  "three-cube.html": "022a3727ba58f70020ab9a48ac27d510e4881426f75db6d5838f044e1ed18430",
+  "maven-pom.xml": "5b520e34ac2b1fab017f6aa0a6ec6eedec2fe1682e3105d0a9c48df7ac6a15b8",
+  "petclinic-pom.xml": "7e61df0a43d538a5404e8130a55b8085541ec8e841fcf39f81bb6d3d81dcd2f4",
+  "bootstrap-icon.svg": "7060197eb38ab5f80121a1f9fdc69b8fa9b806955362234807d10df2dbbe52f1",
+  "svg-logo.svg": "c959a57b9dad523e1a669fafc53145c185545748703eff7cb65b2f0983998f19",
+  "tux.svg": "cd503ad510e16ff2869f959cf57b892bb2175a6874ff696b495bd94fd7db9743",
+  "inkscape-logo.svg": "8388c6cc93a0e44ba6979c8a6f3273c6bb7860e19208c3c9e9f86057733debc0",
+  "gnome-face-smile.svg": "d930ace80c864256a7b69406db3ffd0196c032a85efb1affa8857f5ee6d10b02"
+}

@@ -4,5 +4,77 @@
     "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/tracemonkey.pdf",
     "format": "pdf",
     "licence": "pdf.js test file"
+  },
+  {
+    "file": "annotation-text-widget.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/annotation-text-widget.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "annotation-link-text-popup.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/annotation-link-text-popup.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "form_two_pages.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/form_two_pages.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "nested_outline.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/nested_outline.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "outlines_se.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/outlines_se.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "signed_verified.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/signed_verified.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "perf_images_scan_bilevel.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/perf_images_scan_bilevel.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "attachment.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/attachment.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "alphatrans.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/alphatrans.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "TAMReview.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/TAMReview.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "rotation.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/rotation.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
+  },
+  {
+    "file": "annotation-fileattachment.pdf",
+    "url": "https://raw.githubusercontent.com/mozilla/pdf.js/master/test/pdfs/annotation-fileattachment.pdf",
+    "format": "pdf",
+    "licence": "pdf.js test file"
   }
 ]
