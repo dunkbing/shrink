@@ -1,5 +1,6 @@
 [test]
 # Mantou's JSX plugin for the desktop app's .tsx files
 preload = ["./apps/desktop/node_modules/mantou-ui/runtime/solid/preload.ts"]
+# (bun test ignores this key: the timeout is passed as --timeout 30000 in package.json and CI)
 # the external tools (ImageMagick, strip, advzip) are slow to start on CI runners
 timeout = 30000

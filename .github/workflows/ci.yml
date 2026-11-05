@@ -77,4 +77,4 @@ jobs:
         continue-on-error: true # a mirror can be down; the corpus test skips what is missing
       - run: bun run typecheck
       - run: bun scripts/no-any.ts
-      - run: bun test
+      - run: bun test --timeout 30000

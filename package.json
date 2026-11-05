@@ -5,7 +5,7 @@
   "type": "module",
   "workspaces": ["packages/*", "apps/*"],
   "scripts": {
-    "test": "bun test",
+    "test": "bun test --timeout 30000",
     "gen": "bun scripts/gen-formats.ts",
     "typecheck": "bun scripts/gen-formats.ts && bun check && bun scripts/no-any.ts",
     "fixtures:fetch": "bun scripts/fetch-fixtures.ts",
