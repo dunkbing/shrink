@@ -1,0 +1,43 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    # Windows is new: tests that need POSIX shell fake tools are still being ported.
+    continue-on-error: ${{ matrix.os == 'windows-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      # The external tools the formats run; tests of a format skip when its tool is absent.
+      - name: Tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends oxipng jpegoptim libjpeg-turbo-progs webp gifsicle imagemagick libtiff-tools \
+            ffmpeg flac sqlite3 qpdf mupdf-tools advancecomp zopfli p7zip-full binutils upx-ucl gpac mkclean libdeflate-tools
+      - name: Tools (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install oxipng jpegoptim mozjpeg webp gifsicle imagemagick libtiff ffmpeg flac qpdf mupdf-tools \
+            advancecomp zopfli sevenzip binutils upx gpac mkclean mp4v2 libdeflate
+          brew install tdewolff/tap/minify resvg || true
+      - name: Tools (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install -y ffmpeg imagemagick 7zip qpdf gifsicle
+
+      - run: bun run fixtures:fetch
+        continue-on-error: true # a mirror can be down; the corpus test skips what is missing
+      - run: bun run typecheck
+      - run: bun test

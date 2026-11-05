@@ -63,7 +63,7 @@ interface Facts {
 export const gzip: Format = {
   id: "gzip",
   extensions: ["gz", "tgz", "svgz", "gzip"],
-  detect: (h) => h[0] === 0x1f && h[1] === 0x8b && h[2] === 8,
+  detect: (h, name) => h[0] === 0x1f && h[1] === 0x8b && h[2] === 8 && !/\.svgz$/i.test(name), // .svgz goes to the SVG format
   flags: (s: Settings) => ({ keepMetadata: s.archive.keepMetadata }),
   steps: [native, libdeflate, zopfli],
   oracle: {

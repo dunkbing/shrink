@@ -1,4 +1,5 @@
 // JPEG fixtures: encoded with Bun.Image, with metadata segments added by hand.
+import { existsSync } from "node:fs";
 import { makePng } from "./png";
 
 export async function makeJpeg(o: { width?: number; height?: number; quality?: number; progressive?: boolean; gray?: boolean; seed?: number } = {}): Promise<Uint8Array> {
@@ -45,8 +46,8 @@ export const mpf = (jpeg: Uint8Array) => addSegment(jpeg, 0xe2, cat(text("MPF\0"
 
 /** A JPEG made by mozjpeg's cjpeg from a generated image, for kinds Bun.Image can't write (gray, arithmetic, subsampling, restart markers). */
 export async function cjpeg(opts: { gray?: boolean; args?: string[]; width?: number; height?: number } = {}): Promise<Uint8Array | null> {
-  const bin = "/opt/homebrew/opt/mozjpeg/bin/cjpeg";
-  if (!(await Bun.file(bin).exists())) return null;
+  const bin = ["/opt/homebrew/opt/mozjpeg/bin/cjpeg", "/usr/local/opt/mozjpeg/bin/cjpeg", "/usr/bin/mozjpeg-cjpeg", Bun.which("cjpeg")].find((p) => p && existsSync(p));
+  if (!bin) return null;
   const w = opts.width ?? 128, h = opts.height ?? 96;
   const px = new Uint8Array(w * h * 3);
   for (let i = 0; i < w * h; i++) px.set([(i * 7) & 255, ((i >> 3) * 5) & 255, (i * 3 + (i >> 5)) & 255], i * 3);

@@ -79,7 +79,7 @@ t("7Z-04: a multi-volume part is skipped", async () => {
 
 t("7Z-05: executable filters (BCJ) are kept when they help", async () => {
   const e = make({ level: 9 });
-  const bin = new Uint8Array(readFileSync("/bin/ls"));
+  const bin = new Uint8Array(readFileSync(process.execPath)).subarray(1 << 20, (1 << 20) + 400000) // some real machine code;
   const p = build(e, "x.7z", ["-mx=1", "-mf=off"], (src) => writeFileSync(join(src, "ls"), bin));
   const before = readFileSync(p).length;
   const r = await e.engine.optimizeFile(p);
