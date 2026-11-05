@@ -1,5 +1,6 @@
 // A strict PNG reader for verification: every pixel as 16-bit RGBA (so 16-bit images are compared in full), CRCs checked.
 import { inflateSync } from "node:zlib";
+import { readOrientation } from "./exif";
 
 export interface PngInfo {
   width: number;
@@ -142,19 +143,6 @@ export function decodePng(bytes: Uint8Array): PngInfo {
   let orientation = 1;
   if (exif && exif.length > 12) orientation = readOrientation(exif);
   return { width, height, colorType, bitDepth, interlaced, animated, pixels, colour, orientation, chunks };
-}
-
-/** The EXIF Orientation tag (1 when absent). */
-function readOrientation(e: Uint8Array): number {
-  const v = new DataView(e.buffer, e.byteOffset, e.byteLength);
-  const t = e[0] === 0x45 && e[1] === 0x78 ? 6 : 0; // an "Exif\0\0" prefix
-  const le = e[t] === 0x49;
-  try {
-    const ifd = t + v.getUint32(t + 4, le);
-    const n = v.getUint16(ifd, le);
-    for (let i = 0; i < n; i++) if (v.getUint16(ifd + 2 + i * 12, le) === 0x112) return v.getUint16(ifd + 2 + i * 12 + 8, le);
-  } catch {}
-  return 1;
 }
 
 /** Do two decoded pictures hold the same pixels? Fully transparent pixels count as equal whatever their colour. */

@@ -9,5 +9,8 @@ export { png } from "./formats/png";
 export { decodePng, samePixels } from "./formats/png-decode";
 
 import { png as pngFormat } from "./formats/png";
+import { jpeg as jpegFormat } from "./formats/jpeg";
+export { jpeg } from "./formats/jpeg";
+export { parseJpeg } from "./formats/jpeg-parse";
 /** Every format the engine can optimise. */
-export const allFormats = [pngFormat];
+export const allFormats = [pngFormat, jpegFormat];

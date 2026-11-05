@@ -7,6 +7,12 @@ export class MissingTool extends Error {
   }
 }
 
+/** Places a tool is commonly installed under another name (Homebrew keeps mozjpeg's jpegtran out of PATH). */
+const KNOWN: Record<string, string[]> = {
+  mozjpegtran: ["/opt/homebrew/opt/mozjpeg/bin/jpegtran", "/usr/local/opt/mozjpeg/bin/jpegtran", "/usr/bin/mozjpegtran"],
+  ghostscript: ["gs"],
+};
+
 /** Finds tools: the settings' `toolPaths`, then the tool folder, then PATH. */
 export function createTools(settings: Settings, toolDir?: string): Tools {
   const cache = new Map<string, Promise<string[] | null>>();
@@ -24,8 +30,11 @@ export function createTools(settings: Settings, toolDir?: string): Tools {
               if (await Bun.file(p).exists()) return [p];
             }
           }
-          const w = Bun.which(name);
-          return w ? [w] : null;
+          for (const c of [name, ...(KNOWN[name] ?? [])]) {
+            const w = c.startsWith("/") ? ((await Bun.file(c).exists()) ? c : null) : Bun.which(c);
+            if (w) return [w];
+          }
+          return null;
         })();
         cache.set(name, found);
       }
