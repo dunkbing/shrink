@@ -26,7 +26,8 @@ beforeAll(async () => {
   gnuStrip = (await t.locate("gnu-strip")) !== null;
   appleStrip = process.platform === "darwin" && (await t.locate("strip")) !== null;
 });
-const need = (cond: () => boolean) => (name: string, fn: () => Promise<void>) => test(name, async () => (cond() ? fn() : void 0));
+// GNU strip takes seconds on a CI runner's first PE, hence the generous timeout
+const need = (cond: () => boolean) => (name: string, fn: () => Promise<void>) => test(name, async () => (cond() ? fn() : void 0), 30_000);
 const withGnu = need(() => gnuStrip);
 const withApple = need(() => appleStrip && Bun.which("cc") !== null);
 const bytes = (p: string) => new Uint8Array(readFileSync(p));

@@ -62,14 +62,10 @@ jobs:
           Get-Zip 'https://github.com/amadvance/advancecomp/releases/latest/download/advancecomp-2.6-windows-x64.zip' advancecomp
           Get-Zip 'https://github.com/tukaani-project/xz/releases/latest/download/xz-5.8.4-windows.zip' xz 'x86-64'
           Get-Zip 'https://github.com/tjko/jpegoptim/releases/latest/download/jpegoptim-1.5.6-x64-windows.zip' jpegoptim
+          # libjpeg-turbo (jpegtran, cjpeg) installs outside PATH
+          Add-Content $env:GITHUB_PATH 'C:\libjpeg-turbo64\bin'
           $global:LASTEXITCODE = 0
 
-      - name: debug strip
-        if: runner.os == 'Linux'
-        continue-on-error: true
-        run: |
-          which -a strip llvm-strip nice; strip --version | head -1
-          timeout 60 bun scripts/dbg.ts 2>&1 | head -60
       - run: bun run fixtures:fetch
         continue-on-error: true # a mirror can be down; the corpus test skips what is missing
       - run: bun run typecheck

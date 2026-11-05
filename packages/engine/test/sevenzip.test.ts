@@ -1,17 +1,20 @@
 // 7z cases (docs/FORMATS.md, section 12) against the real 7zz.
 import { afterEach, expect, test } from "bun:test";
-import { chmodSync, mkdirSync, readFileSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, rmSync, symlinkSync, utimesSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { sevenzip, unixMode } from "../src/formats/sevenzip.format";
 import { env, type Env } from "./fake";
+import { posix } from "./lib/platform";
 import { lorem, noise } from "./lib/zip";
 
-const have = Bun.which("7zz") !== null;
+// 7zz (Homebrew, 7-Zip.org), or 7z / 7zip (Debian, Windows)
+const SZ = ["7zz", "7z", "7zip"].find((n) => Bun.which(n)) ?? "7zz";
+const have = Bun.which(SZ) !== null;
 const t = have ? test : test.skip;
 const envs: Env[] = [];
 const make = (settings = {}) => (envs.push(env({ formats: [sevenzip], settings })), envs[envs.length - 1]);
 afterEach(() => envs.splice(0).forEach((e) => e.cleanup()));
-const sz = (...a: string[]) => Bun.spawnSync(["7zz", ...a], { stdout: "pipe", stderr: "pipe" });
+const sz = (...a: string[]) => Bun.spawnSync([SZ, ...a], { stdout: "pipe", stderr: "pipe" });
 
 /** A folder with text, a binary, an empty dir and a symlink, packed with the given 7z switches. */
 function build(e: Env, name: string, switches: string[], extra: (dir: string) => void = () => {}) {
@@ -20,13 +23,13 @@ function build(e: Env, name: string, switches: string[], extra: (dir: string) =>
   mkdirSync(join(src, "sub"), { recursive: true });
   for (let i = 0; i < 8; i++) writeFileSync(join(src, `f${i}.txt`), lorem(30000, i + 1));
   writeFileSync(join(src, "sub", "r.bin"), noise(4000));
-  symlinkSync("f0.txt", join(src, "link"));
+  if (posix) symlinkSync("f0.txt", join(src, "link"));
   utimesSync(join(src, "f1.txt"), 1600000000, 1600000000);
-  chmodSync(join(src, "f2.txt"), 0o664); // group-writable: a plain extraction under umask 022 would lose it
-  chmodSync(join(src, "f3.txt"), 0o755);
+  if (posix) chmodSync(join(src, "f2.txt"), 0o664); // group-writable: a plain extraction under umask 022 would lose it
+  if (posix) chmodSync(join(src, "f3.txt"), 0o755);
   extra(src);
   const out = join(e.dir, name);
-  const r2 = Bun.spawnSync(["7zz", "a", "-t7z", "-snl", ...switches, out, "."], { cwd: src, stdout: "pipe", stderr: "pipe" });
+  const r2 = Bun.spawnSync([SZ, "a", "-t7z", "-snl", ...switches, out, "."], { cwd: src, stdout: "pipe", stderr: "pipe" });
   expect(r2.exitCode).toBe(0);
   return out;
 }
@@ -69,7 +72,7 @@ t("7Z-04: a multi-volume part is skipped", async () => {
   const src = join(e.dir, "mv");
   mkdirSync(src);
   writeFileSync(join(src, "big.bin"), noise(60000));
-  Bun.spawnSync(["7zz", "a", "-t7z", "-v20k", join(e.dir, "mv.7z"), "."], { cwd: src });
+  Bun.spawnSync([SZ, "a", "-t7z", "-v20k", join(e.dir, "mv.7z"), "."], { cwd: src });
   const part = join(e.dir, "mv.7z.001");
   const before = readFileSync(part);
   const r = await e.engine.optimizeFile(part);
@@ -105,21 +108,21 @@ t("a truncated or corrupt 7z is untouched", async () => {
 t("COMMON-08 for 7z: the oracle rejects a different file, a dropped file and a changed attribute", async () => {
   const e = make({ level: 7 });
   const orig = build(e, "o.7z", ["-mx=1"]);
-  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {}, tools: { locate: async () => ["7zz"] }, run: async (tool: string, args: string[]) => { const r = Bun.spawnSync([tool, ...args], { stdout: "pipe", stderr: "pipe" }); return { code: r.exitCode, stdout: r.stdout.toString(), stderr: r.stderr.toString() }; } };
+  const ctx: any = { settings: e.engine.settings, dir: e.dir, facts: {}, tools: { locate: async () => [SZ] }, run: async (tool: string, args: string[]) => { const r = Bun.spawnSync([tool === "7zz" ? SZ : tool, ...args], { stdout: "pipe", stderr: "pipe" }); return { code: r.exitCode, stdout: r.stdout.toString(), stderr: r.stderr.toString() }; } };
   const prepared = await sevenzip.oracle.prepare!(orig, ctx);
   const src = join(e.dir, "alt");
   const variants: Record<string, (d: string) => void> = {
     changed: (d) => writeFileSync(join(d, "f2.txt"), lorem(30000, 99)),
-    dropped: (d) => Bun.spawnSync(["rm", join(d, "f3.txt")]),
-    mode: (d) => Bun.spawnSync(["chmod", "700", join(d, "f4.txt")]),
+    dropped: (d) => rmSync(join(d, "f3.txt")),
+    ...(posix ? { mode: (d: string) => chmodSync(join(d, "f4.txt"), 0o700) } : {}),
   };
   for (const [k, f] of Object.entries(variants)) {
-    Bun.spawnSync(["rm", "-rf", src]);
-    Bun.spawnSync(["mkdir", "-p", src]);
-    Bun.spawnSync(["7zz", "x", "-snl", `-o${src}`, orig]);
+    rmSync(src, { recursive: true, force: true });
+    mkdirSync(src, { recursive: true });
+    Bun.spawnSync([SZ, "x", "-snl", `-o${src}`, orig]);
     f(src);
     const out = join(e.dir, `${k}.7z`);
-    Bun.spawnSync(["7zz", "a", "-snl", out, "."], { cwd: src });
+    Bun.spawnSync([SZ, "a", "-snl", out, "."], { cwd: src });
     expect(await sevenzip.oracle.same(prepared, out, ctx)).not.toBe(true);
   }
 });
@@ -130,8 +133,10 @@ t("an archive without stored times repacks, and unix modes survive the repack", 
   expect(listing(p)).toContain("Modified = \n");
   const r = await e.engine.optimizeFile(p);
   expect(r.status).toBe("optimized");
-  expect(listing(p)).toContain("-rw-rw-r--");
-  expect(listing(p)).toContain("-rwxr-xr-x");
+  if (posix) {
+    expect(listing(p)).toContain("-rw-rw-r--");
+    expect(listing(p)).toContain("-rwxr-xr-x");
+  }
 });
 
 test("unixMode reads the attribute text", () => {
