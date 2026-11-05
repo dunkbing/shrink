@@ -1,0 +1,9 @@
+{
+  "xz-good-1-crc32.xz": "eaa0f7d82fb273920c5247fa4928e695830ce40631945c6dda3cdf3f14d65cec",
+  "lzma-known-size.lzma": "392b7e5739d04e59c42de50129b6f7a36193c73399e8a430a1a9a7b1d9a65c18",
+  "hello_2.10-3_amd64.deb": "2e6e2f1a0007dc43bc91c273fd36e91e40a4f1c2765a03eca68b70a42103878a",
+  "cab-simple.cab": "590791307b407a6ec6d885542952b7eb6575defde68e06d25bac4f41a9b634fd",
+  "cab-mixed.cab": "0ce0b55fe705b744d41bb361170c0467db30da0c7f9bdd386d5dade71a78e171",
+  "cab-large-files.cab": "7137966abdffca1c3cfcf4119bc5a6d2f91f2e546e98f3a2ee013f9aa33b93df",
+  "json.lua": "0eaccda57fabc0330736de25f45cf589821a42b5e0fe02e4e3125f7dc0bf2b7e"
+}

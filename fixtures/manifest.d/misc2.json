@@ -1,0 +1,9 @@
+[
+  { "file": "xz-good-1-crc32.xz", "url": "https://raw.githubusercontent.com/tukaani-project/xz/master/tests/files/good-1-check-crc32.xz", "format": "xz", "licence": "xz test files (public domain)" },
+  { "file": "lzma-known-size.lzma", "url": "https://raw.githubusercontent.com/tukaani-project/xz/master/tests/files/good-known_size-with_eopm.lzma", "format": "lzma", "licence": "xz test files (public domain)" },
+  { "file": "hello_2.10-3_amd64.deb", "url": "https://deb.debian.org/debian/pool/main/h/hello/hello_2.10-3_amd64.deb", "format": "deb", "licence": "GPL-3.0 (Debian hello package)" },
+  { "file": "cab-simple.cab", "url": "https://raw.githubusercontent.com/kyz/libmspack/master/cabextract/test/cabs/simple.cab", "format": "cab", "licence": "libmspack test files (LGPL-2.1)" },
+  { "file": "cab-mixed.cab", "url": "https://raw.githubusercontent.com/kyz/libmspack/master/cabextract/test/cabs/mixed.cab", "format": "cab", "licence": "libmspack test files (LGPL-2.1)" },
+  { "file": "cab-large-files.cab", "url": "https://raw.githubusercontent.com/kyz/libmspack/master/cabextract/test/cabs/large-files-cab.cab", "format": "cab", "licence": "libmspack test files (LGPL-2.1)" },
+  { "file": "json.lua", "url": "https://raw.githubusercontent.com/rxi/json.lua/master/json.lua", "format": "lua", "licence": "MIT (rxi/json.lua)" }
+]
