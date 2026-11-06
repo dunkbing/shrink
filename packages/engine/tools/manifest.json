@@ -427,9 +427,10 @@
           "member": "7zz"
         },
         "win32-x64": {
-          "system": true,
-          "choco": "7zip",
-          "bin": "7z"
+          "version": "26.05",
+          "url": "https://github.com/ip7z/7zip/releases/download/26.05/7z2605-extra.7z",
+          "sha256": "f27a8f103c84785026edcba1f67faf1357225df9d19ddb0b7760d55947141bc7",
+          "member": "x64/7za.exe"
         },
         "darwin-x64": {
           "version": "26.05",
