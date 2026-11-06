@@ -18,12 +18,13 @@ jobs:
         working-directory: apps/desktop
         run: |
           cat > /tmp/nohide.ts <<'TS'
-          import { build } from "mantou-ui/runtime/build";
+          import { build } from "./node_modules/mantou-ui/runtime/build.ts";
           console.log(await build("src/main.tsx", "C:/nohide", "ShrinkDbg.exe"));
           TS
           cp /tmp/nohide.ts ./nohide.ts
           bun nohide.ts
       - name: Run installed (hidden console)
+        if: always()
         shell: pwsh
         run: |
           $i = Get-ChildItem apps/desktop/dist/*.exe | Select -First 1
@@ -35,6 +36,7 @@ jobs:
           Get-Content C:\out-hidden.txt, C:\err-hidden.txt
           Get-Process | Where-Object { $_.ProcessName -match 'Shrink|bun|conhost' } | Format-Table Id,ProcessName,MainWindowTitle
       - name: Run unhidden
+        if: always()
         shell: pwsh
         run: |
           $p = Start-Process C:\nohide\ShrinkDbg.exe -PassThru -RedirectStandardOutput C:\out.txt -RedirectStandardError C:\err.txt
