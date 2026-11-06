@@ -20,28 +20,28 @@
       "platforms": {
         "darwin-arm64": {
           "file": "core-darwin-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "141632f9029ca5267cb6411e62c76f4608db6ce7a0a4c14efbef0dc77c7f65b1",
+          "size": 6846342
         },
         "darwin-x64": {
           "file": "core-darwin-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "db34b127c00c2e87be480d1dc2a24fa4a08e67905d60e62a9404984d42e18ad3",
+          "size": 7509618
         },
         "linux-x64": {
           "file": "core-linux-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "ffaf95ad697bf8b125da63767115a325df407530883afa5e8bef7e64779b46ee",
+          "size": 9385758
         },
         "linux-arm64": {
           "file": "core-linux-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "0dde3aa0d6670823e95d0f58eaaaf24ef44b1c65132a4695c9bd77161dbb71c2",
+          "size": 7829604
         },
         "win32-x64": {
           "file": "core-win32-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "15778e9d98373a3af6beb63a150a00f7ce9f12ddd01f29b70512d134956f7450",
+          "size": 9278786
         }
       }
     },
@@ -56,28 +56,28 @@
       "platforms": {
         "darwin-arm64": {
           "file": "media-darwin-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "51133479291bdd86c3feb2859a0dc34a6d9167ec73d212ab394bc2a20ceb8e24",
+          "size": 21500939
         },
         "darwin-x64": {
           "file": "media-darwin-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "9851e1181fa0d3d1fde36ccf1116f11611dcb668b45e1ddd01a30e386f175614",
+          "size": 24204531
         },
         "linux-x64": {
           "file": "media-linux-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "d766a6545a6d198b9430636437376403fc426e731143c20d4c846b2a6da4d3eb",
+          "size": 257508
         },
         "linux-arm64": {
           "file": "media-linux-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "adefd11014ffe81b1fbef1f37d41bd6eca5314df1544af23a66ac42fcf18a730",
+          "size": 239587
         },
         "win32-x64": {
           "file": "media-win32-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "c3e5d5dcff1294a8b31505323ba838d16e7086542eb26eee1dfb776b7cdc1dfa",
+          "size": 577677
         }
       }
     },
@@ -90,28 +90,28 @@
       "platforms": {
         "darwin-arm64": {
           "file": "docs-darwin-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "861596050f48ab699fa9d633f7ebd66f4be18371ad42567a2cafdada936d63a4",
+          "size": 33682436
         },
         "darwin-x64": {
           "file": "docs-darwin-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "0107838f05922b9be1b045ba900dd1e7427382907fce52fdcded03aabef27697",
+          "size": 33629602
         },
         "linux-x64": {
           "file": "docs-linux-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "7a8074129ffbe4d3c27978abc0cbe3fed6931a637d7e915f2637f75a84be7293",
+          "size": 35061457
         },
         "linux-arm64": {
           "file": "docs-linux-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "55328e27a3b20b13bcbf63020a2fee3f30f8afae1ea90db9df9bfd4887376e7d",
+          "size": 34729998
         },
         "win32-x64": {
           "file": "docs-win32-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "f8080428c4c45d7f024f31ea0c5288c0e2375a6f60300a013d1db9fc7d904d3b",
+          "size": 37295716
         }
       }
     },
@@ -159,28 +159,28 @@
       "platforms": {
         "darwin-arm64": {
           "file": "archive-darwin-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "1d62278af7716137f7322b3e53fd7de84d15137cca7d9fa9455bd4a16153c977",
+          "size": 2648472
         },
         "darwin-x64": {
           "file": "archive-darwin-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "91ea6d143af17f1d03a33d947dcb2ba54ad6c7fb6385995736235a977fb9701b",
+          "size": 2650922
         },
         "linux-x64": {
           "file": "archive-linux-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "cd434bc75b2d020d02005912de1bf32d4fc51f8b409ba48a95082c748794d415",
+          "size": 1363056
         },
         "linux-arm64": {
           "file": "archive-linux-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "9a6dd4f93689d7ba8689c91d96325cbb38a731fa9f642e16fd1d867ea8d168a6",
+          "size": 1247008
         },
         "win32-x64": {
           "file": "archive-win32-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "07e96abf427c2af60f4e7ecfd93b5ad7f8a5e9387c7ff488f7e43ac45d0b77ff",
+          "size": 621695
         }
       }
     },
@@ -193,28 +193,28 @@
       "platforms": {
         "darwin-arm64": {
           "file": "web-darwin-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "ba0a074b53806f91ac2b45aa7a9af2eaaf9c3fa36efd487757f96088608d4413",
+          "size": 3995279
         },
         "darwin-x64": {
           "file": "web-darwin-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "6714d288091603744886678fbef891d688762dc3c3aaaa86589041db1719bd54",
+          "size": 4270578
         },
         "linux-x64": {
           "file": "web-linux-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "484274898bff02928060ad603a444c58ac4441a8e4a571c4bd738ecf04a463b9",
+          "size": 4252268
         },
         "linux-arm64": {
           "file": "web-linux-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "ff32c0d5f80e0d88e98f6173a774b3759977197c478733dfa671154d97c921dc",
+          "size": 3894554
         },
         "win32-x64": {
           "file": "web-win32-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "bcbfd6f361e06749a5d621c862221f73ba3d6c60176980f26665a936e8703a72",
+          "size": 4191328
         }
       }
     },
@@ -226,28 +226,28 @@
       "platforms": {
         "darwin-arm64": {
           "file": "exe-darwin-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "6b8699544379a99a73fac43eae738e0fa4cdc873c8e7b9bf9a13eec57644f5e7",
+          "size": 933014
         },
         "darwin-x64": {
           "file": "exe-darwin-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "d8ec731714db15c1c375563d9a56aff140fbba39c46b8dd91417809b96c388a5",
+          "size": 959781
         },
         "linux-x64": {
           "file": "exe-linux-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "284c45b798aeee6a600fb8c90f69e6046c24507cacd97438254fc7013fc34071",
+          "size": 646819
         },
         "linux-arm64": {
           "file": "exe-linux-arm64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "3618f3915c5c9ba9a52c85192d377a3e0b02aa242bd509d43d871b46dc5a1bcc",
+          "size": 655669
         },
         "win32-x64": {
           "file": "exe-win32-x64.tar.gz",
-          "sha256": null,
-          "size": null
+          "sha256": "e5598c287f4ef1adf1b8d302bad894edcbabaa1821a24c99f8b34f5d3748e625",
+          "size": 638420
         }
       }
     }
@@ -879,25 +879,17 @@
         "-version"
       ],
       "platforms": {
-        "darwin-arm64": {
-          "system": true,
-          "bin": "MP4Box",
-          "brew": "gpac"
-        },
         "darwin-x64": {
           "system": true,
           "bin": "MP4Box",
           "brew": "gpac"
-        },
-        "win32-x64": {
-          "system": true,
-          "bin": "MP4Box",
-          "choco": "gpac"
         }
       },
       "dropped": {
         "linux-x64": "apt gpac pulls ~80 MB of libraries (85 MB pack, 20 min build)",
-        "linux-arm64": "apt gpac pulls ~80 MB of libraries (81 MB pack)"
+        "linux-arm64": "apt gpac pulls ~80 MB of libraries (81 MB pack)",
+        "darwin-arm64": "gpac needs its module folder next to the binary (not relocatable as bundled)",
+        "win32-x64": "MP4Box not found after installing gpac"
       }
     },
     "qpdf": {

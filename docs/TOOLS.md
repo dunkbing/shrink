@@ -75,7 +75,12 @@ manifest is what makes any host safe: a file that does not match is deleted and 
    Changing a pack means changing the manifest `version` (a new release tag) or at least the checksums; installed
    copies of older packs are removed after the new one is in place.
 
-Nothing has been published yet.
+Published: release `tools-1` (https://github.com/dunkbing/shrink/releases/tag/tools-1), built by the workflow on all
+five platforms. `core` is 6.8 to 9.4 MB per platform. Tools the builder could not make relocatable are left out per
+platform (`tools.<name>.dropped` in the manifest has the reason, the engine skips them without an error): `MP4Box` on
+Linux (gpac pulls ~80 MB of libraries), macOS arm64 (gpac module folder) and Windows (no usable choco package), `mkclean`
+on Linux (no apt package). Windows takes xz, jpegtran and 7-Zip from their official release archives (Chocolatey
+installs those as installers). The `images` pack is not built.
 
 ## Provisioner (packages/engine/src/provision.ts)
 

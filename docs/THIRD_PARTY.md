@@ -15,7 +15,7 @@ unless noted, with their own licences. Generated from `packages/engine/tools/man
 | flac | media | see the package | BSD-3-Clause / GPL-2.0 (tools) | https://xiph.org/flac/ |
 | gifsicle | core | see the package | GPL-2.0-only | https://www.lcdf.org/gifsicle/ |
 | jpegoptim | images | see the package | GPL-2.0-or-later | https://github.com/tjko/jpegoptim |
-| jpegtran | core | see the package | BSD-3-Clause / IJG / Zlib | https://github.com/mozilla/mozjpeg |
+| jpegtran | core | 3.2.1 | BSD-3-Clause / IJG / Zlib | https://github.com/mozilla/mozjpeg |
 | magick | images | see the package | ImageMagick License | https://imagemagick.org |
 | metaflac | media | see the package | GPL-2.0-or-later | https://xiph.org/flac/ |
 | minify | web | 2.24.25 | MIT | https://github.com/tdewolff/minify |
@@ -28,7 +28,7 @@ unless noted, with their own licences. Generated from `packages/engine/tools/man
 | sqlite3 | core | see the package | Public domain | https://sqlite.org |
 | tiffcp | images | see the package | libtiff License | https://libtiff.gitlab.io/libtiff/ |
 | upx | exe | 5.3.0 | GPL-2.0-or-later with UPX exception | https://upx.github.io |
-| xz | core | see the package | 0BSD / GPL-2.0-or-later (tool) | https://tukaani.org/xz/ |
+| xz | core | 5.8.4 | 0BSD / GPL-2.0-or-later (tool) | https://tukaani.org/xz/ |
 | zopfli | core | see the package | Apache-2.0 | https://github.com/google/zopfli |
 
 ## Source code
