@@ -35,25 +35,17 @@ jobs:
           "alive: $(-not $p.HasExited) exit: $($p.ExitCode)"
           Get-Content C:\out-hidden.txt, C:\err-hidden.txt
           Get-Process | Where-Object { $_.ProcessName -match 'Shrink|bun|conhost' } | Format-Table Id,ProcessName,MainWindowTitle
-      - name: Release asset, child processes
+      - name: PE deps
         if: always()
         shell: pwsh
         run: |
-          Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
-          gh release download v0.1.0 -R dunkbing/shrink -p '*windows-x64.exe' -D rel --clobber
-          (Get-FileHash rel\*.exe).Hash; (Get-FileHash apps\desktop\dist\*.exe).Hash
-          Remove-Item -Recurse -Force $env:APPDATA\Shrink, $env:LOCALAPPDATA\Shrink -ErrorAction SilentlyContinue
-          Start-Process (Get-ChildItem rel\*.exe).FullName -ArgumentList '/S','/D=C:\rel-app' -Wait
-          $p = Start-Process C:\rel-app\Shrink.exe -PassThru -RedirectStandardOutput C:\o.txt -RedirectStandardError C:\e.txt
-          foreach ($t in 1..12) {
-            Start-Sleep 5
-            $kids = Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $p.Id } | ForEach-Object { "$($_.Name) [$($_.CommandLine)]" }
-            "t=$($t*5) alive=$(-not $p.HasExited) exit=$($p.ExitCode) children: $($kids -join '; ')"
-          }
-          Get-Content C:\o.txt, C:\e.txt
-          Get-ChildItem -Recurse $env:LOCALAPPDATA\Shrink | Select FullName
-        env:
-          GH_TOKEN: ${{ github.token }}
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          $env:PATH += ";" + (Split-Path (Get-ChildItem "$vs\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe" | Select -First 1).FullName)
+          dumpbin /dependents C:\shrink-app\mantou_ffi.dll
+          dumpbin /dependents C:\shrink-app\Shrink.exe
+          dumpbin /headers C:\shrink-app\Shrink.exe | Select-String 'subsystem'
+          dumpbin /headers C:\nohide\ShrinkDbg.exe | Select-String 'subsystem'
+          Get-ChildItem C:\Windows\System32\vcruntime140*.dll, C:\Windows\System32\msvcp140*.dll | Select Name
       - name: Run from source
         if: always()
         shell: bash
