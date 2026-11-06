@@ -35,32 +35,30 @@ jobs:
           "alive: $(-not $p.HasExited) exit: $($p.ExitCode)"
           Get-Content C:\out-hidden.txt, C:\err-hidden.txt
           Get-Process | Where-Object { $_.ProcessName -match 'Shrink|bun|conhost' } | Format-Table Id,ProcessName,MainWindowTitle
-      - name: Launch like Explorer
+      - name: Other install dirs
         if: always()
         shell: pwsh
         run: |
           Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
-          Remove-Item -Recurse -Force $env:APPDATA\Shrink, $env:LOCALAPPDATA\Shrink -ErrorAction SilentlyContinue
-          $lnk = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Shrink.lnk"
-          "lnk exists: $(Test-Path $lnk)"
-          Start-Process $lnk
-          Start-Sleep 15
-          "after lnk: " + ((Get-Process Shrink -ErrorAction SilentlyContinue | Measure-Object).Count)
-          Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
-          Start-Sleep 2
-          Start-Process explorer.exe C:\shrink-app\Shrink.exe
-          Start-Sleep 15
-          "after explorer: " + ((Get-Process Shrink -ErrorAction SilentlyContinue | Measure-Object).Count)
-          Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
-          Start-Sleep 2
-          $psi = [System.Diagnostics.ProcessStartInfo]::new('C:\shrink-app\Shrink.exe'); $psi.UseShellExecute = $true
-          $p = [System.Diagnostics.Process]::Start($psi); Start-Sleep 15
-          "after shellexecute: alive=$(-not $p.HasExited) exit=$($p.ExitCode)"
-          # second launch
-          $q = [System.Diagnostics.Process]::Start($psi); Start-Sleep 5
-          "second: exited=$($q.HasExited) first alive=$(-not $p.HasExited)"
-          Get-WinEvent -FilterHashtable @{LogName='Application'; Level=2,3} -MaxEvents 15 -ErrorAction SilentlyContinue | Format-List TimeCreated,ProviderName,Message
-          Get-ChildItem -Recurse $env:APPDATA\Shrink, $env:LOCALAPPDATA\Shrink -ErrorAction SilentlyContinue | Select FullName
+          $i = (Get-ChildItem apps/desktop/dist/*.exe | Select -First 1).FullName
+          $dirs = @("$env:LOCALAPPDATA\Programs\Shrink", 'C:\Program Files\Shrink app', 'C:\Users\runneradmin\Ünï cödé\Shrink')
+          foreach ($d in $dirs) {
+            "=== $d"
+            Remove-Item -Recurse -Force $env:APPDATA\Shrink, $env:LOCALAPPDATA\Shrink -ErrorAction SilentlyContinue
+            Start-Process $i -ArgumentList '/S', "/D=$d" -Wait
+            Get-ChildItem $d | Select Name
+            $exe = Join-Path $d 'Shrink.exe'
+            $p = Start-Process $exe -PassThru -RedirectStandardOutput C:\o.txt -RedirectStandardError C:\e.txt
+            Start-Sleep 12
+            "alive=$(-not $p.HasExited) exit=$($p.ExitCode)"
+            Get-Content C:\o.txt, C:\e.txt
+            Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep 2
+          }
+          "=== default (no /D)"
+          Start-Process $i -ArgumentList '/S' -Wait
+          Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Depth 1 -ErrorAction SilentlyContinue | Select FullName
+          (Get-ItemProperty HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\dev.dunkbing.shrink) | Format-List InstallLocation, UninstallString, DisplayIcon
       - name: Run from source
         if: always()
         shell: bash
