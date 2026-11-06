@@ -1,9 +1,13 @@
 {
   "name": "shrink",
+  "license": "MIT",
   "private": true,
   "description": "Makes files smaller without changing what they contain: an engine, a CLI and a desktop app.",
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "test": "bun test --timeout 30000",
     "gen": "bun scripts/gen-formats.ts",

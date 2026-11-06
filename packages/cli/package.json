@@ -1,8 +1,13 @@
 {
   "name": "@shrink/cli",
+  "license": "MIT",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "bin": { "shrink": "src/main.ts" },
-  "dependencies": { "@shrink/engine": "workspace:*" }
+  "bin": {
+    "shrink": "src/main.ts"
+  },
+  "dependencies": {
+    "@shrink/engine": "workspace:*"
+  }
 }
