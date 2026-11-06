@@ -52,11 +52,11 @@ async function download(url: string, dest: string) {
   await Bun.write(dest, res);
 }
 
-/** Unpacks an upstream archive (.tar.gz natively; .zip, .tar.xz, .7z with the system tools). */
+/** Unpacks an upstream archive (.tar.gz natively; .zip, .tar.xz, .7z and NSIS .exe with the system tools). */
 async function unpack(archive: string, dest: string) {
   mkdirSync(dest, { recursive: true });
   if (archive.endsWith(".tar.gz") || archive.endsWith(".tgz")) return extractTarGz(archive, dest);
-  if (archive.endsWith(".7z")) return void (await sh(["7z", "x", "-y", `-o${dest}`, archive], { quiet: true }));
+  if (archive.endsWith(".7z") || archive.endsWith(".exe")) return void (await sh(["7z", "x", "-y", `-o${dest}`, archive], { quiet: true }));
   if (archive.endsWith(".zip") && have("unzip")) return void (await sh(["unzip", "-q", "-o", archive, "-d", dest]));
   // bsdtar (macOS, Windows) reads zip; paths are relative to the cwd so a drive letter is never in them
   const gnu = (await sh(["tar", "--version"], { quiet: true })).includes("GNU");

@@ -675,9 +675,13 @@
           "apt": "libjpeg-turbo-progs"
         },
         "win32-x64": {
-          "system": true,
-          "bin": "jpegtran",
-          "choco": "libjpeg-turbo"
+          "version": "3.2.1",
+          "url": "https://github.com/libjpeg-turbo/libjpeg-turbo/releases/download/3.2.1/libjpeg-turbo-3.2.1-gcc-x64.exe",
+          "sha256": "82aceacc61827c77e4c113c3fee279ebb21867c6489af5790379a3a94488a433",
+          "member": "bin/jpegtran.exe",
+          "also": [
+            "bin/libjpeg-62.dll"
+          ]
         }
       }
     },
