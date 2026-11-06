@@ -35,30 +35,25 @@ jobs:
           "alive: $(-not $p.HasExited) exit: $($p.ExitCode)"
           Get-Content C:\out-hidden.txt, C:\err-hidden.txt
           Get-Process | Where-Object { $_.ProcessName -match 'Shrink|bun|conhost' } | Format-Table Id,ProcessName,MainWindowTitle
-      - name: Other install dirs
+      - name: Release asset, child processes
         if: always()
         shell: pwsh
         run: |
           Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
-          $i = (Get-ChildItem apps/desktop/dist/*.exe | Select -First 1).FullName
-          $dirs = @("$env:LOCALAPPDATA\Programs\Shrink", 'C:\Program Files\Shrink app', 'C:\Users\runneradmin\Ünï cödé\Shrink')
-          foreach ($d in $dirs) {
-            "=== $d"
-            Remove-Item -Recurse -Force $env:APPDATA\Shrink, $env:LOCALAPPDATA\Shrink -ErrorAction SilentlyContinue
-            Start-Process $i -ArgumentList '/S', "/D=$d" -Wait
-            Get-ChildItem $d | Select Name
-            $exe = Join-Path $d 'Shrink.exe'
-            $p = Start-Process $exe -PassThru -RedirectStandardOutput C:\o.txt -RedirectStandardError C:\e.txt
-            Start-Sleep 12
-            "alive=$(-not $p.HasExited) exit=$($p.ExitCode)"
-            Get-Content C:\o.txt, C:\e.txt
-            Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
-            Start-Sleep 2
+          gh release download v0.1.0 -R dunkbing/shrink -p '*windows-x64.exe' -D rel --clobber
+          (Get-FileHash rel\*.exe).Hash; (Get-FileHash apps\desktop\dist\*.exe).Hash
+          Remove-Item -Recurse -Force $env:APPDATA\Shrink, $env:LOCALAPPDATA\Shrink -ErrorAction SilentlyContinue
+          Start-Process (Get-ChildItem rel\*.exe).FullName -ArgumentList '/S','/D=C:\rel-app' -Wait
+          $p = Start-Process C:\rel-app\Shrink.exe -PassThru -RedirectStandardOutput C:\o.txt -RedirectStandardError C:\e.txt
+          foreach ($t in 1..12) {
+            Start-Sleep 5
+            $kids = Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $p.Id } | ForEach-Object { "$($_.Name) [$($_.CommandLine)]" }
+            "t=$($t*5) alive=$(-not $p.HasExited) exit=$($p.ExitCode) children: $($kids -join '; ')"
           }
-          "=== default (no /D)"
-          Start-Process $i -ArgumentList '/S' -Wait
-          Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Depth 1 -ErrorAction SilentlyContinue | Select FullName
-          (Get-ItemProperty HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\dev.dunkbing.shrink) | Format-List InstallLocation, UninstallString, DisplayIcon
+          Get-Content C:\o.txt, C:\e.txt
+          Get-ChildItem -Recurse $env:LOCALAPPDATA\Shrink | Select FullName
+        env:
+          GH_TOKEN: ${{ github.token }}
       - name: Run from source
         if: always()
         shell: bash
