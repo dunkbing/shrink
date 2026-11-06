@@ -29,20 +29,14 @@ jobs:
           "@
           function Probe($label, $cmdline) {
             "=== $label"
-            $before = @(Get-Process conhost,OpenConsole -ErrorAction SilentlyContinue | % Id)
-            $psi = [Diagnostics.ProcessStartInfo]::new($cmdline); $psi.UseShellExecute = $false
-            $p = [Diagnostics.Process]::Start($psi)
-            $seen = @(); $cls = @()
-            1..100 | % { Start-Sleep -Milliseconds 30
-              $seen += @(Get-Process conhost,OpenConsole -ErrorAction SilentlyContinue | ? { $before -notcontains $_.Id } | % { "$($_.ProcessName):$($_.Id)" })
-              $cls += [W]::Classes()
-              $seen += @(Get-CimInstance Win32_Process | ? { $_.Name -match 'Shrink|cmd|bun|powershell|WerFault' -and $_.Name -notmatch 'pwsh' } | % { "$($_.Name):$($_.ProcessId)<-$($_.ParentProcessId)" })
+            $known = @{}; Get-Process | % { $known[$_.Id] = 1 }
+            $p = [Diagnostics.Process]::Start([Diagnostics.ProcessStartInfo]::new($cmdline))
+            $log = @{}
+            1..200 | % { Start-Sleep -Milliseconds 25
+              Get-CimInstance Win32_Process | ? { -not $known.ContainsKey([int]$_.ProcessId) -and -not $log.ContainsKey([int]$_.ProcessId) } | % { $log[[int]$_.ProcessId] = "$($_.Name) pid=$($_.ProcessId) ppid=$($_.ParentProcessId) cmd=$($_.CommandLine)" }
             }
-            "new procs: $(($seen | Sort -Unique) -join ', ')"
-            "console windows: $(($cls | Sort -Unique) -join ', ')"
-            "exited=$($p.HasExited) code=$(if($p.HasExited){$p.ExitCode})"
+            $log.Values
+            "exited=$($p.HasExited)"
             Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
           }
           Probe 'healthy' 'C:\shrink-app\Shrink.exe'
-          Probe 'broken dll' 'C:\broken\Shrink.exe'
-          "cpu:"; (Get-CimInstance Win32_Processor).Name
