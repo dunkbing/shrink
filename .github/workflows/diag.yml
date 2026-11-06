@@ -1,0 +1,51 @@
+name: diag
+on: workflow_dispatch
+jobs:
+  win:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: choco install nsis -y --no-progress
+      - name: Package
+        shell: bash
+        working-directory: apps/desktop
+        run: bun run package
+      - name: Build without hideConsole
+        shell: bash
+        working-directory: apps/desktop
+        run: |
+          cat > /tmp/nohide.ts <<'TS'
+          import { build } from "mantou-ui/runtime/build";
+          console.log(await build("src/main.tsx", "C:/nohide", "ShrinkDbg.exe"));
+          TS
+          cp /tmp/nohide.ts ./nohide.ts
+          bun nohide.ts
+      - name: Run installed (hidden console)
+        shell: pwsh
+        run: |
+          $i = Get-ChildItem apps/desktop/dist/*.exe | Select -First 1
+          & $i.FullName /S /D=C:\shrink-app
+          Get-ChildItem C:\shrink-app
+          $p = Start-Process C:\shrink-app\Shrink.exe -PassThru -RedirectStandardOutput C:\out-hidden.txt -RedirectStandardError C:\err-hidden.txt
+          Start-Sleep 15
+          "alive: $(-not $p.HasExited) exit: $($p.ExitCode)"
+          Get-Content C:\out-hidden.txt, C:\err-hidden.txt
+          Get-Process | Where-Object { $_.ProcessName -match 'Shrink|bun|conhost' } | Format-Table Id,ProcessName,MainWindowTitle
+      - name: Run unhidden
+        shell: pwsh
+        run: |
+          $p = Start-Process C:\nohide\ShrinkDbg.exe -PassThru -RedirectStandardOutput C:\out.txt -RedirectStandardError C:\err.txt
+          Start-Sleep 20
+          "alive: $(-not $p.HasExited) exit: $($p.ExitCode)"
+          "--- stdout"; Get-Content C:\out.txt
+          "--- stderr"; Get-Content C:\err.txt
+          Get-ChildItem -Recurse $env:APPDATA\Shrink -ErrorAction SilentlyContinue | Select FullName
+      - name: Run from source
+        if: always()
+        shell: bash
+        working-directory: apps/desktop
+        run: |
+          timeout 25 bun run start > /c-src.txt 2>&1; echo "exit $?"; cat /c-src.txt | head -80
