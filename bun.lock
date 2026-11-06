@@ -10,7 +10,7 @@
     },
     "apps/desktop": {
       "name": "shrink-desktop",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "dependencies": {
         "@shrink/engine": "workspace:*",
         "mantou-ui": "^0.5.2",
