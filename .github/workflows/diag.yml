@@ -1,0 +1,47 @@
+name: diag
+on: workflow_dispatch
+jobs:
+  win:
+    runs-on: windows-2022
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: choco install nsis -y --no-progress
+      - name: Package
+        shell: bash
+        working-directory: apps/desktop
+        run: bun run package
+      - name: Console on failure
+        shell: pwsh
+        run: |
+          Start-Process (Get-ChildItem apps/desktop/dist/*.exe).FullName -ArgumentList '/S','/D=C:\shrink-app' -Wait
+          Copy-Item C:\shrink-app C:\broken -Recurse
+          [IO.File]::WriteAllBytes('C:\broken\mantou_ffi.dll', (New-Object byte[] 4096))
+          Add-Type @"
+          using System; using System.Text; using System.Runtime.InteropServices; using System.Collections.Generic;
+          public class W { public delegate bool CB(IntPtr h, IntPtr l);
+            [DllImport("user32.dll")] public static extern bool EnumWindows(CB cb, IntPtr l);
+            [DllImport("user32.dll")] public static extern int GetClassName(IntPtr h, StringBuilder s, int n);
+            [DllImport("user32.dll")] public static extern bool IsWindowVisible(IntPtr h);
+            public static List<string> Classes() { var r = new List<string>(); EnumWindows((h,l)=>{ var s = new StringBuilder(256); GetClassName(h,s,256); if (s.ToString()=="ConsoleWindowClass" || s.ToString().Contains("Console") || s.ToString()=="CASCADIA_HOSTING_WINDOW_CLASS") r.Add(s + (IsWindowVisible(h)?":visible":":hidden")); return true; }, IntPtr.Zero); return r; } }
+          "@
+          function Probe($label, $cmdline) {
+            "=== $label"
+            $before = @(Get-Process conhost,OpenConsole -ErrorAction SilentlyContinue | % Id)
+            $psi = [Diagnostics.ProcessStartInfo]::new('cmd.exe', "/c $cmdline"); $psi.UseShellExecute = $false
+            $p = [Diagnostics.Process]::Start($psi)
+            $seen = @(); $cls = @()
+            1..100 | % { Start-Sleep -Milliseconds 30
+              $seen += @(Get-Process conhost,OpenConsole -ErrorAction SilentlyContinue | ? { $before -notcontains $_.Id } | % { "$($_.ProcessName):$($_.Id)" })
+              $cls += [W]::Classes()
+              $seen += @(Get-CimInstance Win32_Process | ? { $_.Name -match 'Shrink|cmd|bun|powershell' -and $_.Name -notmatch 'pwsh' -and $_.ProcessId -ne $p.Id } | % { "$($_.Name):$($_.ProcessId)<-$($_.ParentProcessId)" })
+            }
+            "new procs: $(($seen | Sort -Unique) -join ', ')"
+            "console windows: $(($cls | Sort -Unique) -join ', ')"
+            Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
+          }
+          Probe 'healthy' 'C:\shrink-app\Shrink.exe'
+          Probe 'broken dll' 'C:\broken\Shrink.exe'
+          "cpu:"; (Get-CimInstance Win32_Processor).Name
