@@ -25,11 +25,11 @@ jobs:
       - name: Install and run
         shell: pwsh
         run: |
-          $vs = & "${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -property installationPath
-          $env:PATH += ";" + (Split-Path (Get-ChildItem "$vs\\VC\\Tools\\MSVC\\*\\bin\\Hostx64\\x64\\dumpbin.exe" | Select -First 1).FullName)
-          Start-Process (Get-ChildItem apps/desktop/dist/*.exe).FullName -ArgumentList '/S','/D=C:\\shrink-app' -Wait
-          dumpbin /dependents C:\\shrink-app\\mantou_ffi.dll | Select-String -Pattern 'dll'
-          $p = Start-Process C:\\shrink-app\\Shrink.exe -PassThru
+          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
+          $env:PATH += ";" + (Split-Path (Get-ChildItem "$vs\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe" | Select -First 1).FullName)
+          Start-Process (Get-ChildItem apps/desktop/dist/*.exe).FullName -ArgumentList '/S','/D=C:\shrink-app' -Wait
+          dumpbin /dependents C:\shrink-app\mantou_ffi.dll | Select-String -Pattern 'dll'
+          $p = Start-Process C:\shrink-app\Shrink.exe -PassThru
           Start-Sleep 20
           "alive=$(-not $p.HasExited) exit=$($p.ExitCode)"
   win:
