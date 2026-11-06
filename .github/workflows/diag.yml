@@ -1,6 +1,37 @@
 name: diag
 on: workflow_dispatch
 jobs:
+  crt:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - uses: actions/checkout@v4
+        with: { repository: dunkbing/mantou, ref: crt-static, path: mantou-src }
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build Mantou
+        shell: bash
+        env: { CARGO_PROFILE_RELEASE_DEBUG: "false", CARGO_PROFILE_RELEASE_STRIP: symbols }
+        run: |
+          (cd mantou-src && bun install --frozen-lockfile --production && cargo build --release --manifest-path core/Cargo.toml -p mantou-ffi)
+          bun -e 'const fs = require("fs"); const p = "apps/desktop/node_modules/mantou-ui"; fs.rmSync(p, { recursive: true, force: true }); fs.symlinkSync(require("path").resolve("mantou-src"), p, "junction")'
+      - run: choco install nsis -y --no-progress
+      - name: Package
+        shell: bash
+        working-directory: apps/desktop
+        run: bun run package
+      - name: Install and run
+        shell: pwsh
+        run: |
+          $vs = & "${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe" -latest -property installationPath
+          $env:PATH += ";" + (Split-Path (Get-ChildItem "$vs\\VC\\Tools\\MSVC\\*\\bin\\Hostx64\\x64\\dumpbin.exe" | Select -First 1).FullName)
+          Start-Process (Get-ChildItem apps/desktop/dist/*.exe).FullName -ArgumentList '/S','/D=C:\\shrink-app' -Wait
+          dumpbin /dependents C:\\shrink-app\\mantou_ffi.dll | Select-String -Pattern 'dll'
+          $p = Start-Process C:\\shrink-app\\Shrink.exe -PassThru
+          Start-Sleep 20
+          "alive=$(-not $p.HasExited) exit=$($p.ExitCode)"
   win:
     runs-on: windows-2022
     timeout-minutes: 30
@@ -35,17 +66,22 @@ jobs:
           "alive: $(-not $p.HasExited) exit: $($p.ExitCode)"
           Get-Content C:\out-hidden.txt, C:\err-hidden.txt
           Get-Process | Where-Object { $_.ProcessName -match 'Shrink|bun|conhost' } | Format-Table Id,ProcessName,MainWindowTitle
-      - name: PE deps
+      - name: Simulate core load failure
         if: always()
         shell: pwsh
         run: |
-          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
-          $env:PATH += ";" + (Split-Path (Get-ChildItem "$vs\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe" | Select -First 1).FullName)
-          dumpbin /dependents C:\shrink-app\mantou_ffi.dll
-          dumpbin /dependents C:\shrink-app\Shrink.exe
-          dumpbin /headers C:\shrink-app\Shrink.exe | Select-String 'subsystem'
-          dumpbin /headers C:\nohide\ShrinkDbg.exe | Select-String 'subsystem'
-          Get-ChildItem C:\Windows\System32\vcruntime140*.dll, C:\Windows\System32\msvcp140*.dll | Select Name
+          Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
+          Copy-Item C:\shrink-app C:\broken -Recurse
+          [IO.File]::WriteAllBytes('C:\broken\mantou_ffi.dll', (New-Object byte[] 4096))
+          $p = Start-Process C:\broken\Shrink.exe -PassThru -RedirectStandardOutput C:\o.txt -RedirectStandardError C:\e.txt
+          $seen = @()
+          foreach ($n in 1..60) {
+            Start-Sleep -Milliseconds 100
+            $seen += (Get-CimInstance Win32_Process | Where-Object { $_.ParentProcessId -eq $p.Id } | ForEach-Object { $_.Name })
+            if ($p.HasExited) { break }
+          }
+          "exited=$($p.HasExited) code=$($p.ExitCode) children seen: $(($seen | Sort -Unique) -join ',')"
+          Get-Content C:\o.txt, C:\e.txt
       - name: Run from source
         if: always()
         shell: bash
