@@ -17,7 +17,7 @@ type Source = Bun.BunFile | Uint8Array;
 export async function xzRun(cmd: string[], args: string[], stdin: Source, out: { file: string } | { hash: true }, signal?: AbortSignal): Promise<{ sha: string; size: number }> {
   const hash = createHash("sha256");
   let size = 0;
-  const proc = Bun.spawn([...cmd, ...args], { stdin, stdout: "file" in out ? Bun.file(out.file) : "pipe", stderr: "pipe", signal });
+  const proc = Bun.spawn([...cmd, ...args], { stdin, stdout: "file" in out ? Bun.file(out.file) : "pipe", stderr: "pipe", signal, windowsHide: true });
   const stderr = new Response(proc.stderr).text();
   if (!("file" in out)) {
     for await (const chunk of proc.stdout as ReadableStream<Uint8Array>) {

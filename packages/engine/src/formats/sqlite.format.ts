@@ -12,7 +12,7 @@ const sql = (s: string) => `'${s.replace(/'/g, "''")}'`;
 async function hashQuery(db: string, args: string[], ctx: Context): Promise<string> {
   const cmd = await ctx.tools.locate("sqlite3");
   if (!cmd) throw new SkipFile("cannot verify: sqlite3 not available");
-  const proc = Bun.spawn([...cmd, "-readonly", db, ...args], { stdin: "ignore", stdout: "pipe", stderr: "pipe" });
+  const proc = Bun.spawn([...cmd, "-readonly", db, ...args], { stdin: "ignore", stdout: "pipe", stderr: "pipe", windowsHide: true });
   const onAbort = () => proc.kill("SIGKILL");
   ctx.signal.addEventListener("abort", onAbort);
   try {

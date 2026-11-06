@@ -18,8 +18,17 @@ try {
   // CI runners have the Visual C++ runtime; a fresh Windows may not, and the core would then fail to load
   const dll = new TextDecoder("latin1").decode(await Bun.file(join(dir, "mantou_ffi.dll")).bytes());
   if (/VCRUNTIME140|MSVCP140/i.test(dll)) throw new Error("mantou_ffi.dll needs the Visual C++ redistributable (mantou-ui before the static CRT build)");
+  const consoles = () => new Set(Bun.spawnSync(["tasklist", "/fi", "imagename eq conhost.exe", "/fo", "csv", "/nh"]).stdout.toString().match(/"conhost.exe","(\d+)"/g) ?? []);
+  const before = consoles();
   const app = Bun.spawn([exe], { stdio: ["ignore", "ignore", "ignore"] });
-  await Bun.sleep(15_000);
+  // a console program started by the app (without windowsHide) opens a console window: it shows as a new conhost.exe
+  const flashed = new Set<string>();
+  for (let i = 0; i < 40; i++) {
+    await Bun.sleep(125);
+    for (const c of consoles()) if (!before.has(c)) flashed.add(c);
+  }
+  if (flashed.size) throw new Error(`the app opened a console window (${[...flashed].join(", ")}): a child process lacks windowsHide`);
+  await Bun.sleep(10_000);
   if (app.exitCode !== null) throw new Error(`Shrink.exe exited with ${app.exitCode} within 15 s`);
   console.log("ok: the installed app is still running after 15 s");
   app.kill();

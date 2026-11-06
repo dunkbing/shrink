@@ -27,7 +27,7 @@ async function versionOf(exe: string, args: string[]): Promise<number[] | null> 
   if (!v) {
     v = (async () => {
       try {
-        const proc = Bun.spawn([exe, ...args], { stdin: "ignore", stdout: "pipe", stderr: "pipe" });
+        const proc = Bun.spawn([exe, ...args], { stdin: "ignore", stdout: "pipe", stderr: "pipe", windowsHide: true });
         const timer = setTimeout(() => proc.kill("SIGKILL"), 10000);
         const [out, err] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text()]);
         clearTimeout(timer);
@@ -110,7 +110,7 @@ export function createTools(settings: Settings, toolDir?: string, provisioner?: 
 export async function runCommand(cmd: string[], o: { signal: AbortSignal; timeoutMs: number; cwd?: string; lowPriority?: boolean }): Promise<RunResult> {
   if (o.signal.aborted) throw new Error("cancelled");
   const argv = o.lowPriority && process.platform !== "win32" && Bun.which("nice") ? ["nice", "-n", "10", ...cmd] : cmd;
-  const proc = Bun.spawn(argv, { cwd: o.cwd, stdin: "ignore", stdout: "pipe", stderr: "pipe" });
+  const proc = Bun.spawn(argv, { cwd: o.cwd, stdin: "ignore", stdout: "pipe", stderr: "pipe", windowsHide: true });
   let why: string | null = null;
   const kill = (reason: string) => {
     why = reason;
