@@ -1,9 +1,7 @@
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
+import { onOpen } from "mantou-ui";
 import type { Store } from "./store";
 
-/** Launch arguments (this copy's or a later launch's): the existing files are added; URLs and flags are not files. */
-export function openArgs(store: Store, args: string[], cwd: string) {
-  const files = args.map((a) => resolve(cwd, a)).filter((p) => existsSync(p));
-  if (files.length) void store.add(files);
+/** Adds the files this launch and later launches are given (onOpen resolves them against the right cwd); URLs are ignored. */
+export function listenOpen(store: Store) {
+  return onOpen(({ file }) => file && void store.add([file]));
 }

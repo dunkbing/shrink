@@ -1,5 +1,5 @@
 import { Button, For, Scroll, Show, Slider, Tabs, Text, Toggle, View, createEffect, createSignal, type JSX } from "mantou-ui";
-import { Labelled, Section, buttonText, caption, secondary, toggleRow } from "./controls";
+import { Labelled, Section, caption, toggleRow } from "./controls";
 import type { AppSettings } from "./settings";
 import type { Store } from "./store";
 import { c } from "./theme";
@@ -57,7 +57,7 @@ function Tools(props: { tools?: ToolsState }) {
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "spaceBetween" }}>
         <Text style={{ fontSize: 12, color: c.dim }} role="status">{tools() ? `${tools()!.filter((t) => t.found).length} of ${tools()!.length} ready` : "Looking…"}</Text>
         <Show when={props.tools?.failed()}>
-          <Button variant="secondary" onPress={() => props.tools?.retry()} style={secondary}>{buttonText("Retry")}</Button>
+          <Button variant="secondary" onPress={() => props.tools?.retry()}>Retry</Button>
         </Show>
       </View>
       <Text style={{ fontSize: 11, color: c.faint }}>{missing() ? "Formats whose tool is unavailable are skipped." : "Tools are prepared automatically."}</Text>
@@ -79,11 +79,10 @@ function Tools(props: { tools?: ToolsState }) {
 
 export function SidePanel(props: { store: Store; tools?: ToolsState }) {
   const [tab, setTab] = createSignal<"settings" | "tools">("settings");
-  const name = (id: "settings" | "tools", text: string) => <Text style={{ fontSize: 13, fontWeight: 600, color: tab() === id ? c.text : c.dim }}>{text}</Text>;
   return (
     <View style={{ width: 290, flexShrink: 0, borderLeftWidth: 1, borderColor: c.line, backgroundColor: c.panel }}>
       <Tabs
-        tabs={[{ id: "settings", label: name("settings", "Settings") }, { id: "tools", label: name("tools", "Tools") }]}
+        tabs={[{ id: "settings", label: "Settings" }, { id: "tools", label: "Tools" }]}
         value={tab()}
         onChange={setTab}
         style={{ flexGrow: 1, minHeight: 0, gap: 0, paddingTop: 8 }}

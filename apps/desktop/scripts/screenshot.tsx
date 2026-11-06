@@ -2,11 +2,14 @@
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { mount } from "mantou-ui";
+import { mount, setTheme } from "mantou-ui";
 import { HeadlessCore } from "mantou-ui/headless";
 import { encodePng } from "mantou-ui/images";
 import { App } from "../src/App";
 import { createStore } from "../src/store";
+import { shrinkTheme } from "../src/theme";
+
+setTheme(shrinkTheme);
 
 const dir = mkdtempSync(join(tmpdir(), "shrink-shot-"));
 const sample = [

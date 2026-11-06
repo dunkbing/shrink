@@ -1,5 +1,4 @@
 import { Button, Progress, Show, Text, View, createSignal, message, onKey, type DropEvent } from "mantou-ui";
-import { buttonText, primary, secondary } from "./controls";
 import { EmptyState, FileTable } from "./FileTable";
 import { percent, size } from "./files";
 import { pickFiles, pickFolders } from "./pick";
@@ -39,19 +38,19 @@ export function App(props: { store: Store; tools?: ToolsState }) {
     >
       <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0, minHeight: 0 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8, padding: 12, paddingLeft: 16, borderBottomWidth: 1, borderColor: c.line, flexShrink: 0 }}>
-          <Button variant="secondary" style={secondary} onPress={addFiles}>{buttonText("Add Files")}</Button>
-          <Button variant="secondary" style={secondary} onPress={addFolder}>{buttonText("Add Folder")}</Button>
-          <Button variant="secondary" style={secondary} onPress={confirmedClear} disabled={store.items().every((i) => i.status === "working")}>{buttonText("Clear")}</Button>
+          <Button variant="secondary" onPress={addFiles}>Add Files</Button>
+          <Button variant="secondary" onPress={addFolder}>Add Folder</Button>
+          <Button variant="secondary" onPress={confirmedClear} disabled={store.items().every((i) => i.status === "working")}>Clear</Button>
           <View style={{ flexGrow: 1 }} />
-          <Show when={store.running()} fallback={<Button style={primary} onPress={() => void store.start()} disabled={queued() === 0}>{buttonText("Start", true)}</Button>}>
-            <Button style={primary} onPress={store.stop}>{buttonText("Stop", true)}</Button>
+          <Show when={store.running()} fallback={<Button onPress={() => void store.start()} disabled={queued() === 0}>Start</Button>}>
+            <Button onPress={store.stop}>Stop</Button>
           </Show>
         </View>
         <Show when={store.items().length > 0} fallback={<EmptyState over={over()} />}>
           <FileTable store={store} />
         </Show>
         <View style={{ flexShrink: 0, gap: 8, padding: 12, paddingLeft: 16, paddingRight: 16, borderTopWidth: 1, borderColor: c.line }}>
-          <Progress value={fraction()} label={`${Math.round(fraction() * 100)}%`} style={{ height: 3, borderRadius: 1, backgroundColor: c.control, opacity: store.running() ? 1 : 0.5 }} />
+          <Progress value={fraction()} label={`${Math.round(fraction() * 100)}%`} />
           <View style={{ flexDirection: "row", justifyContent: "spaceBetween", alignItems: "center", gap: 12 }}>
             <Text style={{ fontSize: 12, color: c.dim }} role="status">
               {store.running() ? `${store.runDone()} of ${store.runTotal()} files` : `${store.items().length} ${store.items().length === 1 ? "file" : "files"}`}
@@ -59,7 +58,7 @@ export function App(props: { store: Store; tools?: ToolsState }) {
             <Show when={props.tools?.busy()} fallback={<Show when={props.tools?.failed()}><Text style={{ fontSize: 12, color: c.faint }} role="status">Some tools could not be downloaded</Text></Show>}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                 <Text style={{ fontSize: 12, color: c.faint }} role="status">Preparing tools…</Text>
-                <Progress value={props.tools!.fraction()} label="Preparing tools" style={{ width: 70, height: 3, borderRadius: 1, backgroundColor: c.control }} />
+                <Progress value={props.tools!.fraction()} label="Preparing tools" style={{ width: 70 }} />
               </View>
             </Show>
             <View style={{ flexGrow: 1 }} />

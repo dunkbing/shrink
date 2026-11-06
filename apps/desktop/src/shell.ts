@@ -58,7 +58,7 @@ export function attachShell(store: Store, shell: Shell, o: { icon: string }) {
     },
     /** Tray menu items; true when it was one. */
     menu(id: string): boolean {
-      if (id === "tray-show") void win.focus();
+      if (id === "tray-show") void win.restore();
       else if (id === "tray-start") void store.start();
       else if (id === "tray-stop") store.stop();
       else return false;

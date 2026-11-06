@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { singleInstance, paths } from "mantou-ui";
-import { openArgs } from "../src/open";
+import { fileURLToPath } from "node:url";
 import { attachShell, summaryText, type Shell } from "../src/shell";
 import { byLabel, fakeRunner, hasCore, report, setup, until } from "./harness";
 
+const fixture = fileURLToPath(new URL("./fixtures/launch.ts", import.meta.url));
+const preload = fileURLToPath(import.meta.resolve("mantou-ui/preload"));
 const open: (() => unknown)[] = [];
 afterEach(() => open.splice(0).forEach((f) => f()));
 const app = (...a: Parameters<typeof setup>) => {
@@ -188,6 +189,8 @@ describe.skipIf(!hasCore)("desktop behaviour", () => {
     await until(h, () => store.running());
     sh.menu("tray-stop");
     await until(h, () => !store.running());
+    expect(sh.menu("tray-show")).toBe(true); // restore: un-minimize, then focus
+    await until(h, () => h.lastService()?.kind === "window" && h.lastService()?.op === "focus");
     expect(sh.menu("other")).toBe(false);
     expect(sh.closeRequested()).toBe("quit");
     store.setSettings({ closeToTray: true });
@@ -204,25 +207,35 @@ describe.skipIf(!hasCore)("desktop behaviour", () => {
     expect(calls.filter((c) => c.startsWith("login:"))).toEqual(["login:false", "login:true", "login:false"]);
   });
 
-  test("a second launch passes its files to the first through the real socket", async () => {
+  // real processes: the first launch's argument, then a second launch (other cwd, relative path, a flag) handed over the socket
+  test("launch files are added: the first launch's and a second launch's", async () => {
     const tmp = mkdtempSync(join(tmpdir(), "shrink-inst-"));
-    const prev = { argv: process.argv, cwd: process.cwd(), temp: paths.temp };
-    const file = join(tmp, "pic.png");
-    writeFileSync(file, "x");
-    const { store } = app();
     open.push(() => rmSync(tmp, { recursive: true, force: true }));
-    process.env.MANTOU_APP = `shrink-test-${process.pid}`;
-    const launches: string[][] = [];
-    try {
-      process.argv = [prev.argv[0], "app"]; // the first copy: nothing to open
-      expect(await singleInstance((args, cwd) => (launches.push(args), openArgs(store, args, cwd)))).toBe(true);
-      process.argv = [prev.argv[0], "app", file, "--flag"]; // the second launch, with a file given by absolute path
-      expect(await singleInstance()).toBe(false);
-      for (let i = 0; i < 100 && !store.items().length; i++) await new Promise((r) => setTimeout(r, 10));
-      expect(launches).toEqual([[file, "--flag"]]);
-      expect(store.items().map((i) => i.path)).toEqual([file]);
-    } finally {
-      process.argv = prev.argv;
-    }
-  });
+    const cwd = join(tmp, "work");
+    mkdirSync(cwd);
+    writeFileSync(join(tmp, "a.png"), "x");
+    writeFileSync(join(cwd, "b.png"), "x");
+    const [a, b] = [realpathSync(join(tmp, "a.png")), realpathSync(join(cwd, "b.png"))]; // macOS cwd is the real path
+    const env = { ...process.env, MANTOU_APP: `shrink-test-${process.pid}`, MANTOU_TEMP: tmp };
+    const start = (dir: string, ...args: string[]) => {
+      const p = Bun.spawn(["bun", "--preload", preload, fixture, ...args], { cwd: dir, env, stdin: "pipe", stdout: "pipe" });
+      const out = { text: "" };
+      void (async () => {
+        for await (const c of p.stdout) out.text += new TextDecoder().decode(c);
+      })();
+      open.push(() => p.kill());
+      return Object.assign(p, { out });
+    };
+    const until = async (p: { out: { text: string } }, what: string) => {
+      for (let i = 0; i < 400 && !p.out.text.includes(what); i++) await Bun.sleep(50);
+      return p.out.text;
+    };
+    const first = start(tmp, a);
+    expect(await until(first, "added " + a)).toContain("added " + a);
+    const second = start(cwd, "b.png", "--flag");
+    expect(await second.exited).toBe(0);
+    expect(await until(first, "added " + b)).toContain("added " + b);
+    first.stdin.write("x");
+    await first.exited;
+  }, 30000);
 });

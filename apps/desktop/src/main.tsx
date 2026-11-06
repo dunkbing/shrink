@@ -1,17 +1,18 @@
 import { fileURLToPath } from "node:url";
 import { Engine, allFormats } from "@shrink/engine";
-import { onMenu, onOpen, paths, run, setMenu, singleInstance } from "mantou-ui";
+import { onMenu, paths, run, setMenu, setTheme, singleInstance } from "mantou-ui";
 import { App } from "./App";
-import { openArgs } from "./open";
+import { listenOpen } from "./open";
 import { pickFiles, pickFolders } from "./pick";
 import { attachShell, realShell } from "./shell";
 import { createStore } from "./store";
+import { shrinkTheme } from "./theme";
 import { createToolsState } from "./toolstatus";
 
 paths.setApp("Shrink");
+setTheme(shrinkTheme);
 // a second launch hands its files to the first copy and quits
-let onLaunch = (_args: string[], _cwd: string) => {};
-if (!(await singleInstance((args, cwd) => onLaunch(args, cwd)))) process.exit(0);
+if (!(await singleInstance())) process.exit(0);
 
 // tools (oxipng, ffmpeg...) come by themselves: the core pack is fetched now, the others when a file needs them
 const tools = createToolsState();
@@ -26,10 +27,8 @@ const shell = attachShell(store, realShell, { icon: fileURLToPath(new URL("../as
 core.onEvent = (e) => {
   if (e.type === "closeRequested" && shell.closeRequested() === "quit") core.quit(0);
 };
-// files from the launch arguments and from later launches (onOpen resolves them against the cwd: dunkbing/mantou#77)
-onLaunch = (args, cwd) => openArgs(store, args, cwd);
-openArgs(store, process.argv.slice(2), process.cwd());
-onOpen(({ file }) => file && void store.add([file]));
+// files from the launch arguments, "Open with" and later launches
+listenOpen(store);
 void setMenu([
   { label: "Shrink", items: [{ role: "about" }, { separator: true }, { role: "hide" }, { role: "hideOthers" }, { separator: true }, { role: "quit" }] },
   { label: "File", items: [{ id: "add", label: "Add Files…" }, { id: "folder", label: "Add Folders…" }, { separator: true }, { id: "start", label: "Start", accelerator: "cmd+return" }, { id: "stop", label: "Stop", accelerator: "cmd+." }] },
