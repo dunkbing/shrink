@@ -35,16 +35,32 @@ jobs:
           "alive: $(-not $p.HasExited) exit: $($p.ExitCode)"
           Get-Content C:\out-hidden.txt, C:\err-hidden.txt
           Get-Process | Where-Object { $_.ProcessName -match 'Shrink|bun|conhost' } | Format-Table Id,ProcessName,MainWindowTitle
-      - name: Run unhidden
+      - name: Launch like Explorer
         if: always()
         shell: pwsh
         run: |
-          $p = Start-Process C:\nohide\ShrinkDbg.exe -PassThru -RedirectStandardOutput C:\out.txt -RedirectStandardError C:\err.txt
-          Start-Sleep 20
-          "alive: $(-not $p.HasExited) exit: $($p.ExitCode)"
-          "--- stdout"; Get-Content C:\out.txt
-          "--- stderr"; Get-Content C:\err.txt
-          Get-ChildItem -Recurse $env:APPDATA\Shrink -ErrorAction SilentlyContinue | Select FullName
+          Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
+          Remove-Item -Recurse -Force $env:APPDATA\Shrink, $env:LOCALAPPDATA\Shrink -ErrorAction SilentlyContinue
+          $lnk = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Shrink.lnk"
+          "lnk exists: $(Test-Path $lnk)"
+          Start-Process $lnk
+          Start-Sleep 15
+          "after lnk: " + ((Get-Process Shrink -ErrorAction SilentlyContinue | Measure-Object).Count)
+          Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
+          Start-Sleep 2
+          Start-Process explorer.exe C:\shrink-app\Shrink.exe
+          Start-Sleep 15
+          "after explorer: " + ((Get-Process Shrink -ErrorAction SilentlyContinue | Measure-Object).Count)
+          Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
+          Start-Sleep 2
+          $psi = [System.Diagnostics.ProcessStartInfo]::new('C:\shrink-app\Shrink.exe'); $psi.UseShellExecute = $true
+          $p = [System.Diagnostics.Process]::Start($psi); Start-Sleep 15
+          "after shellexecute: alive=$(-not $p.HasExited) exit=$($p.ExitCode)"
+          # second launch
+          $q = [System.Diagnostics.Process]::Start($psi); Start-Sleep 5
+          "second: exited=$($q.HasExited) first alive=$(-not $p.HasExited)"
+          Get-WinEvent -FilterHashtable @{LogName='Application'; Level=2,3} -MaxEvents 15 -ErrorAction SilentlyContinue | Format-List TimeCreated,ProviderName,Message
+          Get-ChildItem -Recurse $env:APPDATA\Shrink, $env:LOCALAPPDATA\Shrink -ErrorAction SilentlyContinue | Select FullName
       - name: Run from source
         if: always()
         shell: bash
