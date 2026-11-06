@@ -218,8 +218,9 @@ async function check(m: Manifest, pack: string, platform: Platform, dir: string)
     const p = Bun.spawn([exe, ...args], { stdout: "pipe", stderr: "pipe", env: { PATH: "/usr/bin:/bin", HOME: process.env.HOME ?? "" } });
     const out = (await new Response(p.stdout).text()) + (await new Response(p.stderr).text());
     await p.exited;
-    if (!/\d/.test(out)) throw new Error(`${name} does not run from the pack:\n${out}`);
-    console.log(`  ok ${name}: ${out.split("\n").find((l) => /\d/.test(l))?.slice(0, 70)}`);
+    // any output that is not a loader failure means it starts (some print no version, e.g. "vnone")
+    if (!out.trim() || /dyld|error while loading|cannot open shared|not found|library not loaded|No such file/i.test(out)) throw new Error(`${name} does not run from the pack:\n${out}`);
+    console.log(`  ok ${name}: ${(out.split("\n").find((l) => /\d/.test(l)) ?? out.split("\n")[0]).slice(0, 70)}`);
   }
 }
 

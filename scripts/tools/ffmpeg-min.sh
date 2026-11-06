@@ -8,7 +8,10 @@ SHA256=b072aed6871998cce9b36e7774033105ca29e33632be5b6347f3206898e0756a
 OUT=$(cd "$1" && pwd)
 WORK=${2:-$(mktemp -d)}
 mkdir -p "$WORK" && cd "$WORK"
-curl -fsSL --retry 4 -o src.tar.xz "https://ffmpeg.org/releases/ffmpeg-$VERSION.tar.xz"
+# ffmpeg.org resets some CI connections: retry, then a mirror
+for u in "https://ffmpeg.org/releases/ffmpeg-$VERSION.tar.xz" "https://ftp.osuosl.org/pub/blfs/conglomeration/ffmpeg/ffmpeg-$VERSION.tar.xz"; do
+  curl -fsSL --retry 4 --retry-all-errors -o src.tar.xz "$u" && break
+done
 echo "$SHA256  src.tar.xz" | (command -v sha256sum >/dev/null && sha256sum -c - || shasum -a 256 -c -)
 tar xf src.tar.xz && cd "ffmpeg-$VERSION"
 
