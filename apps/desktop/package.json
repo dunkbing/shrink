@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@shrink/engine": "workspace:*",
-    "mantou-ui": "^0.6.0"
+    "mantou-ui": "^0.6.1"
   },
   "description": "Makes files smaller without changing what they contain",
   "homepage": "https://github.com/dunkbing/shrink",
