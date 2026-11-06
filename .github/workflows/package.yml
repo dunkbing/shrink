@@ -145,6 +145,11 @@ jobs:
           [ -n "$SIGN_PFX" ] && args+=(--sign-pfx "$SIGN_PFX")
           bun run package "${args[@]}"
 
+      - name: Smoke test (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: bun scripts/smoke-windows.ts "$(ls apps/desktop/dist/*.exe | head -1)"
+
       # the installers only (not the .app folder), with the platform in a name that lacks it
       - name: Collect
         shell: bash
