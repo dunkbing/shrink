@@ -33,8 +33,13 @@ function writeManifest(m: Manifest) {
 function merge(files: string[]) {
   const m: Manifest = JSON.parse(readFileSync(MANIFEST, "utf8"));
   for (const f of files) {
-    const frag = JSON.parse(readFileSync(f, "utf8")) as { pack: string; platform: Platform; file: string; sha256: string; size: number };
+    const frag = JSON.parse(readFileSync(f, "utf8")) as { pack: string; platform: Platform; file: string; sha256: string; size: number; dropped?: { tool: string; reason: string }[] };
     m.packs[frag.pack].platforms[frag.platform] = { file: frag.file, sha256: frag.sha256, size: frag.size };
+    // tools the builder had to leave out: no source for that platform, the engine skips them
+    for (const d of frag.dropped ?? []) {
+      delete m.tools[d.tool].platforms[frag.platform];
+      (m.tools[d.tool].dropped ??= {})[frag.platform] = d.reason;
+    }
   }
   writeManifest(m);
   console.log(`merged ${files.length} pack(s) into the manifest`);
@@ -105,7 +110,13 @@ async function bundleMac(exe: string, stage: string) {
   const system = (p: string) => p.startsWith("/usr/lib/") || p.startsWith("/System/");
   const seen = new Map<string, string>(); // original path -> copy
   const resolveDep = (dep: string, from: string): string | null => {
-    if (dep.startsWith("@loader_path/") || dep.startsWith("@executable_path/")) return resolve(dirname(from), dep.replace(/^@[a-z_]+\//, ""));
+    if (dep.startsWith("@loader_path/") || dep.startsWith("@executable_path/")) {
+      const rel = resolve(dirname(from), dep.replace(/^@[a-z_]+\//, ""));
+      if (existsSync(rel)) return rel;
+      // Homebrew links a cellar lib's neighbours into the prefix
+      for (const d of ["/opt/homebrew/lib", "/usr/local/lib"]) if (existsSync(join(d, basename(rel)))) return join(d, basename(rel));
+      return rel;
+    }
     if (dep.startsWith("@rpath/")) {
       for (const d of [dirname(from), join(dirname(from), "..", "lib"), "/opt/homebrew/lib", "/usr/local/lib"]) if (existsSync(join(d, dep.slice(7)))) return join(d, dep.slice(7));
       return null;
@@ -208,20 +219,30 @@ async function addTool(m: Manifest, name: string, platform: Platform, stage: str
 }
 
 /** Runs every tool of the pack once from its final place: it starts, and says a version. */
-async function check(m: Manifest, pack: string, platform: Platform, dir: string) {
+async function check(m: Manifest, pack: string, platform: Platform, dir: string, failed: Map<string, string>) {
   for (const name of m.packs[pack].tools) {
-    if (!m.tools[name].platforms[platform]) continue;
-    const exe = join(dir, exePath(m, name, platform));
-    if (!existsSync(exe)) throw new Error(`${name} is missing from the pack`);
-    if (platform !== currentPlatform()) continue; // cannot run other platforms' programs
-    const args = m.tools[name].versionArgs ?? ["--version"];
-    const p = Bun.spawn([exe, ...args], { stdout: "pipe", stderr: "pipe", env: { PATH: "/usr/bin:/bin", HOME: process.env.HOME ?? "" } });
-    const out = (await new Response(p.stdout).text()) + (await new Response(p.stderr).text());
-    await p.exited;
-    // any output that is not a loader failure means it starts (some print no version, e.g. "vnone")
-    if (!out.trim() || /dyld|error while loading|cannot open shared|not found|library not loaded|No such file/i.test(out)) throw new Error(`${name} does not run from the pack:\n${out}`);
-    console.log(`  ok ${name}: ${(out.split("\n").find((l) => /\d/.test(l)) ?? out.split("\n")[0]).slice(0, 70)}`);
+    if (failed.has(name)) continue;
+    try {
+      await checkOne(m, name, platform, dir);
+    } catch (e) {
+      if (pack === "core") throw e; // core must work everywhere
+      failed.set(name, (e as Error).message.split("\n").slice(0, 3).join(" ").slice(0, 200));
+    }
   }
+}
+
+async function checkOne(m: Manifest, name: string, platform: Platform, dir: string) {
+  if (!m.tools[name].platforms[platform]) return;
+  const exe = join(dir, exePath(m, name, platform));
+  if (!existsSync(exe)) throw new Error(`${name} is missing from the pack`);
+  if (platform !== currentPlatform()) return; // cannot run other platforms' programs
+  const args = m.tools[name].versionArgs ?? ["--version"];
+  const p = Bun.spawn([exe, ...args], { stdout: "pipe", stderr: "pipe", env: { PATH: "/usr/bin:/bin", HOME: process.env.HOME ?? "" } });
+  const out = (await new Response(p.stdout).text()) + (await new Response(p.stderr).text());
+  await p.exited;
+  // any output that is not a loader failure means it starts (some print no version, e.g. "vnone")
+  if (!out.trim() || /dyld|error while loading|cannot open shared|not found|library not loaded|No such file/i.test(out)) throw new Error(`${name} does not run from the pack:\n${out}`);
+  console.log(`  ok ${name}: ${(out.split("\n").find((l) => /\d/.test(l)) ?? out.split("\n")[0]).slice(0, 70)}`);
 }
 
 async function main() {
@@ -241,13 +262,26 @@ async function main() {
     rmSync(stage, { recursive: true, force: true });
     mkdirSync(join(stage, "bin"), { recursive: true });
     const names = m.packs[pack].tools.filter((n) => !only || only.includes(n));
+    const failed = new Map<string, string>(); // tools left out of a non-core pack, with the reason
     for (const name of names) {
       console.log(`- ${name}`);
-      await addTool(m, name, platform, stage, work, !!values.pin, built);
+      try {
+        await addTool(m, name, platform, stage, work, !!values.pin, built);
+      } catch (e) {
+        if (pack === "core") throw e;
+        failed.set(name, (e as Error).message.split("\n")[0].slice(0, 200));
+        rmSync(join(stage, exePath(m, name, platform)), { force: true });
+        console.log(`  DROPPED ${name}: ${failed.get(name)}`);
+      }
     }
     if (values.pin) writeManifest(m);
     writeFileSync(join(stage, "THIRD_PARTY.md"), thirdParty(m, { pack }));
-    await check({ ...m, packs: { ...m.packs, [pack]: { ...m.packs[pack], tools: names } } }, pack, platform, stage);
+    await check({ ...m, packs: { ...m.packs, [pack]: { ...m.packs[pack], tools: names } } }, pack, platform, stage, failed);
+    for (const n of failed.keys()) rmSync(join(stage, exePath(m, n, platform)), { force: true });
+    if (names.every((n) => failed.has(n) || !m.tools[n].platforms[platform])) {
+      console.log(`  ${pack}: nothing usable on ${platform}, no pack`);
+      continue;
+    }
     const file = `${pack}-${platform}.tar.gz`;
     rmSync(join(out, file), { force: true });
     await Bun.spawn(["tar", "-czf", file, "-C", stage, "."], { cwd: out, env: { ...process.env, COPYFILE_DISABLE: "1" }, stdout: "inherit", stderr: "inherit" }).exited;
@@ -255,8 +289,9 @@ async function main() {
     const probe = join(work, "probe", pack);
     rmSync(probe, { recursive: true, force: true });
     await extractTarGz(join(out, file), probe);
-    await check({ ...m, packs: { ...m.packs, [pack]: { ...m.packs[pack], tools: names } } }, pack, platform, probe);
-    const frag = { pack, platform, file, sha256: sha256(join(out, file)), size: statSync(join(out, file)).size };
+    await check({ ...m, packs: { ...m.packs, [pack]: { ...m.packs[pack], tools: names } } }, pack, platform, probe, failed);
+    const dropped = [...failed].map(([tool, reason]) => ({ tool, reason }));
+    const frag = { pack, platform, file, dropped, sha256: sha256(join(out, file)), size: statSync(join(out, file)).size };
     writeFileSync(join(out, `${pack}-${platform}.json`), JSON.stringify(frag, null, 2));
     console.log(`  ${file}: ${(frag.size / 1048576).toFixed(1)} MB sha256 ${frag.sha256}`);
   }

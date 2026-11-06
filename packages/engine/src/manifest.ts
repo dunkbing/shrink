@@ -35,6 +35,8 @@ export interface ToolEntry {
   /** The builder takes the executable from another tool's build (ffprobe from ffmpeg). */
   builtWith?: string;
   experimental?: boolean;
+  /** Platforms where the pack builder could not make it relocatable: why it is left out. */
+  dropped?: Partial<Record<Platform, string>>;
   platforms: Partial<Record<Platform, ToolSource>>;
 }
 

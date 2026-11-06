@@ -33,6 +33,8 @@ esac
   --enable-encoder=pcm_f64le,pcm_s16le --enable-parser="$(pick parsers '.')" --enable-bsf="$(pick bsfs '.')" \
   --enable-filter=aresample,aformat,anull,null,format,atrim,asetpts \
   ${EXTRA[@]+"${EXTRA[@]}"}
-make -j"$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)" ffmpeg ffprobe
+EXE=""
+case "$(uname -s)" in MINGW*|MSYS*) EXE=.exe ;; esac
+make -j"$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 2)" "ffmpeg$EXE" "ffprobe$EXE"
 for b in ffmpeg ffprobe; do cp "$b$([ -f "$b.exe" ] && echo .exe)" "$OUT/"; done
 strip "$OUT"/ffmpeg* "$OUT"/ffprobe* 2>/dev/null || true
