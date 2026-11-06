@@ -28,7 +28,7 @@ jobs:
         shell: pwsh
         run: |
           $i = Get-ChildItem apps/desktop/dist/*.exe | Select -First 1
-          & $i.FullName /S /D=C:\shrink-app
+          Start-Process $i.FullName -ArgumentList '/S','/D=C:\shrink-app' -Wait
           Get-ChildItem C:\shrink-app
           $p = Start-Process C:\shrink-app\Shrink.exe -PassThru -RedirectStandardOutput C:\out-hidden.txt -RedirectStandardError C:\err-hidden.txt
           Start-Sleep 15
