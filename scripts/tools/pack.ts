@@ -212,6 +212,7 @@ async function addTool(m: Manifest, name: string, platform: Platform, stage: str
     if (!existsSync(member)) throw new Error(`${name}: ${src.member} not in ${basename(file)}`);
     copyFileSync(member, dest);
     chmodSync(dest, 0o755);
+    for (const a of src.also ?? []) copyFileSync(join(x, a), join(stage, "bin", basename(a)));
     // licence texts that ship with the program
     const lic = join(stage, "licenses", name);
     for (const e of readdirSync(dirname(member))) if (/^(licen[sc]e|copying|notice)/i.test(e) && statSync(join(dirname(member), e)).isFile()) (mkdirSync(lic, { recursive: true }), copyFileSync(join(dirname(member), e), join(lic, e)));

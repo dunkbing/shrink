@@ -18,6 +18,8 @@ export interface ToolSource {
   choco?: string;
   /** The executable's name in that package. */
   bin?: string;
+  /** Other files of the archive that belong beside the executable (DLLs). */
+  also?: string[];
   /** Script (relative to the repo) that builds it. */
   build?: string;
 }
