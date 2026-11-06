@@ -855,17 +855,11 @@
           "system": true,
           "bin": "mkclean",
           "brew": "mkclean"
-        },
-        "linux-x64": {
-          "system": true,
-          "bin": "mkclean",
-          "apt": "mkclean"
-        },
-        "linux-arm64": {
-          "system": true,
-          "bin": "mkclean",
-          "apt": "mkclean"
         }
+      },
+      "dropped": {
+        "linux-x64": "no apt package",
+        "linux-arm64": "no apt package"
       }
     },
     "MP4Box": {
@@ -886,21 +880,15 @@
           "bin": "MP4Box",
           "brew": "gpac"
         },
-        "linux-x64": {
-          "system": true,
-          "bin": "MP4Box",
-          "apt": "gpac"
-        },
-        "linux-arm64": {
-          "system": true,
-          "bin": "MP4Box",
-          "apt": "gpac"
-        },
         "win32-x64": {
           "system": true,
           "bin": "MP4Box",
           "choco": "gpac"
         }
+      },
+      "dropped": {
+        "linux-x64": "apt gpac pulls ~80 MB of libraries (85 MB pack, 20 min build)",
+        "linux-arm64": "apt gpac pulls ~80 MB of libraries (81 MB pack)"
       }
     },
     "qpdf": {
