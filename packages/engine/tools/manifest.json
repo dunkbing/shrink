@@ -507,7 +507,7 @@
         "win32-x64": {
           "version": "2.6",
           "url": "https://github.com/amadvance/advancecomp/releases/download/v2.6/advancecomp-2.6-windows-x64.zip",
-          "sha256": null,
+          "sha256": "39478e2810d2e6fecea321d11a8e8aad678e9e52f83c684d85dcb70342607704",
           "member": "advzip.exe"
         }
       }
