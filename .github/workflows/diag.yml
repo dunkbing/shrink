@@ -30,16 +30,17 @@ jobs:
           function Probe($label, $cmdline) {
             "=== $label"
             $before = @(Get-Process conhost,OpenConsole -ErrorAction SilentlyContinue | % Id)
-            $psi = [Diagnostics.ProcessStartInfo]::new('cmd.exe', "/c $cmdline"); $psi.UseShellExecute = $false
+            $psi = [Diagnostics.ProcessStartInfo]::new($cmdline); $psi.UseShellExecute = $false
             $p = [Diagnostics.Process]::Start($psi)
             $seen = @(); $cls = @()
             1..100 | % { Start-Sleep -Milliseconds 30
               $seen += @(Get-Process conhost,OpenConsole -ErrorAction SilentlyContinue | ? { $before -notcontains $_.Id } | % { "$($_.ProcessName):$($_.Id)" })
               $cls += [W]::Classes()
-              $seen += @(Get-CimInstance Win32_Process | ? { $_.Name -match 'Shrink|cmd|bun|powershell' -and $_.Name -notmatch 'pwsh' -and $_.ProcessId -ne $p.Id } | % { "$($_.Name):$($_.ProcessId)<-$($_.ParentProcessId)" })
+              $seen += @(Get-CimInstance Win32_Process | ? { $_.Name -match 'Shrink|cmd|bun|powershell|WerFault' -and $_.Name -notmatch 'pwsh' } | % { "$($_.Name):$($_.ProcessId)<-$($_.ParentProcessId)" })
             }
             "new procs: $(($seen | Sort -Unique) -join ', ')"
             "console windows: $(($cls | Sort -Unique) -join ', ')"
+            "exited=$($p.HasExited) code=$(if($p.HasExited){$p.ExitCode})"
             Get-Process Shrink -ErrorAction SilentlyContinue | Stop-Process -Force
           }
           Probe 'healthy' 'C:\shrink-app\Shrink.exe'
