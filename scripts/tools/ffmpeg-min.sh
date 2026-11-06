@@ -21,7 +21,7 @@ pick() { list "$1" | tr ' ' '\n' | grep -E "$2" | paste -sd, -; }
 EXTRA=()
 case "$(uname -s)" in
   Linux) EXTRA+=(--extra-ldflags=-static --pkg-config-flags=--static) ;;
-  MINGW*|MSYS*) EXTRA+=(--target-os=mingw32 --arch=x86_64) ;;
+  MINGW*|MSYS*) EXTRA+=(--target-os=mingw32 --arch=x86_64 --extra-ldflags=-static) ;;
 esac
 
 ./configure --prefix="$PWD/out" --disable-everything --disable-autodetect --disable-doc --disable-network \
