@@ -1,0 +1,221 @@
+name: package
+# Builds the installers (macOS .dmg, Linux .deb/.tar.gz/.AppImage, Windows setup .exe) with `mantou package`, and the CLI
+# as one executable per platform. A tag v* attaches them to its GitHub release; a manual run only uploads artifacts.
+#
+# Optional secrets (without them everything is built unsigned, macOS ad hoc):
+#   APPLE_CERTIFICATE           base64 of the "Developer ID Application" .p12
+#   APPLE_CERTIFICATE_PASSWORD  its password
+#   APPLE_SIGNING_IDENTITY      e.g. "Developer ID Application: Name (TEAMID)"
+#   APPLE_ID, APPLE_APP_PASSWORD, APPLE_TEAM_ID   notarization (needs the three above too)
+#   WINDOWS_CERTIFICATE         base64 of the Authenticode .pfx
+#   WINDOWS_CERTIFICATE_PASSWORD
+#
+# Linux and Windows packaging needs a mantou-ui that has `mantou package` for them (dunkbing/mantou#81, #82). While the
+# npm version in bun.lock lacks it those jobs fail with a message; run with `mantou_ref` (a branch, tag or SHA of
+# dunkbing/mantou, e.g. main) to build the native core and the CLI from source. Once mantou-ui releases it, bump
+# apps/desktop/package.json and the lockfile, and leave `mantou_ref` empty.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      mantou_ref:
+        description: Install Mantou from this dunkbing/mantou ref (builds the core with Rust); empty = the npm version in bun.lock
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  desktop:
+    name: desktop ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: darwin-arm64, os: macos-15 }
+          - { platform: darwin-x64, os: macos-15-intel }
+          - { platform: linux-x64, os: ubuntu-22.04 } # oldest glibc we can get: the package runs on anything newer
+          - { platform: linux-arm64, os: ubuntu-22.04-arm }
+          - { platform: win32-x64, os: windows-2022 }
+    env:
+      MANTOU_REF: ${{ inputs.mantou_ref }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+
+      - name: Version matches the tag
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          v=$(bun -e 'console.log(require("./apps/desktop/package.json").version)')
+          [ "v$v" = "$GITHUB_REF_NAME" ] || { echo "::error::tag $GITHUB_REF_NAME, but apps/desktop/package.json says $v"; exit 1; }
+
+      # Mantou from source: the runtime from git, the native core built here, linked in place of the npm package
+      - name: Mantou source
+        if: env.MANTOU_REF != ''
+        uses: actions/checkout@v4
+        with:
+          repository: dunkbing/mantou
+          ref: ${{ inputs.mantou_ref }}
+          path: mantou-src
+      - uses: dtolnay/rust-toolchain@stable
+        if: env.MANTOU_REF != ''
+      - uses: Swatinem/rust-cache@v2
+        if: env.MANTOU_REF != ''
+        with:
+          workspaces: mantou-src/core
+          key: ${{ matrix.platform }}
+      - name: Build Mantou
+        if: env.MANTOU_REF != ''
+        shell: bash
+        env:
+          CARGO_PROFILE_RELEASE_DEBUG: "false"
+          CARGO_PROFILE_RELEASE_STRIP: symbols
+          MACOSX_DEPLOYMENT_TARGET: "11.0"
+        run: |
+          (cd mantou-src && bun install --frozen-lockfile --production && cargo build --release --manifest-path core/Cargo.toml -p mantou-ffi)
+          bun -e 'const fs = require("fs"); const p = "apps/desktop/node_modules/mantou-ui"; fs.rmSync(p, { recursive: true, force: true }); fs.symlinkSync(require("path").resolve("mantou-src"), p, "junction")'
+
+      - name: Packaging is supported
+        if: runner.os != 'macOS'
+        shell: bash
+        working-directory: apps/desktop
+        run: |
+          want=Linux; [ "$RUNNER_OS" = Windows ] && want=Windows
+          usage=$(bunx mantou package 2>&1 || true)
+          if ! grep -q "$want:" <<< "$usage"; then
+            echo "::error::this mantou-ui cannot package for $want yet (dunkbing/mantou#81 Linux, #82 Windows): run again with mantou_ref set to a dunkbing/mantou ref that has it, or bump mantou-ui once it is released"
+            exit 1
+          fi
+
+      - name: NSIS (Windows)
+        if: runner.os == 'Windows'
+        run: choco install nsis -y --no-progress
+
+      - name: Signing (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then echo "no APPLE_CERTIFICATE: signing ad hoc"; exit 0; fi
+          kc="$RUNNER_TEMP/build.keychain-db"; pw=$(uuidgen)
+          security create-keychain -p "$pw" "$kc"
+          security set-keychain-settings -lut 21600 "$kc"
+          security unlock-keychain -p "$pw" "$kc"
+          echo "$APPLE_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$kc"
+          rm "$RUNNER_TEMP/cert.p12"
+          security set-key-partition-list -S apple-tool:,apple: -k "$pw" "$kc" > /dev/null
+          security list-keychains -d user -s "$kc" $(security list-keychains -d user | tr -d '"')
+          security default-keychain -s "$kc"
+          if [ -n "$APPLE_ID" ] && [ -n "$APPLE_APP_PASSWORD" ] && [ -n "$APPLE_TEAM_ID" ]; then
+            xcrun notarytool store-credentials shrink-ci --apple-id "$APPLE_ID" --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD"
+            echo "NOTARY=shrink-ci" >> "$GITHUB_ENV"
+          fi
+          echo "SIGN_IDENTITY=${{ secrets.APPLE_SIGNING_IDENTITY }}" >> "$GITHUB_ENV"
+
+      - name: Signing (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+        run: |
+          if [ -z "$WINDOWS_CERTIFICATE" ]; then echo "no WINDOWS_CERTIFICATE: unsigned"; exit 0; fi
+          echo "$WINDOWS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.pfx"
+          echo "SIGN_PFX=$RUNNER_TEMP/cert.pfx" >> "$GITHUB_ENV"
+
+      - name: Package
+        shell: bash
+        working-directory: apps/desktop
+        env:
+          MANTOU_SIGN_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          args=()
+          [ -n "$SIGN_IDENTITY" ] && args+=(--identity "$SIGN_IDENTITY")
+          [ -n "$NOTARY" ] && args+=(--notary "$NOTARY")
+          [ -n "$SIGN_PFX" ] && args+=(--sign-pfx "$SIGN_PFX")
+          bun run package "${args[@]}"
+
+      # the installers only (not the .app folder), with the platform in a name that lacks it
+      - name: Collect
+        shell: bash
+        run: |
+          mkdir out
+          find apps/desktop/dist -maxdepth 1 -type f | while read -r f; do
+            n=$(basename "$f")
+            case "$n" in *.dmg) n="${n%.dmg}-macos-${{ matrix.platform }}.dmg" ;; esac
+            cp "$f" "out/$n"
+          done
+          ls -l out
+          [ -n "$(ls out)" ] || { echo "::error::no installers were made"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shrink-desktop-${{ matrix.platform }}
+          path: out/*
+          if-no-files-found: error
+
+  cli:
+    name: cli ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: darwin-arm64, os: macos-15 }
+          - { platform: darwin-x64, os: macos-15-intel }
+          - { platform: linux-x64, os: ubuntu-22.04 }
+          - { platform: linux-arm64, os: ubuntu-22.04-arm }
+          - { platform: win32-x64, os: windows-2022 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      # the tools manifest is imported as JSON, so it is inside the executable
+      - name: Compile
+        shell: bash
+        run: bun build --compile packages/cli/src/main.ts --outfile out/shrink-${{ matrix.platform }}
+      - name: Smoke test
+        shell: bash
+        run: |
+          mkdir "$RUNNER_TEMP/smoke"
+          cp docs/images/desktop.png "$RUNNER_TEMP/smoke/x.png"
+          cd "$RUNNER_TEMP/smoke"
+          exe=$(ls "$GITHUB_WORKSPACE"/out/shrink-*) # shrink-<platform>, plus .exe on Windows
+          "$exe" --help | head -3
+          "$exe" tools | grep -q oxipng # the embedded manifest
+          "$exe" --offline x.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shrink-${{ matrix.platform }}
+          path: out/*
+          if-no-files-found: error
+
+  release:
+    name: release
+    needs: [desktop, cli]
+    # a tag only; whatever was built is attached even when another platform failed
+    if: ${{ !cancelled() && github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: art
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          find art -type f | sort
+          gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" $(find art -type f) --clobber

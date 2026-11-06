@@ -1,15 +1,44 @@
 {
   "name": "shrink-desktop",
   "license": "MIT",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "mantou dev src/main.tsx",
-    "start": "mantou run src/main.tsx"
+    "start": "mantou run src/main.tsx",
+    "package": "mantou package src/main.tsx --name Shrink --id dev.dunkbing.shrink --version 0.1.0"
   },
   "dependencies": {
     "@shrink/engine": "workspace:*",
     "mantou-ui": "^0.4.1"
+  },
+  "description": "Makes files smaller without changing what they contain",
+  "homepage": "https://github.com/dunkbing/shrink",
+  "mantou": {
+    "name": "Shrink",
+    "id": "dev.dunkbing.shrink",
+    "icon": "assets/icon.svg",
+    "linux": {
+      "formats": [
+        "deb",
+        "tar",
+        "appimage"
+      ],
+      "categories": [
+        "Utility"
+      ],
+      "keywords": [
+        "compress",
+        "optimize",
+        "image",
+        "video"
+      ],
+      "maintainer": "dunkbing <dunkbing@users.noreply.github.com>"
+    },
+    "windows": {
+      "publisher": "dunkbing",
+      "scope": "user"
+    }
   }
 }

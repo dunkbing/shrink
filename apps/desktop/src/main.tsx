@@ -1,6 +1,8 @@
-import { fileURLToPath } from "node:url";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { Engine, allFormats } from "@shrink/engine";
 import { onMenu, paths, run, setMenu, setTheme, singleInstance } from "mantou-ui";
+import trayAsset from "../assets/tray.svg" with { type: "file" };
 import { App } from "./App";
 import { listenOpen } from "./open";
 import { pickFiles, pickFolders } from "./pick";
@@ -23,7 +25,11 @@ const store = createStore({
 });
 
 const core = run(() => <App store={store} tools={tools} />, { title: "Shrink", width: 1000, height: 640, minWidth: 760, minHeight: 440, restoreState: true, quitOnClose: false });
-const shell = attachShell(store, realShell, { icon: fileURLToPath(new URL("../assets/tray.svg", import.meta.url)) });
+// the native side reads the icon from disk, but in a compiled app the asset lives inside the executable: copy it out
+mkdirSync(paths.data, { recursive: true });
+const trayIcon = join(paths.data, "tray.svg");
+await Bun.write(trayIcon, Bun.file(trayAsset));
+const shell = attachShell(store, realShell, { icon: trayIcon });
 core.onEvent = (e) => {
   if (e.type === "closeRequested" && shell.closeRequested() === "quit") core.quit(0);
 };

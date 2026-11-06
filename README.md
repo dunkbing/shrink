@@ -4,6 +4,10 @@ Makes files smaller without changing what they contain. Images, PDFs, audio, vid
 
 ![Shrink desktop app](docs/images/desktop.png)
 
+## Install
+
+Download the desktop app (macOS `.dmg`, Windows `-setup.exe`, Linux `.deb`, `.tar.gz` or `.AppImage`) or the single-file `shrink` command line program for your platform from [Releases](https://github.com/dunkbing/shrink/releases). No Bun needed. Builds are unsigned unless a release says otherwise: on macOS, right-click the app and choose Open the first time.
+
 ## Use it
 
 Command line:
